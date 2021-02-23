@@ -61,7 +61,9 @@ object MethodsImpl {
 
     // parseValues
 
-    // build netty request 
+    // build netty request
+
+    // return wrapped object
 
 
     c.Expr[Unit](q"()")
