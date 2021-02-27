@@ -1,45 +1,63 @@
 import com.github.fntz.omhs.methods._
 import com.github.fntz.omhs._
-import scala.reflect.runtime.universe._
 
 object Main extends App {
   import ParamDSL._
   import p._
   import Methods._
 
-  get("test" / StringParam) ~> { x: Long =>
+  val x = "test"
+
+  get(x / LongParam) ~> { x: Long =>
     println(x)
   }
 
-//  implicit class pext(val x: p) extends AnyVal {
-//    def ~>(f: () => Unit) = println(0)
-//    def ~>[T](f: T => Unit) = println(1)
-//    def ~>[T1, T2](f: (T1, T2) => Unit) = println(2)
-//  }
-//
-//  get("test" / LongParam) ~> { x: Long =>
-//    println(x)
-//  }
-//
-//  get("test" / LongParam) ~> { (x: Long, a: String) =>
-//    println(s"$x $a")
-//  }
-//
-//  get("test"/ StringParam) ~> { () =>
-//    println(0)
-//  }
 
   /*
-    get("test" / LongParam) ~> { (x: Long) =>
+  idea is :
+    enum UnmatchReasons =
+      pathNotFound
+      cookieIsNotPresent
+      headerIsNotPresent
+      bodyIsUnparsable
+      exception(t: Throwable)
 
+    case class RouteMat() {
+      val xs = ArrayBuffer[RB]
+      def add(b: RB) = xs += b
+
+      def onUnMatched = { reason =>
+
+      }
     }
+
+    case class RouteBuilder(m: method?) {
+      def path(str: String)
+      def path[T](n: name?) // swagger
+      def cookie
+      def header
+      def body[T: Decoder]
+
+      def handler[T...](f: T... => Result]
+
+      def ::(o: RB) = new RouteMat(this ++ o)
+      def ::(o: RM) = o.add(this)
+    }
+
+    val r = RouteBuilder(get)
+     // or .get
+     .path("test")
+     .path[Long]
+     .header("X-Custom-Header") // validator ? maybe in future
+     .body[Person]
+
+     val t = RouteBuilder...
+
+     val e = RouteBuilder...
+
+
+
    */
-
-//  Methods.get("test" / LongParam) { case Tuple1(rq: Long) =>
-//    println("333")
-//    println(rq)
-//  }
-
 
 
 

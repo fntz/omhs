@@ -1,8 +1,9 @@
 package com.github.fntz.omhs.methods
 
 import scala.language.experimental.macros
-import com.github.fntz.omhs.{HardCodedParam, LongParam, Param, StringParam, p}
+import com.github.fntz.omhs._
 
+import java.util.UUID
 import scala.reflect.macros.whitebox
 
 
@@ -31,8 +32,24 @@ object MethodsImpl {
                             (f: c.Expr[T => Unit]): c.Expr[Unit] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
-    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
-      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
+
+    val params = c.prefix.tree.collect {
+      case q"com.github.fntz.omhs.UUIDParam" =>
+        UUIDParam
+      case q"com.github.fntz.omhs.StringParam" =>
+        StringParam
+      case q"com.github.fntz.omhs.LongParam" =>
+        LongParam
+      case q"com.github.fntz.omhs.RegexParam" =>
+        RegexParam("".r) // stub
+      case q"com.github.fntz.omhs.*" =>
+        *
+    }
+
+    // val x = "test"
+    // get(x / LongParam) => fail
+//    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
+//      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
 
     val actualFunctionParameters = f.tree match {
       case q"(..$params) => $_" =>
@@ -51,11 +68,11 @@ object MethodsImpl {
     }
 
     params.zip(actualFunctionParameters).foreach { case (p, (fp, argName)) =>
-      // check against arguments // TODO
-      fp match {
-        case TypeRef(_, x, _) if x.asType.asClass != p.actualType.getClass =>
-          c.abort(focus, s"Incorrect type for `$argName`, " +
-            s"required: ${p.actualType.getName}, given: ${fp}")
+      // check against arguments
+      val at = getType(c, p)
+      if (!(fp.typeSymbol.asType.toType =:= at)) {
+        c.abort(focus, s"Incorrect type for `$argName`, " +
+              s"required: ${at.typeSymbol.name}, given: ${fp}")
       }
     }
 
@@ -67,6 +84,18 @@ object MethodsImpl {
 
 
     c.Expr[Unit](q"()")
+  }
+
+  def getType(c: whitebox.Context, p: Param): c.universe.Type = {
+    import c.universe._
+    p match {
+      case _: HardCodedParam =>    typeTag[String].tpe
+      case StringParam => typeTag[String].tpe
+      case LongParam => typeTag[Long].tpe
+      case UUIDParam => typeTag[UUID].tpe
+      case _: RegexParam => typeTag[String].tpe
+      case * => typeTag[List[String]].tpe
+    }
   }
 
 

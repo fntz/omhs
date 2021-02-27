@@ -5,22 +5,18 @@ import java.util.UUID
 import scala.util.Try
 
 sealed trait Param {
-  def actualType: Class[_]
   def isRestParam: Boolean = false
   def isUserDefined: Boolean = false
   def check(in: String): Boolean
 }
 case class HardCodedParam(value: String) extends Param {
-  override val actualType: Class[_] = classOf[Nothing]
   override val isUserDefined: Boolean = true
   override def check(in: String): Boolean = in == value
 }
 case object StringParam extends Param {
-  override val actualType: Class[_] = classOf[String]
   override def check(in: String): Boolean = true
 }
 case object LongParam extends Param {
-  override val actualType: Class[_] = classOf[Long]
   override def check(in: String): Boolean = {
     if (in.isEmpty || in.contains(".")) {
       false
@@ -30,7 +26,6 @@ case object LongParam extends Param {
   }
 }
 case object UUIDParam extends Param {
-  override val actualType: Class[_] = classOf[UUID]
   override def check(in: String): Boolean = {
     if (in.length == 36) {
       Try(UUID.fromString(in)).isSuccess
@@ -39,14 +34,14 @@ case object UUIDParam extends Param {
     }
   }
 }
+
 case class RegexParam(re: Regex) extends Param {
-  override val actualType: Class[_] = classOf[Regex] // TOOD result should be string
   override def check(in: String): Boolean = {
     re.findFirstIn(in).isDefined
   }
 }
+
 case object * extends Param {
-  override val actualType: Class[_] = classOf[List[String]]
   override def check(in: String): Boolean = true
   override def isRestParam: Boolean = true
 }
