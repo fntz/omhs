@@ -5,67 +5,30 @@ object Main extends App {
   import ParamDSL._
   import p._
   import Methods._
+  import DefaultHttpHandler._
+  import RuleDSL._
 
+  val r1 = Get().path("test").path(StringParam) ~> { x: String =>
+    "asd"
+  }
 
-  val r1 = Get().path("test").path(StringParam)
-  val r2 = Get().path("test").path(LongParam).path(StringParam)
-  val r3 = Post().path("example")
-  val r = r1 :: r2 :: r3
+  val r2 = Get().path("test").path(LongParam)
+    .path(StringParam) ~> { (x: Long, y :String) =>
+    "qwe"
+  }
 
+  val r3 = Post().path("example") ~> { () =>
+    "333"
+  }
+  val r = r1 ++ r2 ++ r3
+
+  DefaultServer.run(9000, r.toHandler)
 
 //  val x = "test"
 //
 //  get(x / LongParam) ~> { x: Long =>
 //    println(x)
 //  }
-
-
-  /*
-  idea is :
-    enum UnmatchReasons =
-      pathNotFound
-      cookieIsNotPresent
-      headerIsNotPresent
-      bodyIsUnparsable
-      exception(t: Throwable)
-
-    case class RouteMat() {
-      val xs = ArrayBuffer[RB]
-      def add(b: RB) = xs += b
-
-      def onUnMatched = { reason =>
-
-      }
-    }
-
-    case class RouteBuilder(m: method?) {
-      def path(str: String)
-      def path[T](n: name?) // swagger
-      def cookie
-      def header
-      def body[T: Decoder]
-
-      def handler[T...](f: T... => Result]
-
-      def ::(o: RB) = new RouteMat(this ++ o)
-      def ::(o: RM) = o.add(this)
-    }
-
-    val r = RouteBuilder(get)
-     // or .get
-     .path("test")
-     .path[Long]
-     .header("X-Custom-Header") // validator ? maybe in future
-     .body[Person]
-
-     val t = RouteBuilder...
-
-     val e = RouteBuilder...
-
-
-
-   */
-
 
 
 }

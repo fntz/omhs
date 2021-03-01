@@ -4,8 +4,11 @@ import java.util.UUID
 
 sealed trait ParamDef[T] {
   def value: T
+  val skip: Boolean = false
 }
-case class EmptyDef(value: String) extends ParamDef[String]
+case class EmptyDef(value: String) extends ParamDef[String] {
+  override val skip: Boolean = true
+}
 case class LongDef(value: Long) extends ParamDef[Long]
 case class StringDef(value: String) extends ParamDef[String]
 case class UUIDDef(value: UUID) extends ParamDef[UUID]

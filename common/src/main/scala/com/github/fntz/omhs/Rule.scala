@@ -6,20 +6,35 @@ import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Route {
   private val rules: AB[Rule] = new AB[Rule]()
+  private val rulesAndF: AB[RuleAndF] = new AB[RuleAndF]()
 
   def current: Vector[Rule] = rules.toVector
 
-  def addRule(x: Rule) = {
+  def currentF: Vector[RuleAndF] = rulesAndF.toVector
+
+  def addF[T <: RuleAndF](x: T): Route = {
+    rulesAndF += x
+    this
+  }
+
+  def addRule(x: Rule): Route = {
     rules += x
     this
   }
 
-  def ::(other: Route) = {
-    other.rules.foreach(addRule)
+  def ::(other: Route): Route = {
+    rules ++= other.rules
+    this
   }
 
-  def ::(rule: Rule) = {
+  def ++[T <: RuleAndF](other: T): Route = {
+    addF(other)
+    this
+  }
+
+  def ::(rule: Rule): Route = {
     addRule(rule)
+    this
   }
 
   override def toString: String = {
@@ -27,33 +42,56 @@ class Route {
   }
 }
 
+abstract class RuleAndF(val rule: Rule) {
+  def ++[T <: RuleAndF](other: T): Route = {
+    val r = new Route
+    r.addF(this)
+     .addF(other)
+  }
+}
+case class RuleAndF0(override val rule: Rule,
+                     func: Function0[String]) extends RuleAndF(rule)
+case class RuleAndF1[T](override val rule: Rule,
+                        func: Function1[T, String]) extends RuleAndF(rule)
+case class RuleAndF2[T1, T2](override val rule: Rule,
+                             func: Function2[T1, T2, String]) extends RuleAndF(rule)
+
+object RuleDSL {
+  implicit class RuleExt(val rule: Rule) extends AnyVal {
+    def ~>(f: () => String) = RuleAndF0(rule, f)
+    def ~>[T](f: T => String) = RuleAndF1(rule, f)
+    def ~>[T1, T2](f: (T1, T2) => String) = RuleAndF2(rule, f)
+  }
+}
+
 class Rule(val method: HttpMethod) {
   private val paths: AB[Param] = new AB[Param]()
 
-  def draw: Vector[Param] = paths.toVector
+  def params: Vector[Param] = paths.toVector
+
 
   // : Reader
   def body[T] = ???
 
-  def path(x: String) = {
+  def path(x: String): Rule = {
     paths += HardCodedParam(x)
     this
   }
 
-  def path(x: Param) = {
+  def path(x: Param): Rule = {
     paths += x
     this
   }
 
-  def cookie(x: String) = {
+  def cookie(x: String): Rule = {
     this
   }
 
-  def header(x: String) = {
+  def header(x: String): Rule = {
     this
   }
 
-  def ::(other: Rule) = {
+  def ::(other: Rule): Route = {
     val r = new Route
     r.addRule(this)
       .addRule(other)
@@ -66,14 +104,14 @@ class Rule(val method: HttpMethod) {
 }
 
 object Get {
-  def apply(): Rule = new Rule(HttpMethod.Get)
+  def apply(): Rule = new Rule(HttpMethod.GET)
 }
 object Post {
-  def apply(): Rule = new Rule(HttpMethod.Post)
+  def apply(): Rule = new Rule(HttpMethod.POST)
 }
 object Put {
-  def apply(): Rule = new Rule(HttpMethod.Put)
+  def apply(): Rule = new Rule(HttpMethod.PUT)
 }
 object Delete {
-  def apply(): Rule = new Rule(HttpMethod.Delete)
+  def apply(): Rule = new Rule(HttpMethod.DELETE)
 }

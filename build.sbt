@@ -19,18 +19,19 @@ val opts = Seq(
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 )
 
+val netty = Seq("io.netty" % "netty-codec-http" % "4.1.59.Final")
+
 val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile",
-  "io.netty" % "netty-codec-http" % "4.1.59.Final",
   "ch.qos.logback"  %  "logback-classic"    % "1.2.3"
-)
+) ++ netty
 
 val specs2 = Seq("org.specs2" %% "specs2-core" % "4.10.0" % "test")
 
 val common = project.settings(opts)
   .settings(
     name := "common",
-    libraryDependencies ++= specs2
+    libraryDependencies ++= specs2 ++ netty
   )
 
 val macros = project.settings(opts)
