@@ -4,52 +4,69 @@ import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http._
+import io.netty.handler.codec.http.{HttpMethod => HM}
 import io.netty.util.CharsetUtil
+import org.slf4j.LoggerFactory
 
 @Sharable
 class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAdapter {
 
+  // todo rename route
+  private val logger = LoggerFactory.getLogger(getClass)
+
   private val rules = route.currentF
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
+    //
+    val empty = new DefaultFullHttpResponse(
+      HttpVersion.HTTP_1_1,
+      HttpResponseStatus.OK,
+      Unpooled.EMPTY_BUFFER
+    )
+
     msg match {
       case request: FullHttpRequest =>
-        val message = "test"
-        println(request.method())
+        logger.debug(s"${request.method()} -> ${request.uri()}")
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
         val result = rules.map(x => (x, Param.parse(target, x.rule.params)))
 
         val first = result.find(_._2.isSuccess)
 
-        first match {
-          case Some((r, ParseResult(_, defs))) =>
-            val real = defs.filterNot(_.skip)
-            r match {
-              case RuleAndF0(rule, func) =>
-                println("0")
-              case RuleAndF1(rule, func) =>
-                println("1")
-              case RuleAndF2(rule, func) =>
-                println("2")
-            }
-            println(s"=======> won: ${r} with ${defs}")
+        // todo on big screen :)
+        var strBody = ""
 
-          case _ =>
-            println("call 404")
-            // todo call 404 and stop processing
+        if (request.method() == HM.POST) {
+          val tmp = request.decoderResult()
+          // todo stop processing here and push unparsed
+          if (tmp.isSuccess) {
+            strBody = request.content.toString(CharsetUtil.UTF_8)
+          }
         }
 
-        // if post
-//        println("-"*100)
-//        println(request.decoderResult())
-//        println(request.content.toString(CharsetUtil.UTF_8))
+        val matchResult = first match {
+          case Some((r, ParseResult(_, defs))) =>
+            val real = defs.filterNot(_.skip)
+            try {
+              if (strBody.nonEmpty) {
+                val parsed = r.rule.currentReader.read(strBody)
+                r.run(real ++ Vector(BodyDef(parsed)))
+              } else {
+                r.run(real)
+              }
 
-        val response = new DefaultFullHttpResponse(
-          HttpVersion.HTTP_1_1,
-          HttpResponseStatus.OK,
-          Unpooled.copiedBuffer(message.getBytes)
-        )
+            } catch {
+              case t: Throwable =>
+                logger.warn("Failed to call function", t)
+                route.currentUnhandled.apply(UnhandledException(t))
+            }
+
+          case _ =>
+            logger.debug(s"No matched route for ${request.uri()}")
+            route.currentUnhandled.apply(PathNotFound)
+        }
+
+        val response = empty.replace(Unpooled.copiedBuffer(matchResult.getBytes))
 
         if (HttpUtil.isKeepAlive(request))
         {
@@ -58,7 +75,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         }
 
         response.headers.set(HttpHeaderNames.CONTENT_TYPE, "text/plain")
-        response.headers.set(HttpHeaderNames.CONTENT_LENGTH, message.length)
+        response.headers.set(HttpHeaderNames.CONTENT_LENGTH, matchResult.length)
 
         ctx.writeAndFlush(response)
 
