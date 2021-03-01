@@ -40,7 +40,8 @@ object Main extends App {
 
 //  val x = "test"
 //
-//  get(x / LongParam) ~> { x: Long =>
+//  get(x / LongParam |: body[Person] |: header["X-Header"])
+  //  ~> { (x: Long, person, xHeader) =>
 //    println(x)
 //  }
 

@@ -26,9 +26,12 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
     msg match {
       case request: FullHttpRequest =>
+        val cr = CurrentHttpRequest(request.uri())
         logger.debug(s"${request.method()} -> ${request.uri()}")
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
+        val headers = request.headers()
+
         val result = rules.map(x => (x, Param.parse(target, x.rule.params)))
 
         val first = result.find(_._2.isSuccess)

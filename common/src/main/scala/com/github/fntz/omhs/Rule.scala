@@ -1,8 +1,11 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.HttpMethod.HttpMethod
+import io.netty.handler.codec.http.HttpRequest
 
 import scala.collection.mutable.{ArrayBuffer => AB}
+
+case class CurrentHttpRequest(target: String)
 
 class Route {
   private val rules: AB[Rule] = new AB[Rule]()
@@ -84,11 +87,13 @@ case class RuleAndF2[T1, T2](override val rule: Rule,
 }
 
 object RuleDSL {
+
   implicit class RuleExt(val rule: Rule) extends AnyVal {
     def ~>(f: () => String) = RuleAndF0(rule, f)
     def ~>[T](f: T => String) = RuleAndF1(rule, f)
     def ~>[T1, T2](f: (T1, T2) => String) = RuleAndF2(rule, f)
   }
+
 }
 
 class Rule(val method: HttpMethod) {
