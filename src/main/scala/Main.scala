@@ -6,11 +6,18 @@ object Main extends App {
   import p._
   import Methods._
 
-  val x = "test"
 
-  get(x / LongParam) ~> { x: Long =>
-    println(x)
-  }
+  val r1 = Get().path("test").path(StringParam)
+  val r2 = Get().path("test").path(LongParam).path(StringParam)
+  val r3 = Post().path("example")
+  val r = r1 :: r2 :: r3
+
+
+//  val x = "test"
+//
+//  get(x / LongParam) ~> { x: Long =>
+//    println(x)
+//  }
 
 
   /*

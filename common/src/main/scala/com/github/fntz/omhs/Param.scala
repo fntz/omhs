@@ -12,9 +12,13 @@ sealed trait Param {
 case class HardCodedParam(value: String) extends Param {
   override val isUserDefined: Boolean = true
   override def check(in: String): Boolean = in == value
+
+  override def toString: String = value
 }
 case object StringParam extends Param {
   override def check(in: String): Boolean = true
+
+  override def toString: String = ":string"
 }
 case object LongParam extends Param {
   override def check(in: String): Boolean = {
@@ -24,6 +28,8 @@ case object LongParam extends Param {
       Try(in.toLong).isSuccess
     }
   }
+
+  override def toString: String = ":long"
 }
 case object UUIDParam extends Param {
   override def check(in: String): Boolean = {
@@ -33,17 +39,23 @@ case object UUIDParam extends Param {
       false
     }
   }
+
+  override def toString: String = ":uuid"
 }
 
 case class RegexParam(re: Regex) extends Param {
   override def check(in: String): Boolean = {
     re.findFirstIn(in).isDefined
   }
+
+  override def toString: String = s"$re.re"
 }
 
 case object * extends Param {
   override def check(in: String): Boolean = true
   override def isRestParam: Boolean = true
+
+  override def toString: String = "*"
 }
 
 case class ParseResult(success: Boolean, defs: Vector[ParamDef[_]]) {

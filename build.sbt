@@ -21,6 +21,7 @@ val opts = Seq(
 
 val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile",
+  "io.netty" % "netty-codec-http" % "4.1.59.Final",
   "ch.qos.logback"  %  "logback-classic"    % "1.2.3"
 )
 
