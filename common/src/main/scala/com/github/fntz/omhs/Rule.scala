@@ -1,7 +1,6 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.HttpMethod.HttpMethod
-import io.netty.handler.codec.http.HttpRequest
 
 import scala.collection.mutable.{ArrayBuffer => AB}
 
@@ -11,7 +10,11 @@ class Route {
   private val rules: AB[Rule] = new AB[Rule]()
   private val rulesAndF: AB[RuleAndF] = new AB[RuleAndF]()
   private var unhandledDefault = (x: UnhandledReason) => {
-    "boom"
+    new CommonResponse(
+      status = 500, // todo by reason plz
+      contentType = "text/plain",
+      content = "boom"
+    )
   }
 
   def current: Vector[Rule] = rules.toVector
@@ -43,12 +46,12 @@ class Route {
     this
   }
 
-  def onUnhandled(f: UnhandledReason => String): Route = {
+  def onUnhandled(f: UnhandledReason => CommonResponse): Route = {
     unhandledDefault = f
     this
   }
 
-  def currentUnhandled: UnhandledReason => String = {
+  def currentUnhandled: UnhandledReason => CommonResponse = {
     unhandledDefault
   }
 
@@ -64,34 +67,36 @@ abstract class RuleAndF(val rule: Rule) {
      .addF(other)
   }
 
-  def run(defs: Vector[ParamDef[_]]): String
+  def run(defs: Vector[ParamDef[_]]): CommonResponse
 }
-case class RuleAndF0(override val rule: Rule,
-                     func: Function0[String]) extends RuleAndF(rule) {
-  override def run(defs: Vector[ParamDef[_]]): String = {
-    func.apply()
+case class RuleAndF0[R](override val rule: Rule,
+                     func: Function0[R])(implicit w: BodyWriter[R]) extends RuleAndF(rule) {
+  override def run(defs: Vector[ParamDef[_]]): CommonResponse = {
+    w.write(func.apply())
   }
 }
-case class RuleAndF1[T](override val rule: Rule,
-                        func: Function1[T, String]) extends RuleAndF(rule) {
-  override def run(defs: Vector[ParamDef[_]]): String = {
-    func.apply(defs(0).value.asInstanceOf[T])
+case class RuleAndF1[T, R](override val rule: Rule,
+                        func: Function1[T, R])
+                                      (implicit w: BodyWriter[R]) extends RuleAndF(rule) {
+  override def run(defs: Vector[ParamDef[_]]): CommonResponse = {
+    w.write(func.apply(defs(0).value.asInstanceOf[T]))
   }
 }
-case class RuleAndF2[T1, T2](override val rule: Rule,
-                             func: Function2[T1, T2, String])
+case class RuleAndF2[T1, T2, R](override val rule: Rule,
+                             func: Function2[T1, T2, R])(implicit w: BodyWriter[R])
   extends RuleAndF(rule) {
-  override def run(defs: Vector[ParamDef[_]]): String = {
-    func.apply(defs(0).value.asInstanceOf[T1], defs(1).value.asInstanceOf[T2])
+  override def run(defs: Vector[ParamDef[_]]): CommonResponse = {
+    w.write(func.apply(defs(0).value.asInstanceOf[T1], defs(1).value.asInstanceOf[T2]))
   }
 }
+
 
 object RuleDSL {
 
   implicit class RuleExt(val rule: Rule) extends AnyVal {
-    def ~>(f: () => String) = RuleAndF0(rule, f)
-    def ~>[T](f: T => String) = RuleAndF1(rule, f)
-    def ~>[T1, T2](f: (T1, T2) => String) = RuleAndF2(rule, f)
+    def ~>[R: BodyWriter](f: () => R) = RuleAndF0(rule, f)
+    def ~>[T, R: BodyWriter](f: T => R) = RuleAndF1(rule, f)
+    def ~>[T1, T2, R: BodyWriter](f: (T1, T2) => R) = RuleAndF2(rule, f)
   }
 
 }

@@ -5,7 +5,8 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.{HttpMethod => HM}
-import io.netty.util.CharsetUtil
+import io.netty.util.{CharsetUtil, Version}
+import scala.collection.JavaConverters._
 import org.slf4j.LoggerFactory
 
 @Sharable
@@ -15,6 +16,12 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val rules = route.currentF
+
+  private val currentProject = "omhs"
+  private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
+    .map { v => s"netty-${v.artifactVersion()}"}
+    .getOrElse("unknown")
+  private val serverHeader = "X-Server-Version"
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     //
@@ -69,7 +76,12 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             route.currentUnhandled.apply(PathNotFound)
         }
 
-        val response = empty.replace(Unpooled.copiedBuffer(matchResult.getBytes))
+        val response = empty.replace(Unpooled.copiedBuffer(matchResult.content.getBytes))
+
+        // todo from setup
+        response.headers().set(serverHeader, nettyVersion)
+
+
 
         if (HttpUtil.isKeepAlive(request))
         {
@@ -77,8 +89,9 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
           response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
         }
 
-        response.headers.set(HttpHeaderNames.CONTENT_TYPE, "text/plain")
-        response.headers.set(HttpHeaderNames.CONTENT_LENGTH, matchResult.length)
+        response.setStatus(HttpResponseStatus.valueOf(matchResult.status))
+        response.headers.set(HttpHeaderNames.CONTENT_TYPE, matchResult.contentType)
+        response.headers.set(HttpHeaderNames.CONTENT_LENGTH, matchResult.content.length)
 
         ctx.writeAndFlush(response)
 
