@@ -1,5 +1,5 @@
 import com.github.fntz.omhs.methods.Methods
-import com.github.fntz.omhs.{*, CommonResponse, DefaultHttpHandler, LongParam, ParamDSL, RegexParam, RuleDSL, StringParam, UUIDParam, p}
+import com.github.fntz.omhs.{*, CommonResponse, DefaultHttpHandler, LongParam, ParamDSL, ParamDef, RegexParam, RuleDSL, StringParam, UUIDParam, p}
 
 import java.util.UUID
 
@@ -12,17 +12,17 @@ object MyApp extends App {
 
   case class Person(id: Int, name: String)
 
-
-
   val x = "test"
   val xx = "/a/".r
   val k = RegexParam(xx)
   val r1 = get("api" / LongParam) ~> { (x: Long) =>
     println("="*100)
-    new CommonResponse(200, "text/plain", s"lng: ${x}")
+    new CommonResponse(200, "text/plain", s"123: ${x}")
   }
 
-  val r = get(x / *) ~> { (x: List[String]) =>
+  println(s"---------> $r1")
+
+  val r = get(x / LongParam) ~> { (x: Long) =>
     println("--------")
     new CommonResponse(200, "text/plain", s"123: ${x}")
   }

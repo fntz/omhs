@@ -59,13 +59,20 @@ object MethodsImpl {
       c.error(focus, "Args lengths are not the same")
     }
 
+    println(s"======> ${actualFunctionParameters}")
+
     tokens.zip(actualFunctionParameters).foreach { case (p, (fp, argName)) =>
       // check against arguments
       val at = getType(c, p)
-      if (!(fp.typeSymbol.asType.toType =:= at)) {
+      if (at.toString != fp.toString) {
         c.abort(focus, s"Incorrect type for `$argName`, " +
-              s"required: ${at.typeSymbol.name}, given: ${fp}")
+          s"required: ${at.typeSymbol.name}, given: ${fp}")
       }
+//      TODO doesn't work with List[String]
+//      if (!(fp.typeSymbol.asType.toType =:= at)) {
+//        c.abort(focus, s"Incorrect type for `$argName`, " +
+//              s"required: ${at.typeSymbol.name}, given: ${fp}")
+//      }
     }
 
     // todo http method pass somehow
@@ -76,20 +83,20 @@ object MethodsImpl {
       val n = TermName(c.freshName())
       t match {
         case StringToken =>
-          (pq"_root_.com.github.fntz.omhs.StringDef($n: String)", n, false)
+          (pq"_root_.com.github.fntz.omhs.StringDef($n)", n)
         case LongToken =>
-          (pq"_root_.com.github.fntz.omhs.LongDef($n: scala.Long)", n, true)
+          (pq"_root_.com.github.fntz.omhs.LongDef($n : Long)", n)
         case RegexToken =>
-          (pq"_root_.com.github.fntz.omhs.RegexDef($n: scala.util.matching.Regex)", n, false)
+          (pq"_root_.com.github.fntz.omhs.RegexDef($n)", n)
         case UUIDToken =>
-          (pq"_root_.com.github.fntz.omhs.UUIDDef($n: java.util.UUID)", n, false)
+          (pq"_root_.com.github.fntz.omhs.UUIDDef($n)", n)
         case RestToken =>
-          (pq"_root_.com.github.fntz.omhs.TailDef($n: scala.collection.immutable.List[String])", n, false)
+          (pq"_root_.com.github.fntz.omhs.TailDef($n)", n)
       }
     }
 
-    val caseClause = ts.map(_._1).reduce((a, b) => q"$a :: $b")
-    val args = ts.map(_._2)
+    val caseClause = ts.map(_._1)//.reduce((a, b) => q"$a::$b")
+    val args = ts.map(_._2)//.map { x => tq"$x.value" }
 
     // x.xs outside param of Ext class
     // skip body/headers/cookies for now
@@ -105,14 +112,15 @@ object MethodsImpl {
               ${c.prefix.tree}.obj.xs.map { param =>
                 rule.path(param)
               }
+
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.CommonResponse = {
                   println(defs)
                   defs match {
-                    case $caseClause :: Nil =>
-                      $f(..$args)
+                    case ..$caseClause :: Nil =>
+                      $f(...$args)
                     case _ =>
-                      println("====================")
+                      println("======TODO==============")
                       com.github.fntz.omhs.CommonResponse.empty
                   }
                 }
@@ -122,6 +130,8 @@ object MethodsImpl {
             $funName()
         }
         """
+
+        println(instance)
 
     c.Expr[RuleAndF](instance)
   }

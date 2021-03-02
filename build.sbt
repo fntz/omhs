@@ -13,7 +13,8 @@ val opts = Seq(
     "-language:reflectiveCalls",
     "-unchecked",
     "-Xverify",
-    "-Xfuture"
+    "-Xfuture",
+    "-Ydelambdafy:inline" // todo https://github.com/scala/bug/issues/10554
   ),
   scalacOptions in Test ++= Seq("-Yrangepos"),
   javacOptions ++= Seq("-source", "1.8", "-target", "1.8")

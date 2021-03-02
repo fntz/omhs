@@ -81,7 +81,7 @@ object Param {
       case StringParam => StringDef(in)
       case UUIDParam => UUIDDef(UUID.fromString(in))
       case RegexParam(re) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
-      case * => TailDef(Vector(in)) // unreachable
+      case * => TailDef(List(in)) // unreachable
     }
   }
 
@@ -109,7 +109,7 @@ object Param {
               val param = params(i)
               if (param.isRestParam) {
                 doneByRest = true
-                buffer += TailDef(tmp.slice(i, tmpLength + 1).toVector)
+                buffer += TailDef(tmp.slice(i, tmpLength + 1).toList)
               }
               flag = param.check(part)
               if (flag && !doneByRest) {
@@ -126,7 +126,7 @@ object Param {
             val param = params(i)
             if (param.isRestParam) {
               doneByRest = true
-              buffer += TailDef(tmp.slice(i, tmpLength + 1).toVector)
+              buffer += TailDef(tmp.slice(i, tmpLength + 1).toList)
             }
             if (i <= tmpLength) {
               val part = tmp(i)
