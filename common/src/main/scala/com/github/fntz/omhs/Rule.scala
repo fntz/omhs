@@ -9,13 +9,18 @@ class Rule(val method: HttpMethod) {
 
   private var reader: BodyReader[_] = null // todo None instead
 
+  private var isBodyNeeded = false
+
   def params: Vector[Param] = paths.toVector
+
+  def isParseBody = isBodyNeeded
 
   def currentReader = reader
 
   // : Reader
   def body[T]()(implicit reader: BodyReader[T]): Rule = {
     this.reader = reader
+    this.isBodyNeeded = true
     this
   }
 

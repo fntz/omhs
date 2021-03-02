@@ -4,16 +4,10 @@ import scala.util.matching.Regex
 import java.util.UUID
 import scala.util.Try
 
-sealed trait ParamToken
-case object StringToken extends ParamToken
-case object LongToken extends ParamToken
-case object UUIDToken extends ParamToken
-case object RegexToken extends ParamToken
-case object RestToken extends ParamToken
-
 sealed trait Param {
   def isRestParam: Boolean = false
   def isUserDefined: Boolean = false
+  def isBodyParam: Boolean = false
   def check(in: String): Boolean
 }
 case class HardCodedParam(value: String) extends Param {
@@ -65,6 +59,14 @@ case object * extends Param {
   override def toString: String = "*"
 }
 
+case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
+  override def check(in: String): Boolean = true
+  override def isBodyParam: Boolean = true
+
+  override def toString: String = s"body[]" // todo typeOf[T]
+}
+
+
 case class ParseResult(success: Boolean, defs: Vector[ParamDef[_]]) {
   val isSuccess: Boolean = success
 }
@@ -82,6 +84,7 @@ object Param {
       case UUIDParam => UUIDDef(UUID.fromString(in))
       case RegexParam(re) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
       case * => TailDef(List(in)) // unreachable
+      case _: BodyParam[_] => BodyDef(null) // unreachable todo without
     }
   }
 

@@ -4,11 +4,7 @@ import scala.language.experimental.macros
 import com.github.fntz.omhs.{BodyWriter, _}
 
 import java.util.UUID
-import scala.annotation.implicitNotFound
 import scala.reflect.macros.whitebox
-
-
-abstract class Req {}
 
 object Methods {
 
@@ -30,6 +26,32 @@ object MethodsImpl {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
+    // TODO make sharable
+    sealed trait ParamToken {
+      def isBody = false
+    }
+    case object StringToken extends ParamToken
+    case object LongToken extends ParamToken
+    case object UUIDToken extends ParamToken
+    case object RegexToken extends ParamToken
+    case object RestToken extends ParamToken
+    case class BodyToken(tpe: c.universe.Type, reader: c.universe.Tree)
+      extends ParamToken {
+      override def isBody: Boolean = true
+    }
+
+    def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
+      import c.universe._
+      p match {
+        case StringToken => c.typeTag[String].tpe
+        case LongToken => c.typeTag[Long].tpe
+        case UUIDToken => c.typeTag[UUID].tpe
+        case RegexToken => c.typeTag[String].tpe
+        case RestToken => c.typeTag[List[String]].tpe
+        case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
+      }
+    }
+
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
         UUIDToken
@@ -41,6 +63,16 @@ object MethodsImpl {
         RegexToken
       case q"com.github.fntz.omhs.*" =>
         RestToken
+      case Apply(Apply(TypeApply(
+          Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
+        BodyToken(tpt.tpe, reader)
+    }
+
+    if (tokens.count(_.isBody) > 1) {
+      val where = tokens.collect {
+        case BodyToken(tpe, _) => tpe.resultType.toString
+      }
+      c.abort(focus, s"Too many BodyParam(${where.mkString(", ")}) arguments, but expected one")
     }
 
     val actualFunctionParameters = f.tree match {
@@ -55,18 +87,20 @@ object MethodsImpl {
         Seq.empty
     }
 
+    println(s"actual parameters: $actualFunctionParameters")
+
     if (tokens.size != actualFunctionParameters.size) {
       c.error(focus, "Args lengths are not the same")
     }
 
-    println(s"======> ${actualFunctionParameters}")
-
-    tokens.zip(actualFunctionParameters).foreach { case (p, (fp, argName)) =>
+    tokens.zip(actualFunctionParameters).foreach { case (paramToken, (funcTypeParam, argName)) =>
       // check against arguments
-      val at = getType(c, p)
-      if (at.toString != fp.toString) {
+      println(s"----> ${funcTypeParam}")
+      val at = getType(c, paramToken)
+      println(s"------> ${at.toString} ${funcTypeParam.toString} ${funcTypeParam.typeSymbol.asType.toType =:= at}")
+      if (at.toString != funcTypeParam.toString) {
         c.abort(focus, s"Incorrect type for `$argName`, " +
-          s"required: ${at.typeSymbol.name}, given: ${fp}")
+          s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
       }
 //      TODO doesn't work with List[String]
 //      if (!(fp.typeSymbol.asType.toType =:= at)) {
@@ -96,6 +130,8 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.UUIDDef($n)", n)
         case RestToken =>
           (pq"_root_.com.github.fntz.omhs.TailDef($n)", n)
+        case BodyToken(tpt, _) =>
+          (pq"_root_.com.github.fntz.omhs.BodyDef($n: ${tpt.typeSymbol})", n)
       }
     }
 
@@ -110,10 +146,13 @@ object MethodsImpl {
             def $funName() = {
               import Predef._
               val rule = new _root_.com.github.fntz.omhs.Rule(
-                _root_.com.github.fntz.omhs.HttpMethod.GET
+                ${c.prefix.tree}.obj.method
               )
-              ${c.prefix.tree}.obj.xs.map { param =>
-                rule.path(param)
+              ${c.prefix.tree}.obj.xs.map {
+                case b: BodyParam[_] =>
+                  rule.body()(b.reader)
+                case param =>
+                  rule.path(param)
               }
 
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
@@ -140,16 +179,7 @@ object MethodsImpl {
   }
 
 
-  private def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
-    import c.universe._
-    p match {
-      case StringToken => typeTag[String].tpe
-      case LongToken => typeTag[Long].tpe
-      case UUIDToken => typeTag[UUID].tpe
-      case RegexToken => typeTag[String].tpe
-      case RestToken => typeTag[List[String]].tpe
-    }
-  }
+
 
 
 }

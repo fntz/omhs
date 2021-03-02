@@ -16,5 +16,4 @@ case class RegexDef(value: String) extends ParamDef[String]
 case class TailDef(values: List[String]) extends ParamDef[List[String]] {
   override val value: List[String] = values
 }
-// ???
 case class BodyDef[T](value: T) extends ParamDef[T]
