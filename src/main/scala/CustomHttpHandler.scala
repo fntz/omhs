@@ -3,6 +3,9 @@ import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter, Si
 import io.netty.handler.codec.http._
 import io.netty.util.CharsetUtil
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 class CustomHttpHandler extends ChannelInboundHandlerAdapter {
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
@@ -11,9 +14,6 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
         val message = "test"
 
         val dec = new QueryStringDecoder(request.uri)
-        println("-"*100)
-        println(request.decoderResult())
-        println(request.content.toString(CharsetUtil.UTF_8))
 
         val response = new DefaultFullHttpResponse(
           HttpVersion.HTTP_1_1,
@@ -30,7 +30,9 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
         response.headers.set(HttpHeaderNames.CONTENT_TYPE, "text/plain")
         response.headers.set(HttpHeaderNames.CONTENT_LENGTH, message.length)
 
-        ctx.writeAndFlush(response)
+        Future.successful(1).map { _ =>
+          ctx.writeAndFlush(response)
+        }
 
       case _ =>
         super.channelRead(ctx, msg)

@@ -2,7 +2,6 @@ import com.github.fntz.omhs.methods._
 import com.github.fntz.omhs._
 import play.api.libs.json._
 
-
 object Main extends App {
   import ParamDSL._
   import p._
@@ -22,6 +21,7 @@ object Main extends App {
       )
     }
   }
+
   implicit val bodyWriterPerson = new BodyWriter[Person] {
     override def write(w: Person): CommonResponse = {
       new CommonResponse(
@@ -46,7 +46,7 @@ object Main extends App {
     println(s"========> ${person}")
     person
   }
-  val r = r1 ++ r2 ++ r3
+  val r = r1 :: r2 :: r3
 
   r.onUnhandled { r =>
     println(s"reason: $r")
@@ -54,7 +54,6 @@ object Main extends App {
   }
 
   DefaultServer.run(9000, r.toHandler)
-
 //  val x = "test"
 //
 //  get(x / LongParam |: body[Person] |: header["X-Header"])

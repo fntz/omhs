@@ -4,7 +4,7 @@ package com.github.fntz.omhs
 class CommonResponse(
                          val status: Int,
                          val contentType: String,
-                         val content: String
+                         val content: String // todo should be array of bytes
                          )
 case class OkResponse(override val content: String)
   extends CommonResponse(200, "text/plain", content)

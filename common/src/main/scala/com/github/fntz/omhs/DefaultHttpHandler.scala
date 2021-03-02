@@ -15,7 +15,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   // todo rename route
   private val logger = LoggerFactory.getLogger(getClass)
 
-  private val rules = route.currentF
+  private val rules = route.current
 
   private val currentProject = "omhs"
   private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
@@ -80,8 +80,6 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
         // todo from setup
         response.headers().set(serverHeader, nettyVersion)
-
-
 
         if (HttpUtil.isKeepAlive(request))
         {
