@@ -1,9 +1,10 @@
 package com.github.fntz.omhs.methods
 
 import scala.language.experimental.macros
-import com.github.fntz.omhs._
+import com.github.fntz.omhs.{BodyWriter, _}
 
 import java.util.UUID
+import scala.annotation.implicitNotFound
 import scala.reflect.macros.whitebox
 
 
@@ -12,9 +13,7 @@ abstract class Req {}
 object Methods {
 
   implicit class PExt(val obj: p) extends AnyVal {
-
-    implicit def ~>[T](f: T => CommonResponse): RuleAndF = macro MethodsImpl.run1[T]
-    implicit def ~>[T1, T2](f: (T1, T2) => CommonResponse): RuleAndF = macro MethodsImpl.run2[T1, T2]
+    implicit def ~>[T, R](f: T => R)(implicit w: BodyWriter[R]): RuleAndF = macro MethodsImpl.run1[T, R]
   }
 
 
@@ -25,8 +24,9 @@ object MethodsImpl {
   // get(x / LongParam) => fail
   //    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
   //      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
-  def run1[T: c.WeakTypeTag](c: whitebox.Context)
-                            (f: c.Expr[T => CommonResponse]): c.Expr[RuleAndF] = {
+  def run1[T: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                            (f: c.Expr[T => R])
+                            (w: c.Expr[BodyWriter[R]]): c.Expr[RuleAndF] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
@@ -79,6 +79,10 @@ object MethodsImpl {
 
     // todo check on empty
 
+    // todo with carrying
+    // val fresh = f _
+    // fresh(n)(n)(n) ???
+    //
     val ts = tokens.map { t =>
       val n = TermName(c.freshName())
       t match {
@@ -98,7 +102,6 @@ object MethodsImpl {
     val caseClause = ts.map(_._1)//.reduce((a, b) => q"$a::$b")
     val args = ts.map(_._2)//.map { x => tq"$x.value" }
 
-    // x.xs outside param of Ext class
     // skip body/headers/cookies for now
     val funName = TermName(c.freshName())
     val instance =
@@ -118,7 +121,7 @@ object MethodsImpl {
                   println(defs)
                   defs match {
                     case ..$caseClause :: Nil =>
-                      $f(...$args)
+                      implicitly[BodyWriter[${c.weakTypeOf[R]}]].write($f(...$args))
                     case _ =>
                       println("======TODO==============")
                       com.github.fntz.omhs.CommonResponse.empty
@@ -134,13 +137,6 @@ object MethodsImpl {
         println(instance)
 
     c.Expr[RuleAndF](instance)
-  }
-
-  def run2[T1: c.WeakTypeTag, T2: c.WeakTypeTag](c: whitebox.Context)
-                                                (f: c.Expr[(T1, T2) => CommonResponse]): c.Expr[RuleAndF] = {
-    import c.universe._
-
-    c.Expr[RuleAndF](q"???")
   }
 
 
