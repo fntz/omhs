@@ -37,17 +37,20 @@ class Rule(val method: HttpMethod) {
     this
   }
 
-//  def ::(other: Rule): Route = {
-//    val r = new Route
-//    r.addRule(this)
-//      .addRule(other)
-//  }
-
   override def toString: String = {
     s"$method ${paths.mkString("/")}"
   }
 
 }
+
+/*
+class RF(override val method: HttpMethod) extends Rule(method) {
+  def run[R](x: Long, p: String, f: (Long, String) => CommonResponse)
+            (implicit bw: BodyWriter[R]): CommonResponse = {
+    f.apply(x, p)
+  }
+}
+*/
 
 object Get {
   def apply(): Rule = new Rule(HttpMethod.GET)

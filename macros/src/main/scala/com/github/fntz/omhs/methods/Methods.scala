@@ -9,47 +9,39 @@ import scala.reflect.macros.whitebox
 
 abstract class Req {}
 
-/*
-  case class Req()
-  val r = get("test" / LongParam) { req =>  }
- */
-
-
 object Methods {
 
-  implicit class PExt(val x: p) extends AnyVal {
+  implicit class PExt(val obj: p) extends AnyVal {
 
-    implicit def ~>[T](f: T => Unit): Unit = macro MethodsImpl.run1[T]
-    implicit def ~>[T1, T2](f: (T1, T2) => Unit): Unit = macro MethodsImpl.run2[T1, T2]
+    implicit def ~>[T](f: T => CommonResponse): RuleAndF = macro MethodsImpl.run1[T]
+    implicit def ~>[T1, T2](f: (T1, T2) => CommonResponse): RuleAndF = macro MethodsImpl.run2[T1, T2]
   }
 
 
 }
 
 object MethodsImpl {
-
+  // val x = "test"
+  // get(x / LongParam) => fail
+  //    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
+  //      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
   def run1[T: c.WeakTypeTag](c: whitebox.Context)
-                            (f: c.Expr[T => Unit]): c.Expr[Unit] = {
+                            (f: c.Expr[T => CommonResponse]): c.Expr[RuleAndF] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
-    val params = c.prefix.tree.collect {
+    val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
-        UUIDParam
+        UUIDToken
       case q"com.github.fntz.omhs.StringParam" =>
-        StringParam
+        StringToken
       case q"com.github.fntz.omhs.LongParam" =>
-        LongParam
+        LongToken
       case q"com.github.fntz.omhs.RegexParam" =>
-        RegexParam("".r) // stub
+        RegexToken
       case q"com.github.fntz.omhs.*" =>
-        *
+        RestToken
     }
-
-    // val x = "test"
-    // get(x / LongParam) => fail
-//    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
-//      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
 
     val actualFunctionParameters = f.tree match {
       case q"(..$params) => $_" =>
@@ -63,11 +55,11 @@ object MethodsImpl {
         Seq.empty
     }
 
-    if (params.size != actualFunctionParameters.size) {
+    if (tokens.size != actualFunctionParameters.size) {
       c.error(focus, "Args lengths are not the same")
     }
 
-    params.zip(actualFunctionParameters).foreach { case (p, (fp, argName)) =>
+    tokens.zip(actualFunctionParameters).foreach { case (p, (fp, argName)) =>
       // check against arguments
       val at = getType(c, p)
       if (!(fp.typeSymbol.asType.toType =:= at)) {
@@ -76,35 +68,81 @@ object MethodsImpl {
       }
     }
 
-    // parseValues
+    // todo http method pass somehow
 
-    // build netty request
+    // todo check on empty
 
-    // return wrapped object
-
-
-    c.Expr[Unit](q"()")
-  }
-
-  def getType(c: whitebox.Context, p: Param): c.universe.Type = {
-    import c.universe._
-    p match {
-      case _: HardCodedParam =>    typeTag[String].tpe
-      case StringParam => typeTag[String].tpe
-      case LongParam => typeTag[Long].tpe
-      case UUIDParam => typeTag[UUID].tpe
-      case _: RegexParam => typeTag[String].tpe
-      case * => typeTag[List[String]].tpe
+    val ts = tokens.map { t =>
+      val n = TermName(c.freshName())
+      t match {
+        case StringToken =>
+          (pq"_root_.com.github.fntz.omhs.StringDef($n: String)", n, false)
+        case LongToken =>
+          (pq"_root_.com.github.fntz.omhs.LongDef($n: scala.Long)", n, true)
+        case RegexToken =>
+          (pq"_root_.com.github.fntz.omhs.RegexDef($n: scala.util.matching.Regex)", n, false)
+        case UUIDToken =>
+          (pq"_root_.com.github.fntz.omhs.UUIDDef($n: java.util.UUID)", n, false)
+        case RestToken =>
+          (pq"_root_.com.github.fntz.omhs.TailDef($n: scala.collection.immutable.List[String])", n, false)
+      }
     }
+
+    val caseClause = ts.map(_._1).reduce((a, b) => q"$a :: $b")
+    val args = ts.map(_._2)
+
+    // x.xs outside param of Ext class
+    // skip body/headers/cookies for now
+    val funName = TermName(c.freshName())
+    val instance =
+      q"""
+        {
+            def $funName() = {
+              import Predef._
+              val rule = new _root_.com.github.fntz.omhs.Rule(
+                _root_.com.github.fntz.omhs.HttpMethod.GET
+              )
+              ${c.prefix.tree}.obj.xs.map { param =>
+                rule.path(param)
+              }
+              val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
+                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.CommonResponse = {
+                  println(defs)
+                  defs match {
+                    case $caseClause :: Nil =>
+                      $f(..$args)
+                    case _ =>
+                      println("====================")
+                      com.github.fntz.omhs.CommonResponse.empty
+                  }
+                }
+              }
+              rf
+            }
+            $funName()
+        }
+        """
+
+    c.Expr[RuleAndF](instance)
   }
-
-
 
   def run2[T1: c.WeakTypeTag, T2: c.WeakTypeTag](c: whitebox.Context)
-                                                (f: c.Expr[(T1, T2) => Unit]): c.Expr[Unit] = {
+                                                (f: c.Expr[(T1, T2) => CommonResponse]): c.Expr[RuleAndF] = {
     import c.universe._
 
-    c.Expr[Unit](q"()")
+    c.Expr[RuleAndF](q"???")
+  }
+
+
+  private def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
+    import c.universe._
+    p match {
+      case StringToken => typeTag[String].tpe
+      case LongToken => typeTag[Long].tpe
+      case UUIDToken => typeTag[UUID].tpe
+      case RegexToken => typeTag[String].tpe
+      case RestToken => typeTag[List[String]].tpe
+    }
   }
 
 

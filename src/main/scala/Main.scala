@@ -2,7 +2,7 @@ import com.github.fntz.omhs.methods._
 import com.github.fntz.omhs._
 import play.api.libs.json._
 
-object Main extends App {
+object Main {
   import ParamDSL._
   import p._
   import Methods._
@@ -53,11 +53,10 @@ object Main extends App {
     new CommonResponse(500, "text/plain", r.toString)
   }
 
-  DefaultServer.run(9000, r.toHandler)
-//  val x = "test"
-//
-//  get(x / LongParam |: body[Person] |: header["X-Header"])
-  //  ~> { (x: Long, person, xHeader) =>
+//  DefaultServer.run(9000, r.toHandler)
+  val x = "test"
+
+//  get(x / LongParam) ~> { (x: Long) =>
 //    println(x)
 //  }
 

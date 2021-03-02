@@ -4,6 +4,13 @@ import scala.util.matching.Regex
 import java.util.UUID
 import scala.util.Try
 
+sealed trait ParamToken
+case object StringToken extends ParamToken
+case object LongToken extends ParamToken
+case object UUIDToken extends ParamToken
+case object RegexToken extends ParamToken
+case object RestToken extends ParamToken
+
 sealed trait Param {
   def isRestParam: Boolean = false
   def isUserDefined: Boolean = false

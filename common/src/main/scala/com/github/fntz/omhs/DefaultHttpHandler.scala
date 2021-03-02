@@ -16,6 +16,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val rules = route.current
+  private val unhanded = route.currentUnhandled
 
   private val currentProject = "omhs"
   private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
@@ -39,41 +40,38 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         val target = decoder.rawPath()
         val headers = request.headers()
 
-        val result = rules.map(x => (x, Param.parse(target, x.rule.params)))
+        // todo from map method -> params
+        val result = rules
+          .map(x => (x, Param.parse(target, x.rule.params))).find(_._2.isSuccess)
 
-        val first = result.find(_._2.isSuccess)
-
-        // todo on big screen :)
-        var strBody = ""
-
-        if (request.method() == HM.POST) {
-          val tmp = request.decoderResult()
-          // todo stop processing here and push unparsed
-          if (tmp.isSuccess) {
-            strBody = request.content.toString(CharsetUtil.UTF_8)
-          }
-        }
-
-        val matchResult = first match {
+        val matchResult = result match {
           case Some((r, ParseResult(_, defs))) =>
-            val real = defs.filterNot(_.skip)
+            val real = defs.filterNot(_.skip).toList
             try {
-              if (strBody.nonEmpty) {
-                val parsed = r.rule.currentReader.read(strBody)
-                r.run(real ++ Vector(BodyDef(parsed)))
+              // only if body is needed
+              // if isNeedToParseBody && ...
+              if (request.decoderResult().isSuccess) {
+                val strBody = request.content.toString(CharsetUtil.UTF_8)
+                if (strBody.nonEmpty) {
+                  val parsed = r.rule.currentReader.read(strBody)
+                  r.run(real ++ List(BodyDef(parsed)))
+                } else { // is it error? need to check in tests
+                  // todo add error because body is unparsable and log error from decoderResult()
+                  r.run(real)
+                }
               } else {
-                r.run(real)
+                logger.warn(s"Can not parse body", request.decoderResult().cause())
+                unhanded.apply(BodyIsUnparsable)
               }
-
             } catch {
               case t: Throwable =>
                 logger.warn("Failed to call function", t)
-                route.currentUnhandled.apply(UnhandledException(t))
+                unhanded.apply(UnhandledException(t))
             }
 
           case _ =>
             logger.debug(s"No matched route for ${request.uri()}")
-            route.currentUnhandled.apply(PathNotFound)
+            unhanded.apply(PathNotFound)
         }
 
         val response = empty.replace(Unpooled.copiedBuffer(matchResult.content.getBytes))

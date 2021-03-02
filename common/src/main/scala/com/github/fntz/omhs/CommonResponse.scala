@@ -6,6 +6,9 @@ class CommonResponse(
                          val contentType: String,
                          val content: String // todo should be array of bytes
                          )
+object CommonResponse {
+  val empty = new CommonResponse(200, "text/plain", "")
+}
 case class OkResponse(override val content: String)
   extends CommonResponse(200, "text/plain", content)
 
