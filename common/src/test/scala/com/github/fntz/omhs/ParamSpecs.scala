@@ -10,54 +10,58 @@ class ParamSpecs extends Specification {
 
   private val uuid = UUID.randomUUID()
 
+  private def parse(target: String, xs: Vector[Param]) = {
+    Param.parse(target, xs.collect { case x: PathParam => x })
+  }
+
   "params check" should {
     "#check" in {
       val a = "test" / LongParam / "abc"
-      Param.parse("/test/123/abc", a) ==== ParseResult(
-        success = true, Vector(EmptyDef("test"), LongDef(123), EmptyDef("abc"))
+      parse("/test/123/abc", a) ==== ParseResult(
+        success = true, List(EmptyDef("test"), LongDef(123), EmptyDef("abc"))
       )
-      Param.parse("/test/asd/abc", a).isSuccess must beFalse
-      Param.parse("test/", a).isSuccess must beFalse
+      parse("/test/asd/abc", a).isSuccess must beFalse
+      parse("test/", a.asInstanceOf[Vector[PathParam]]).isSuccess must beFalse
 
       val b = LongParam / "test"
-      Param.parse("/test/123", b).isSuccess must beFalse
-      Param.parse("/123/123", b).isSuccess must beFalse
-      Param.parse("123", b).isSuccess must beFalse
-      Param.parse("123/test", b) ==== ParseResult(
-        success = true, Vector(LongDef(123), EmptyDef("test"))
+      parse("/test/123", b).isSuccess must beFalse
+      parse("/123/123", b).isSuccess must beFalse
+      parse("123", b).isSuccess must beFalse
+      parse("123/test", b) ==== ParseResult(
+        success = true, List(LongDef(123), EmptyDef("test"))
       )
 
       val c = "test" / "abc"
-      Param.parse("/test/123", c).isSuccess must beFalse
-      Param.parse("/test/abc/123", c).isSuccess must beFalse
-      Param.parse("/test/abc", c) ==== ParseResult(
-        success = true, Vector(EmptyDef("test"), EmptyDef("abc"))
+      parse("/test/123", c).isSuccess must beFalse
+      parse("/test/abc/123", c).isSuccess must beFalse
+      parse("/test/abc", c) ==== ParseResult(
+        success = true, List(EmptyDef("test"), EmptyDef("abc"))
       )
 
       val d = "test" / UUIDParam / "abc" / *
-      Param.parse(s"/test/$uuid", d).isSuccess must beFalse
-      Param.parse(s"/foo/$uuid/abc/123/bar", d).isSuccess must beFalse
-      Param.parse(s"/test/$uuid/abc/123", d) ==== ParseResult(
-        success = true, Vector(EmptyDef("test"), UUIDDef(uuid),
+      parse(s"/test/$uuid", d).isSuccess must beFalse
+      parse(s"/foo/$uuid/abc/123/bar", d).isSuccess must beFalse
+      parse(s"/test/$uuid/abc/123", d) ==== ParseResult(
+        success = true, List(EmptyDef("test"), UUIDDef(uuid),
           EmptyDef("abc"), TailDef(List("123")))
       )
-      Param.parse(s"/test/$uuid/abc/123/bar", d) ==== ParseResult(
-        success = true, Vector(EmptyDef("test"), UUIDDef(uuid),
+      parse(s"/test/$uuid/abc/123/bar", d) ==== ParseResult(
+        success = true, List(EmptyDef("test"), UUIDDef(uuid),
           EmptyDef("abc"), TailDef(List("123", "bar")))
       )
 
       val e = UUIDParam / LongParam
-      Param.parse(s"/test/$uuid", e).isSuccess must beFalse
-      Param.parse(s"/$uuid/asd", e).isSuccess must beFalse
-      Param.parse(s"/$uuid/123/asd", e).isSuccess must beFalse
-      Param.parse(s"/$uuid/123/123", e).isSuccess must beFalse
-      Param.parse(s"/$uuid/123", e) ==== ParseResult(
-        success = true, Vector(UUIDDef(uuid), LongDef(123))
+      parse(s"/test/$uuid", e).isSuccess must beFalse
+      parse(s"/$uuid/asd", e).isSuccess must beFalse
+      parse(s"/$uuid/123/asd", e).isSuccess must beFalse
+      parse(s"/$uuid/123/123", e).isSuccess must beFalse
+      parse(s"/$uuid/123", e) ==== ParseResult(
+        success = true, List(UUIDDef(uuid), LongDef(123))
       )
 
       val f = UUIDParam / "test"
-      Param.parse(s"$uuid/test?asd=123", f) ==== ParseResult(
-        success = true, Vector(UUIDDef(uuid), EmptyDef("test"))
+      parse(s"$uuid/test?asd=123", f) ==== ParseResult(
+        success = true, List(UUIDDef(uuid), EmptyDef("test"))
       )
     }
 
