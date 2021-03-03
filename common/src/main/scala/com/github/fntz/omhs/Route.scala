@@ -8,7 +8,7 @@ class Route {
     val result = reason match {
       case PathNotFound(value) => (404, value)
       case CookieIsMissing(value) => (400, s"cookie: $value is missing")
-      case HeaderIsMissing(value) => (400, s"cookie: $value is missing")
+      case HeaderIsMissing(value) => (400, s"header: $value is missing")
       case BodyIsUnparsable => (400, s"body is incorrect")
       case UnhandledException(ex) => (500, s"$ex")
     }

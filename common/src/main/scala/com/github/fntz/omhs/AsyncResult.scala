@@ -3,7 +3,7 @@ package com.github.fntz.omhs
 import scala.concurrent.{ExecutionContext, Future}
 
 class AsyncResult {
-
+// todo atomic: set in one thread, read in another
   private var value: CommonResponse = null.asInstanceOf[CommonResponse]
   private var completeWith: CommonResponse => Unit = null
 

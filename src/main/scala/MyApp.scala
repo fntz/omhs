@@ -46,7 +46,7 @@ object MyApp extends App {
     }
   }
 
-  val r = get(x / HeaderParam("User-Agent")) ~> { (x: String) =>
+  val r = get(x / HeaderParam("User-Agent1")) ~> { (x: String) =>
     println(s"-------- ${x}")
     s"tst: ${x}"
   }

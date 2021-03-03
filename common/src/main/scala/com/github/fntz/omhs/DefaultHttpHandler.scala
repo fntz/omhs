@@ -2,7 +2,7 @@ package com.github.fntz.omhs
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
+import io.netty.channel.{ChannelFuture, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
@@ -13,26 +13,16 @@ import scala.language.existentials
 @Sharable
 class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAdapter {
 
+  import DefaultHttpHandler._
+
   // todo rename route
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val rules = route.current
+  private val byMethod = route.current.groupBy(_.rule.method)
   private val unhanded = route.currentUnhandled
 
-  private val currentProject = "omhs"
-  private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
-    .map { v => s"netty-${v.artifactVersion()}"}
-    .getOrElse("unknown")
-  private val serverHeader = "X-Server-Version"
-  private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
-
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-    import AsyncResult._
-    val empty = new DefaultFullHttpResponse(
-      HttpVersion.HTTP_1_1,
-      HttpResponseStatus.OK,
-      Unpooled.EMPTY_BUFFER
-    )
     // todo from setup
     empty.headers().set(serverHeader, nettyVersion)
 
@@ -45,9 +35,9 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
 
-        // todo from map method -> params
-        val result = rules
-          .map(x => (x, Param.parse(target, x.rule.params)))
+        // todo findFirst
+        val result = byMethod.getOrElse(request.method(), Vector.empty)
+          .map { x => (x, Param.parse(target, x.rule.params)) }
           .find(_._2.isSuccess)
 
         val matchResult = result match {
@@ -74,9 +64,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         matchResult.onComplete { v: CommonResponse =>
           done(
             ctx = ctx,
-            request = request,
-            response = empty.replace(
-              Unpooled.copiedBuffer(v.content)),
+            isKeepAlive = HttpUtil.isKeepAlive(request),
             userResponse = v
           )
         }
@@ -87,10 +75,12 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   }
 
   protected def done(ctx: ChannelHandlerContext,
-                     request: FullHttpRequest,
-                     response: FullHttpResponse,
-                     userResponse: CommonResponse) = {
-    if (HttpUtil.isKeepAlive(request)) {
+                     isKeepAlive: Boolean,
+                     userResponse: CommonResponse): ChannelFuture = {
+
+    val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
+
+    if (isKeepAlive) {
       response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content.readableBytes)
       response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
     }
@@ -116,6 +106,19 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 }
 
 object DefaultHttpHandler {
+
+  private val currentProject = "omhs"
+  private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
+    .map { v => s"netty-${v.artifactVersion()}"}
+    .getOrElse("unknown")
+  private val serverHeader = "X-Server-Version"
+  private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
+  private val empty = new DefaultFullHttpResponse(
+    HttpVersion.HTTP_1_1,
+    HttpResponseStatus.OK,
+    Unpooled.EMPTY_BUFFER
+  )
+
   // params:
   // - do not pass X-Server-Version
   // - ignore-case
