@@ -43,16 +43,20 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             try {
               RequestHelper.materialize(request, r.rule) match {
                 case Right(defs) =>
-                  // if req is needed
-                  val currentRequest = CurrentHttpRequest(
-                    uri = request.uri(),
-                    path = target,
-                    query = decoder.rawQuery(),
-                    method = request.method(),
-                    headers = request.headers(),
-                    rawBody = request.content.toString(CharsetUtil.UTF_8)
-                  )
-                  r.run(real ++ defs)
+                  val reqDef = if (r.rule.isRunWithRequest) {
+                    val currentRequest = CurrentHttpRequest(
+                      uri = request.uri(),
+                      path = target,
+                      query = decoder.rawQuery(),
+                      method = request.method(),
+                      headers = request.headers(),
+                      rawBody = request.content.toString(CharsetUtil.UTF_8)
+                    )
+                    List(CurrentHttpRequestDef(currentRequest))
+                  } else {
+                    Nil
+                  }
+                  r.run(real ++ defs ++ reqDef)
                 case Left(reason) =>
                   AsyncResult.completed(unhanded.apply(reason))
               }

@@ -40,18 +40,22 @@ object MyApp extends App {
   val xx = "/a/".r
   val k = RegexParam(xx)
 
-  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
+  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person, req: CurrentHttpRequest) =>
+    println(s"----> ${req.headers}")
     Future {
       x
     }
   }
 
-  val r = get(x / HeaderParam("User-Agent")) ~> { (x: String) =>
-    println(s"-------- ${x}")
-    s"tst: ${x}"
+  val r = get(x / LongParam / HeaderParam("User-Agent")) ~> {
+      (y: Long, x: String, req: CurrentHttpRequest) =>
+    println(s"-------- ${x} + $y")
+    s"tst: $y ----> ${x} ${req.uri}"
   }
 
-//  val t = (new Route).addRule(r1)
+
+
+//  val t = (new Route).addRule(r)
   val t = r :: r1
 
   DefaultServer.run(9000, t.toHandler)

@@ -13,13 +13,22 @@ class Rule(val method: HttpMethod) {
 
   private var isBodyNeeded = false
 
+  private var isCurrentRequestNeeded: Boolean = false
+
   def params: Vector[PathParam] = paths.toVector
 
   def currentHeaders: Vector[String] = headers.toVector
 
   def isParseBody = isBodyNeeded
 
+  def isRunWithRequest = isCurrentRequestNeeded
+
   def currentReader = reader
+
+  def withRequest(): Rule = {
+    isCurrentRequestNeeded = true
+    this
+  }
 
   // : Reader
   def body[T]()(implicit reader: BodyReader[T]): Rule = {

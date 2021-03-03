@@ -4,26 +4,125 @@ import scala.language.experimental.macros
 import com.github.fntz.omhs.{BodyWriter, _}
 
 import java.util.UUID
+import scala.reflect.api.Trees
 import scala.reflect.macros.whitebox
 
 object Methods {
 
   implicit class PExt(val obj: p) extends AnyVal {
-    implicit def ~>[T, R](f: T => R): RuleAndF = macro MethodsImpl.run1[T, R]
+    implicit def ~>[R](f: () => R): RuleAndF =
+    macro MethodsImpl.run0[R]
+    implicit def ~>[T, R](f: T => R): RuleAndF =
+      macro MethodsImpl.run1[T, R]
+    implicit def ~>[T1, T2, R](f: (T1, T2) => R): RuleAndF =
+      macro MethodsImpl.run2[T1, T2, R]
+    implicit def ~>[T1, T2, T3, R](f: (T1, T2, T3) => R): RuleAndF =
+      macro MethodsImpl.run3[T1, T2, T3, R]
+    implicit def ~>[T1, T2, T3, T4, R](f: (T1, T2, T3, T4) => R): RuleAndF =
+      macro MethodsImpl.run4[T1, T2, T3, T4,  R]
+    implicit def ~>[T1, T2, T3, T4, T5, R](f: (T1, T2, T3, T4, T5) => R): RuleAndF =
+      macro MethodsImpl.run5[T1, T2, T3, T4, T5, R]
+    implicit def ~>[T1, T2, T3, T4, T5, T6, R](f: (T1, T2, T3, T4, T5, T6) => R): RuleAndF =
+      macro MethodsImpl.run6[T1, T2, T3, T4, T5, T6, R]
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, R](f: (T1, T2, T3, T4, T5, T6, T7) => R): RuleAndF =
+      macro MethodsImpl.run7[T1, T2, T3, T4, T5, T6, T7, R]
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, R](f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): RuleAndF =
+      macro MethodsImpl.run8[T1, T2, T3, T4, T5, T6, T7, T8, R]
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R): RuleAndF =
+      macro MethodsImpl.run9[T1, T2, T3, T4, T5, T6, T7, T8, T9, R]
   }
 
 
 }
 
+
 object MethodsImpl {
-  // (w: c.Expr[BodyWriter[R]])
-  // val x = "test"
-  // get(x / LongParam) => fail
-  //    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
-  //      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
+
+  def run0[R: c.WeakTypeTag](c: whitebox.Context)
+                           (f: c.Expr[() => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
   def run1[T: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                            (f: c.Expr[T => R])
-                            : c.Expr[RuleAndF] = {
+                                              (f: c.Expr[T => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run2[T1: c.WeakTypeTag, T2: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                              (f: c.Expr[(T1, T2) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run3[T1: c.WeakTypeTag, T2: c.WeakTypeTag, T3: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                                                  (f: c.Expr[(T1, T2, T3) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run4[T1: c.WeakTypeTag,
+           T2: c.WeakTypeTag,
+           T3: c.WeakTypeTag,
+           T4: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                  (f: c.Expr[(T1, T2, T3, T4) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run5[T1: c.WeakTypeTag,
+    T2: c.WeakTypeTag,
+    T3: c.WeakTypeTag,
+    T4: c.WeakTypeTag,
+    T5: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                        (f: c.Expr[(T1, T2, T3, T4, T5) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run6[T1: c.WeakTypeTag,
+    T2: c.WeakTypeTag,
+    T3: c.WeakTypeTag,
+    T4: c.WeakTypeTag,
+    T5: c.WeakTypeTag,
+    T6: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run7[T1: c.WeakTypeTag,
+    T2: c.WeakTypeTag,
+    T3: c.WeakTypeTag,
+    T4: c.WeakTypeTag,
+    T5: c.WeakTypeTag,
+    T6: c.WeakTypeTag,
+    T7: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run8[T1: c.WeakTypeTag,
+    T2: c.WeakTypeTag,
+    T3: c.WeakTypeTag,
+    T4: c.WeakTypeTag,
+    T5: c.WeakTypeTag,
+    T6: c.WeakTypeTag,
+    T7: c.WeakTypeTag,
+    T8: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+  def run9[T1: c.WeakTypeTag,
+    T2: c.WeakTypeTag,
+    T3: c.WeakTypeTag,
+    T4: c.WeakTypeTag,
+    T5: c.WeakTypeTag,
+    T6: c.WeakTypeTag,
+    T7: c.WeakTypeTag,
+    T8: c.WeakTypeTag,
+    T9: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9) => R]): c.Expr[RuleAndF] = {
+    generate(c)(f.tree)
+  }
+
+
+  private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[RuleAndF] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
@@ -41,9 +140,9 @@ object MethodsImpl {
       override def isBody: Boolean = true
     }
     case object HeaderToken extends ParamToken
+    case object CurrentRequestToken extends ParamToken
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
-      import c.universe._
       p match {
         case StringToken => c.typeTag[String].tpe
         case LongToken => c.typeTag[Long].tpe
@@ -52,6 +151,7 @@ object MethodsImpl {
         case RestToken => c.typeTag[List[String]].tpe
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
         case HeaderToken => c.typeTag[String].tpe
+        case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
       }
     }
 
@@ -70,9 +170,9 @@ object MethodsImpl {
       case q"com.github.fntz.omhs.HeaderParam" =>
         HeaderToken
       case Apply(Apply(TypeApply(
-          Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
+      Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
-    }
+    }.to[scala.collection.mutable.ArrayBuffer]
 
     if (tokens.count(_.isBody) > 1) {
       val where = tokens.collect {
@@ -81,7 +181,7 @@ object MethodsImpl {
       c.abort(focus, s"Too many BodyParam(${where.mkString(", ")}) arguments, but expected one")
     }
 
-    val actualFunctionParameters = f.tree match {
+    val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
         params.collect {
           case q"$_ val $tname: $tpt = $_" =>
@@ -94,6 +194,20 @@ object MethodsImpl {
     }
     println(s"actual parameters: $actualFunctionParameters")
 
+    val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
+    def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
+    val isReqParamNeeded = actualFunctionParameters.exists(x => isReqParam(x._1))
+
+    println(s"need to pass requestParam? $isReqParamNeeded")
+
+    if (!(isReqParamNeeded && isReqParam(actualFunctionParameters.last._1))) {
+      c.error(focus, s"${reqType} must the last argument in the function")
+    }
+
+    if (isReqParamNeeded) {
+      tokens += CurrentRequestToken
+    }
+
     if (tokens.size != actualFunctionParameters.size) {
       c.error(focus, "Args lengths are not the same")
     }
@@ -105,11 +219,11 @@ object MethodsImpl {
         c.abort(focus, s"Incorrect type for `$argName`, " +
           s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
       }
-//      TODO doesn't work with List[String]
-//      if (!(fp.typeSymbol.asType.toType =:= at)) {
-//        c.abort(focus, s"Incorrect type for `$argName`, " +
-//              s"required: ${at.typeSymbol.name}, given: ${fp}")
-//      }
+      //      TODO doesn't work with List[String]
+      //      if (!(fp.typeSymbol.asType.toType =:= at)) {
+      //        c.abort(focus, s"Incorrect type for `$argName`, " +
+      //              s"required: ${at.typeSymbol.name}, given: ${fp}")
+      //      }
     }
 
     // todo check on empty
@@ -135,10 +249,12 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.BodyDef($n: ${tpt.typeSymbol})", n)
         case HeaderToken =>
           (pq"_root_.com.github.fntz.omhs.HeaderDef($n)", n)
+        case CurrentRequestToken =>
+          (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($n)", n)
       }
     }
 
-    val caseClause = ts.map(_._1)
+    val caseClause = q"List(..${ts.map(_._1)})"
     val args = ts.map(_._2)
 
     // skip cookies for now
@@ -159,12 +275,16 @@ object MethodsImpl {
                   rule.path(param)
               }
 
+              if ($isReqParamNeeded) {
+                rule.withRequest()
+              }
+
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   defs match {
-                    case ..$caseClause :: Nil =>
-                      $f(...$args)
+                    case $caseClause =>
+                      $f(..$args)
                     case _ =>
                       println("======TODO==============")
                       _root_.com.github.fntz.omhs.AsyncResult.completed(
@@ -178,13 +298,11 @@ object MethodsImpl {
             $funName()
         }
         """
-        //implicitly[BodyWriter[${c.weakTypeOf[R]}]].write($f(...$args))
+
+    println(instance)
 
     c.Expr[RuleAndF](instance)
   }
-
-
-
 
 
 }

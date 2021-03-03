@@ -20,3 +20,4 @@ case class TailDef(values: List[String]) extends PathParamDef[List[String]] {
 }
 case class BodyDef[T](value: T) extends ParamDef[T]
 case class HeaderDef(value: String) extends ParamDef[String]
+case class CurrentHttpRequestDef(value: CurrentHttpRequest) extends ParamDef[CurrentHttpRequest]
