@@ -2,12 +2,18 @@ import com.github.fntz.omhs.methods._
 import com.github.fntz.omhs._
 import play.api.libs.json._
 
+import scala.concurrent.Future
+
 object Main {
+  /*
   import ParamDSL._
   import p._
   import Methods._
   import DefaultHttpHandler._
   import RuleDSL._
+  import AsyncResult._
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Person(id: Int, name: String)
   implicit val personBodyReader = new BodyReader[Person] {
@@ -44,7 +50,7 @@ object Main {
   val r3 = Post()
     .path("example").body[Person]() ~> { (person: Person) =>
     println(s"========> ${person}")
-    person
+    Future(person)
   }
   val r = r1 :: r2 :: r3
 
@@ -59,6 +65,8 @@ object Main {
 //  get(x / LongParam) ~> { (x: Long) =>
 //    println(x)
 //  }
+
+   */
 
 
 }

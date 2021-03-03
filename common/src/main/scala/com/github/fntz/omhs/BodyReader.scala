@@ -5,5 +5,5 @@ trait BodyReader[T] {
 }
 
 trait BodyWriter[W] {
-  def write(w: W): CommonResponse
+  def write(w: W): Response
 }

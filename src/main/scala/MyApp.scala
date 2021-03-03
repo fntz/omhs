@@ -1,15 +1,17 @@
 import com.github.fntz.omhs.methods.Methods
-import com.github.fntz.omhs.{*, BodyParam, BodyReader, BodyWriter, CommonResponse, DefaultHttpHandler, HeaderParam, LongParam, ParamDSL, ParamDef, RegexParam, Route, RuleDSL, StringParam, UUIDParam, p}
+import com.github.fntz.omhs._
 import play.api.libs.json.Json
 
-import java.util.UUID
+import scala.concurrent.Future
 
 object MyApp extends App {
+  import DefaultHttpHandler._
+  import Methods._
   import ParamDSL._
   import p._
-  import Methods._
-  import RuleDSL._
-  import DefaultHttpHandler._
+  import AsyncResult._
+
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Person(id: Int, name: String)
 
@@ -24,6 +26,7 @@ object MyApp extends App {
       )
     }
   }
+
   implicit val bodyWriterPerson = new BodyWriter[Person] {
     override def write(w: Person): CommonResponse = {
       new CommonResponse(
@@ -34,24 +37,29 @@ object MyApp extends App {
     }
   }
 
+  implicit def bwf[T](implicit writer: BodyWriter[T]) = new BodyWriter[Future[T]] {
+    override def write(w: Future[T]): Response = {
+      AsyncResponse(w.toAsync)
+    }
+  }
+
   val x = "test"
   val xx = "/a/".r
   val k = RegexParam(xx)
 
-//  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
-//    println("="*100)
-//    x
-//  }
-//
-//  println(s"---------> $r1")
+  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
+    Future{
+      x
+    }
+  }
 
   val r = get(x / HeaderParam("User-Agent")) ~> { (x: String) =>
     println(s"-------- ${x}")
     s"tst: ${x}"
   }
 
-  val t = (new Route).addRule(r)
-//  val t = r :: r1
+//  val t = (new Route).addRule(r1)
+  val t = r :: r1
 
   DefaultServer.run(9000, t.toHandler)
 

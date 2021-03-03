@@ -159,7 +159,7 @@ object MethodsImpl {
               }
 
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.CommonResponse = {
+                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.Response = {
                   println(defs)
                   defs match {
                     case ..$caseClause :: Nil =>

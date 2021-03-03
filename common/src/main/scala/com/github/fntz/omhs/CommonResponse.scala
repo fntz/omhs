@@ -1,16 +1,13 @@
 package com.github.fntz.omhs
 
 // content-type
-class CommonResponse(
-                         val status: Int,
-                         val contentType: String,
-                         val content: String // todo should be array of bytes
-                         )
+sealed trait Response
+case class CommonResponse(
+                         status: Int,
+                         contentType: String,
+                         content: String // todo should be array of bytes
+                         ) extends Response
+case class AsyncResponse[T](asyncResult: AsyncResult[T]) extends Response
 object CommonResponse {
   val empty = new CommonResponse(200, "text/plain", "")
 }
-case class OkResponse(override val content: String)
-  extends CommonResponse(200, "text/plain", content)
-
-case class NotFoundResponse(override val content: String)
-  extends CommonResponse(404, "text/plain", content)

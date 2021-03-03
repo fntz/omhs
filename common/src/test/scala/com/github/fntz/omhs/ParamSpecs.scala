@@ -10,10 +10,6 @@ class ParamSpecs extends Specification {
 
   private val uuid = UUID.randomUUID()
 
-  private def parse(target: String, xs: Vector[Param]) = {
-    Param.parse(target, xs.collect { case x: PathParam => x })
-  }
-
   "params check" should {
     "#check" in {
       val a = "test" / LongParam / "abc"
@@ -85,6 +81,10 @@ class ParamSpecs extends Specification {
       re.check("grey") must beTrue
       re.check("gray") must beTrue
     }
+  }
+
+  private def parse(target: String, xs: Vector[Param]) = {
+    Param.parse(target, xs.collect { case x: PathParam => x })
   }
 
 }

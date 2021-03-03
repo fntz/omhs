@@ -72,23 +72,49 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             unhanded.apply(PathNotFound(request.uri()))
         }
 
-        val response = empty.replace(Unpooled.copiedBuffer(matchResult.content.getBytes))
+        matchResult match {
+          case c: CommonResponse =>
+            done(
+              ctx = ctx,
+              request = request,
+              response = empty.replace(Unpooled.copiedBuffer(c.content.getBytes)),
+              userResponse = c
+            )
 
-        if (HttpUtil.isKeepAlive(request)) {
-          empty.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content.readableBytes)
-          empty.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
+          case AsyncResponse(asyncResult) =>
+            asyncResult.onComplete { v =>
+              // todo handle it (instanceOf)
+              val responseResult = asyncResult.writer
+                .write(v).asInstanceOf[CommonResponse]
+              done(
+                ctx = ctx,
+                request = request,
+                response = empty.replace(Unpooled.copiedBuffer(responseResult.content.getBytes)),
+                userResponse = responseResult
+              )
+            }
+
         }
-
-        response.setStatus(HttpResponseStatus.valueOf(matchResult.status))
-        response.headers.set(HttpHeaderNames.CONTENT_TYPE, matchResult.contentType)
-        response.headers.set(HttpHeaderNames.CONTENT_LENGTH, matchResult.content.length)
-
-        ctx.writeAndFlush(response)
-
 
       case _ =>
         super.channelRead(ctx, msg)
     }
+  }
+
+  protected def done(ctx: ChannelHandlerContext,
+                     request: FullHttpRequest,
+                     response: FullHttpResponse,
+                     userResponse: CommonResponse) = {
+    if (HttpUtil.isKeepAlive(request)) {
+      response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content.readableBytes)
+      response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
+    }
+
+    response.setStatus(HttpResponseStatus.valueOf(userResponse.status))
+    response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
+    response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
+
+    ctx.writeAndFlush(response)
   }
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
