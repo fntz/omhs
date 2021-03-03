@@ -2,7 +2,7 @@ import com.github.fntz.omhs.methods.Methods
 import com.github.fntz.omhs._
 import play.api.libs.json.Json
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object MyApp extends App {
   import DefaultHttpHandler._
@@ -10,6 +10,7 @@ object MyApp extends App {
   import ParamDSL._
   import p._
   import AsyncResult._
+  import AsyncResult.Implicits._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,18 +36,12 @@ object MyApp extends App {
     }
   }
 
-  implicit def bwf[T](implicit writer: BodyWriter[T]) = new BodyWriter[Future[T]] {
-    override def write(w: Future[T]): Response = {
-      AsyncResponse(w.toAsync)
-    }
-  }
-
   val x = "test"
   val xx = "/a/".r
   val k = RegexParam(xx)
 
   val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
-    Future{
+    Future {
       x
     }
   }

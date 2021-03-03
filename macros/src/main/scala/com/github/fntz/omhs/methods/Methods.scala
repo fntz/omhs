@@ -9,20 +9,21 @@ import scala.reflect.macros.whitebox
 object Methods {
 
   implicit class PExt(val obj: p) extends AnyVal {
-    implicit def ~>[T, R](f: T => R)(implicit w: BodyWriter[R]): RuleAndF = macro MethodsImpl.run1[T, R]
+    implicit def ~>[T, R](f: T => R): RuleAndF = macro MethodsImpl.run1[T, R]
   }
 
 
 }
 
 object MethodsImpl {
+  // (w: c.Expr[BodyWriter[R]])
   // val x = "test"
   // get(x / LongParam) => fail
   //    val params = c.eval(c.Expr(c.untypecheck(c.prefix.tree)))
   //      .asInstanceOf[Methods.PExt].x.xs.filterNot(_.isUserDefined)
   def run1[T: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
                             (f: c.Expr[T => R])
-                            (w: c.Expr[BodyWriter[R]]): c.Expr[RuleAndF] = {
+                            : c.Expr[RuleAndF] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
@@ -159,14 +160,16 @@ object MethodsImpl {
               }
 
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.Response = {
+                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   defs match {
                     case ..$caseClause :: Nil =>
-                      implicitly[BodyWriter[${c.weakTypeOf[R]}]].write($f(...$args))
+                      $f(...$args)
                     case _ =>
                       println("======TODO==============")
-                      com.github.fntz.omhs.CommonResponse.empty
+                      _root_.com.github.fntz.omhs.AsyncResult.complete(
+                        com.github.fntz.omhs.CommonResponse.empty
+                        )
                   }
                 }
               }
@@ -175,6 +178,7 @@ object MethodsImpl {
             $funName()
         }
         """
+        //implicitly[BodyWriter[${c.weakTypeOf[R]}]].write($f(...$args))
 
     c.Expr[RuleAndF](instance)
   }

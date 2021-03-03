@@ -4,16 +4,18 @@ import io.netty.handler.codec.http.{HttpHeaderValues, HttpResponseStatus}
 import io.netty.util.CharsetUtil
 
 // content-type
-sealed trait Response
 case class CommonResponse(
-                         status: HttpResponseStatus,
-                         contentType: String,
-                         content: Array[Byte]
-                         ) extends Response
+                           status: HttpResponseStatus,
+                           contentType: String,
+                           content: Array[Byte]
+                         )
 
-case class AsyncResponse[T](asyncResult: AsyncResult[T]) extends Response
 object CommonResponse {
-  val empty = new CommonResponse(HttpResponseStatus.OK, "text/plain", "")
+  val empty = new CommonResponse(
+    status = HttpResponseStatus.OK,
+    contentType = "text/plain",
+    content = Array.emptyByteArray
+  )
 
   def json(content: String): CommonResponse = {
     json(HttpResponseStatus.OK.code(), content)
@@ -23,6 +25,18 @@ object CommonResponse {
     CommonResponse(
       status = status,
       contentType = HttpHeaderValues.APPLICATION_JSON.toString,
+      content = content
+    )
+  }
+
+  def plain(content: String): CommonResponse = {
+    plain(HttpResponseStatus.OK.code(), content)
+  }
+
+  def plain(status: Int, content: String): CommonResponse = {
+    CommonResponse(
+      status = status,
+      contentType = HttpHeaderValues.TEXT_PLAIN.toString,
       content = content
     )
   }

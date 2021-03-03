@@ -7,7 +7,7 @@ abstract class RuleAndF(val rule: Rule) {
       .addRule(other)
   }
 
-  def run(defs: List[ParamDef[_]]): Response
+  def run(defs: List[ParamDef[_]]): AsyncResult
 
   override def toString: String = {
     s"Rule[$rule]"

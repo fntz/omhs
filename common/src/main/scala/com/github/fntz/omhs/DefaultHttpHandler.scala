@@ -27,7 +27,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-    //
+    import AsyncResult._
     val empty = new DefaultFullHttpResponse(
       HttpVersion.HTTP_1_1,
       HttpResponseStatus.OK,
@@ -44,7 +44,6 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         logger.debug(s"${request.method()} -> ${request.uri()}")
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
-        val headers = request.headers()
 
         // todo from map method -> params
         val result = rules
@@ -59,42 +58,27 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
                 case Right(defs) =>
                   r.run(real ++ defs)
                 case Left(reason) =>
-                  unhanded.apply(reason)
+                  AsyncResult.complete(unhanded.apply(reason))
               }
             } catch {
               case t: Throwable =>
                 logger.warn("Failed to call function", t)
-                unhanded.apply(UnhandledException(t))
+                AsyncResult.complete(unhanded.apply(UnhandledException(t)))
             }
 
           case _ =>
             logger.debug(s"No matched route for ${request.uri()}")
-            unhanded.apply(PathNotFound(request.uri()))
+            AsyncResult.complete(unhanded.apply(PathNotFound(request.uri())))
         }
 
-        matchResult match {
-          case c: CommonResponse =>
-            done(
-              ctx = ctx,
-              request = request,
-              response = empty.replace(Unpooled.copiedBuffer(c.content)),
-              userResponse = c
-            )
-
-          case AsyncResponse(asyncResult) =>
-            asyncResult.onComplete { v =>
-              // todo handle it (instanceOf)
-              val responseResult = asyncResult.writer
-                .write(v).asInstanceOf[CommonResponse]
-              done(
-                ctx = ctx,
-                request = request,
-                response = empty.replace(
-                  Unpooled.copiedBuffer(responseResult.content)),
-                userResponse = responseResult
-              )
-            }
-
+        matchResult.onComplete { v: CommonResponse =>
+          done(
+            ctx = ctx,
+            request = request,
+            response = empty.replace(
+              Unpooled.copiedBuffer(v.content)),
+            userResponse = v
+          )
         }
 
       case _ =>
