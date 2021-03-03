@@ -39,11 +39,11 @@ class ParamSpecs extends Specification {
       Param.parse(s"/foo/$uuid/abc/123/bar", d).isSuccess must beFalse
       Param.parse(s"/test/$uuid/abc/123", d) ==== ParseResult(
         success = true, Vector(EmptyDef("test"), UUIDDef(uuid),
-          EmptyDef("abc"), TailDef(Vector("123")))
+          EmptyDef("abc"), TailDef(List("123")))
       )
       Param.parse(s"/test/$uuid/abc/123/bar", d) ==== ParseResult(
         success = true, Vector(EmptyDef("test"), UUIDDef(uuid),
-          EmptyDef("abc"), TailDef(Vector("123", "bar")))
+          EmptyDef("abc"), TailDef(List("123", "bar")))
       )
 
       val e = UUIDParam / LongParam

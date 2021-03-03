@@ -7,9 +7,7 @@ import scala.util.Try
 sealed trait Param {
   def isRestParam: Boolean = false
   def isUserDefined: Boolean = false
-  def isBodyParam: Boolean = false
   def isPathParam: Boolean = true
-  def isHeaderParam: Boolean = false
   def check(in: String): Boolean
 }
 case class HardCodedParam(value: String) extends Param {
@@ -62,17 +60,17 @@ case object * extends Param {
 }
 
 case class HeaderParam(name: String) extends Param {
-  override def check(in: String): Boolean = in == name
+  override def check(in: String): Boolean = true
 
   override val isPathParam: Boolean = false
-  override val isHeaderParam: Boolean = true
 }
+
+// cookie: https://www.programcreek.com/java-api-examples/?api=io.netty.handler.codec.http.Cookie
 
 case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
   override def check(in: String): Boolean = true
 
   override val isPathParam: Boolean = false
-  override val isBodyParam: Boolean = true
 
   override def toString: String = s"body[]" // todo typeOf[T]
 }

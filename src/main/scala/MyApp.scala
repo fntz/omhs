@@ -38,7 +38,6 @@ object MyApp extends App {
   val xx = "/a/".r
   val k = RegexParam(xx)
 
-
 //  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
 //    println("="*100)
 //    x

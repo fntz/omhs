@@ -9,4 +9,6 @@ object p {
   def post(xs: Vector[Param]): p = p(xs, HttpMethod.POST)
   def delete(xs: Vector[Param]): p = p(xs, HttpMethod.DELETE)
   def put(xs: Vector[Param]): p = p(xs, HttpMethod.PUT)
+  def path(xs: Vector[Param]): p = p(xs, HttpMethod.PATH)
+  def head(xs: Vector[Param]): p = p(xs, HttpMethod.HEAD)
 }

@@ -176,7 +176,6 @@ object MethodsImpl {
             $funName()
         }
         """
-        println(instance)
 
     c.Expr[RuleAndF](instance)
   }

@@ -40,8 +40,6 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         ctx.writeAndFlush(continue)
 
       case request: FullHttpRequest =>
-        println("~"*100)
-        val cr = CurrentHttpRequest(request.uri())
         logger.debug(s"${request.method()} -> ${request.uri()}")
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
@@ -56,32 +54,11 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
           case Some((r, ParseResult(_, defs))) =>
             val real = defs.filterNot(_.skip).toList
             try {
-              if (request.decoderResult().isSuccess) {
-                val bodyDef = if (r.rule.isParseBody) {
-                  val strBody = request.content.toString(CharsetUtil.UTF_8)
-                  List(BodyDef(r.rule.currentReader.read(strBody)))
-                } else {
-                  Nil
-                }
-                val tmpHeaderDefs = if (r.rule.currentHeaders.nonEmpty) {
-                  r.rule.currentHeaders.map { need =>
-                    (headers.get(need), need)
-                  }.toList
-                } else {
-                  Nil
-                }
-                val nullHeader = tmpHeaderDefs.find(_._1 == null)
-                if (nullHeader.isEmpty) { // is it correct ?
-                  val headerDefs = tmpHeaderDefs.map(x => HeaderDef(x._1))
-                  val full = real ++ bodyDef ++ headerDefs
-                  r.run(full)
-                } else {
-                  logger.warn("Header is missing")
-                  unhanded.apply(HeaderIsMissing(nullHeader.get._2))
-                }
-              } else {
-                logger.warn(s"Can not parse body", request.decoderResult().cause())
-                unhanded.apply(BodyIsUnparsable)
+              RequestParser.run(request, r.rule) match {
+                case Right(defs) =>
+                  r.run(real ++ defs)
+                case Left(reason) =>
+                  unhanded.apply(reason)
               }
             } catch {
               case t: Throwable =>
