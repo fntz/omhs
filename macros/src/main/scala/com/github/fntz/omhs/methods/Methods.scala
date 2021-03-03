@@ -39,6 +39,7 @@ object MethodsImpl {
       extends ParamToken {
       override def isBody: Boolean = true
     }
+    case object HeaderToken extends ParamToken
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
       import c.universe._
@@ -49,8 +50,10 @@ object MethodsImpl {
         case RegexToken => c.typeTag[String].tpe
         case RestToken => c.typeTag[List[String]].tpe
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
+        case HeaderToken => c.typeTag[String].tpe
       }
     }
+
 
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
@@ -63,6 +66,8 @@ object MethodsImpl {
         RegexToken
       case q"com.github.fntz.omhs.*" =>
         RestToken
+      case q"com.github.fntz.omhs.HeaderParam" =>
+        HeaderToken
       case Apply(Apply(TypeApply(
           Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
@@ -95,9 +100,7 @@ object MethodsImpl {
 
     tokens.zip(actualFunctionParameters).foreach { case (paramToken, (funcTypeParam, argName)) =>
       // check against arguments
-      println(s"----> ${funcTypeParam}")
       val at = getType(c, paramToken)
-      println(s"------> ${at.toString} ${funcTypeParam.toString} ${funcTypeParam.typeSymbol.asType.toType =:= at}")
       if (at.toString != funcTypeParam.toString) {
         c.abort(focus, s"Incorrect type for `$argName`, " +
           s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
@@ -108,8 +111,6 @@ object MethodsImpl {
 //              s"required: ${at.typeSymbol.name}, given: ${fp}")
 //      }
     }
-
-    // todo http method pass somehow
 
     // todo check on empty
 
@@ -132,25 +133,28 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.TailDef($n)", n)
         case BodyToken(tpt, _) =>
           (pq"_root_.com.github.fntz.omhs.BodyDef($n: ${tpt.typeSymbol})", n)
+        case HeaderToken =>
+          (pq"_root_.com.github.fntz.omhs.HeaderDef($n)", n)
       }
     }
 
-    val caseClause = ts.map(_._1)//.reduce((a, b) => q"$a::$b")
-    val args = ts.map(_._2)//.map { x => tq"$x.value" }
+    val caseClause = ts.map(_._1)
+    val args = ts.map(_._2)
 
-    // skip body/headers/cookies for now
+    // skip cookies for now
     val funName = TermName(c.freshName())
     val instance =
       q"""
         {
             def $funName() = {
-              import Predef._
               val rule = new _root_.com.github.fntz.omhs.Rule(
                 ${c.prefix.tree}.obj.method
               )
               ${c.prefix.tree}.obj.xs.map {
-                case b: BodyParam[_] =>
+                case b: _root_.com.github.fntz.omhs.BodyParam[_] =>
                   rule.body()(b.reader)
+                case _root_.com.github.fntz.omhs.HeaderParam(value) =>
+                  rule.header(value)
                 case param =>
                   rule.path(param)
               }
@@ -172,7 +176,6 @@ object MethodsImpl {
             $funName()
         }
         """
-
         println(instance)
 
     c.Expr[RuleAndF](instance)

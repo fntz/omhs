@@ -1,5 +1,5 @@
 import com.github.fntz.omhs.methods.Methods
-import com.github.fntz.omhs.{*, BodyParam, BodyReader, BodyWriter, CommonResponse, DefaultHttpHandler, LongParam, ParamDSL, ParamDef, RegexParam, Route, RuleDSL, StringParam, UUIDParam, p}
+import com.github.fntz.omhs.{*, BodyParam, BodyReader, BodyWriter, CommonResponse, DefaultHttpHandler, HeaderParam, LongParam, ParamDSL, ParamDef, RegexParam, Route, RuleDSL, StringParam, UUIDParam, p}
 import play.api.libs.json.Json
 
 import java.util.UUID
@@ -38,21 +38,21 @@ object MyApp extends App {
   val xx = "/a/".r
   val k = RegexParam(xx)
 
-  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
-    println("="*100)
-    x
+
+//  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person) =>
+//    println("="*100)
+//    x
+//  }
+//
+//  println(s"---------> $r1")
+
+  val r = get(x / HeaderParam("User-Agent")) ~> { (x: String) =>
+    println(s"-------- ${x}")
+    s"tst: ${x}"
   }
 
-  println(s"---------> $r1")
-
-//  val r = get(x / LongParam) ~> { (x: Long) =>
-//    println("--------")
-//    s"tst: ${x}"
-//  }
-
-
+  val t = (new Route).addRule(r)
 //  val t = r :: r1
-  val t = new Route().addRule(r1)
 
   DefaultServer.run(9000, t.toHandler)
 

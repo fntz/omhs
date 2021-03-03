@@ -1,8 +1,8 @@
 package com.github.fntz.omhs
 
 sealed trait UnhandledReason
-case object PathNotFound extends UnhandledReason
-case object CookieIsMissing extends UnhandledReason
-case object HeaderIsMissing extends UnhandledReason
+case class PathNotFound(path: String) extends UnhandledReason
+case class CookieIsMissing(cookieName: String) extends UnhandledReason
+case class HeaderIsMissing(headerName: String) extends UnhandledReason
 case object BodyIsUnparsable extends UnhandledReason
 case class UnhandledException(t:  Throwable) extends UnhandledReason

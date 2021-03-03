@@ -8,6 +8,10 @@ abstract class RuleAndF(val rule: Rule) {
   }
 
   def run(defs: List[ParamDef[_]]): CommonResponse
+
+  override def toString: String = {
+    s"Rule[$rule]"
+  }
 }
 
 case class RuleAndF0[R](override val rule: Rule,

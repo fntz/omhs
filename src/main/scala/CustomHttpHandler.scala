@@ -1,10 +1,6 @@
 import io.netty.buffer.Unpooled
-import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler}
+import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.CharsetUtil
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class CustomHttpHandler extends ChannelInboundHandlerAdapter {
 
@@ -30,9 +26,7 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
         response.headers.set(HttpHeaderNames.CONTENT_TYPE, "text/plain")
         response.headers.set(HttpHeaderNames.CONTENT_LENGTH, message.length)
 
-        Future.successful(1).map { _ =>
-          ctx.writeAndFlush(response)
-        }
+        ctx.writeAndFlush(response)
 
       case _ =>
         super.channelRead(ctx, msg)

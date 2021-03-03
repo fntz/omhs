@@ -8,6 +8,8 @@ sealed trait Param {
   def isRestParam: Boolean = false
   def isUserDefined: Boolean = false
   def isBodyParam: Boolean = false
+  def isPathParam: Boolean = true
+  def isHeaderParam: Boolean = false
   def check(in: String): Boolean
 }
 case class HardCodedParam(value: String) extends Param {
@@ -59,9 +61,18 @@ case object * extends Param {
   override def toString: String = "*"
 }
 
+case class HeaderParam(name: String) extends Param {
+  override def check(in: String): Boolean = in == name
+
+  override val isPathParam: Boolean = false
+  override val isHeaderParam: Boolean = true
+}
+
 case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
   override def check(in: String): Boolean = true
-  override def isBodyParam: Boolean = true
+
+  override val isPathParam: Boolean = false
+  override val isBodyParam: Boolean = true
 
   override def toString: String = s"body[]" // todo typeOf[T]
 }
@@ -83,8 +94,9 @@ object Param {
       case StringParam => StringDef(in)
       case UUIDParam => UUIDDef(UUID.fromString(in))
       case RegexParam(re) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
-      case * => TailDef(List(in)) // unreachable
-      case _: BodyParam[_] => BodyDef(null) // unreachable todo without
+      case * => TailDef(List(in))                 // unreachable
+      case _: BodyParam[_] => BodyDef(null)       // unreachable todo without
+      case HeaderParam(value) => HeaderDef(value) // unreachable
     }
   }
 

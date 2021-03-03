@@ -4,6 +4,7 @@ import java.util.UUID
 
 sealed trait ParamDef[T] {
   def value: T
+  // do not used for call user-defined function
   val skip: Boolean = false
 }
 case class EmptyDef(value: String) extends ParamDef[String] {
@@ -17,3 +18,4 @@ case class TailDef(values: List[String]) extends ParamDef[List[String]] {
   override val value: List[String] = values
 }
 case class BodyDef[T](value: T) extends ParamDef[T]
+case class HeaderDef(value: String) extends ParamDef[String]

@@ -6,12 +6,15 @@ import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Rule(val method: HttpMethod) {
   private val paths: AB[Param] = new AB[Param]()
+  private val headers: AB[String] = new AB[String]()
 
   private var reader: BodyReader[_] = null // todo None instead
 
   private var isBodyNeeded = false
 
   def params: Vector[Param] = paths.toVector
+
+  def currentHeaders: Vector[String] = headers.toVector
 
   def isParseBody = isBodyNeeded
 
@@ -38,7 +41,8 @@ class Rule(val method: HttpMethod) {
     this
   }
 
-  def header(x: String): Rule = {
+  def header(header: String): Rule = {
+    headers += header
     this
   }
 
@@ -47,15 +51,6 @@ class Rule(val method: HttpMethod) {
   }
 
 }
-
-/*
-class RF(override val method: HttpMethod) extends Rule(method) {
-  def run[R](x: Long, p: String, f: (Long, String) => CommonResponse)
-            (implicit bw: BodyWriter[R]): CommonResponse = {
-    f.apply(x, p)
-  }
-}
-*/
 
 object Get {
   def apply(): Rule = new Rule(HttpMethod.GET)
