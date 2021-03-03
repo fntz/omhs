@@ -4,7 +4,7 @@ import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.Version
+import io.netty.util.{CharsetUtil, Version}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -15,10 +15,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
   import DefaultHttpHandler._
 
-  // todo rename route
   private val logger = LoggerFactory.getLogger(getClass)
-
-  private val rules = route.current
   private val byMethod = route.current.groupBy(_.rule.method)
   private val unhanded = route.currentUnhandled
 
@@ -35,8 +32,8 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         val decoder = new QueryStringDecoder(request.uri)
         val target = decoder.rawPath()
 
-        // todo findFirst
-        val result = byMethod.getOrElse(request.method(), Vector.empty)
+        val result = byMethod
+          .getOrElse(request.method(), Vector.empty)
           .map { x => (x, Param.parse(target, x.rule.params)) }
           .find(_._2.isSuccess)
 
@@ -46,6 +43,15 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             try {
               RequestHelper.materialize(request, r.rule) match {
                 case Right(defs) =>
+                  // if req is needed
+                  val currentRequest = CurrentHttpRequest(
+                    uri = request.uri(),
+                    path = target,
+                    query = decoder.rawQuery(),
+                    method = request.method(),
+                    headers = request.headers(),
+                    rawBody = request.content.toString(CharsetUtil.UTF_8)
+                  )
                   r.run(real ++ defs)
                 case Left(reason) =>
                   AsyncResult.completed(unhanded.apply(reason))
@@ -57,7 +63,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             }
 
           case _ =>
-            logger.debug(s"No matched route for ${request.uri()}")
+            logger.warn(s"No matched route for ${request.uri()}")
             AsyncResult.completed(unhanded.apply(PathNotFound(request.uri())))
         }
 
