@@ -58,17 +58,17 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
                 case Right(defs) =>
                   r.run(real ++ defs)
                 case Left(reason) =>
-                  AsyncResult.complete(unhanded.apply(reason))
+                  AsyncResult.completed(unhanded.apply(reason))
               }
             } catch {
               case t: Throwable =>
                 logger.warn("Failed to call function", t)
-                AsyncResult.complete(unhanded.apply(UnhandledException(t)))
+                AsyncResult.completed(unhanded.apply(UnhandledException(t)))
             }
 
           case _ =>
             logger.debug(s"No matched route for ${request.uri()}")
-            AsyncResult.complete(unhanded.apply(PathNotFound(request.uri())))
+            AsyncResult.completed(unhanded.apply(PathNotFound(request.uri())))
         }
 
         matchResult.onComplete { v: CommonResponse =>

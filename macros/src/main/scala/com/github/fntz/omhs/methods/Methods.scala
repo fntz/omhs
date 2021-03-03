@@ -167,9 +167,9 @@ object MethodsImpl {
                       $f(...$args)
                     case _ =>
                       println("======TODO==============")
-                      _root_.com.github.fntz.omhs.AsyncResult.complete(
+                      _root_.com.github.fntz.omhs.AsyncResult.completed(
                         com.github.fntz.omhs.CommonResponse.empty
-                        )
+                      )
                   }
                 }
               }
