@@ -1,12 +1,12 @@
 package com.github.fntz.omhs
 
-import io.netty.handler.codec.http.HttpHeaderValues
+import io.netty.handler.codec.http.{HttpHeaderValues, HttpResponseStatus}
 import io.netty.util.CharsetUtil
 
 // content-type
 sealed trait Response
 case class CommonResponse(
-                         status: Int,
+                         status: HttpResponseStatus,
                          contentType: String,
                          content: Array[Byte]
                          ) extends Response
@@ -16,7 +16,7 @@ object CommonResponse {
   val empty = CommonResponse(200, "text/plain", "")
 
   def json(content: String): CommonResponse = {
-    json(200, content)
+    json(HttpResponseStatus.OK.code(), content)
   }
 
   def json(status: Int, content: String): CommonResponse = {
@@ -29,7 +29,7 @@ object CommonResponse {
 
   def apply(status: Int, contentType: String,
             content: String): CommonResponse = {
-    new CommonResponse(status, contentType,
+    new CommonResponse(HttpResponseStatus.valueOf(status), contentType,
       content.getBytes(CharsetUtil.UTF_8))
   }
 }

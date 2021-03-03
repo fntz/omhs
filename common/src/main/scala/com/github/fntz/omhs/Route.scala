@@ -4,11 +4,18 @@ import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Route {
   private val rules: AB[RuleAndF] = new AB[RuleAndF]()
-  private var unhandledDefault = (_: UnhandledReason) => {
+  private var unhandledDefault = (reason: UnhandledReason) => {
+    val result = reason match {
+      case PathNotFound(value) => (404, value)
+      case CookieIsMissing(value) => (400, s"cookie: $value is missing")
+      case HeaderIsMissing(value) => (400, s"cookie: $value is missing")
+      case BodyIsUnparsable => (400, s"body is incorrect")
+      case UnhandledException(ex) => (500, s"$ex")
+    }
     CommonResponse(
-      status = 500, // todo by reason plz
+      status = result._1,
       contentType = "text/plain",
-      content = "boom"
+      content = result._2
     )
   }
 

@@ -111,7 +111,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
       response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
     }
 
-    response.setStatus(HttpResponseStatus.valueOf(userResponse.status))
+    response.setStatus(userResponse.status)
     response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
     response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
 
