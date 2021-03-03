@@ -91,7 +91,6 @@ object MethodsImpl {
         c.error(focus, "Function is required")
         Seq.empty
     }
-
     println(s"actual parameters: $actualFunctionParameters")
 
     if (tokens.size != actualFunctionParameters.size) {
@@ -155,7 +154,7 @@ object MethodsImpl {
                   rule.body()(b.reader)
                 case _root_.com.github.fntz.omhs.HeaderParam(value) =>
                   rule.header(value)
-                case param =>
+                case param: _root_.com.github.fntz.omhs.PathParam =>
                   rule.path(param)
               }
 

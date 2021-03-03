@@ -10,18 +10,19 @@ sealed trait Param {
   def isPathParam: Boolean = true
   def check(in: String): Boolean
 }
-case class HardCodedParam(value: String) extends Param {
+sealed trait PathParam extends Param
+case class HardCodedParam(value: String) extends PathParam {
   override val isUserDefined: Boolean = true
   override def check(in: String): Boolean = in == value
 
   override def toString: String = value
 }
-case object StringParam extends Param {
+case object StringParam extends PathParam {
   override def check(in: String): Boolean = true
 
   override def toString: String = ":string"
 }
-case object LongParam extends Param {
+case object LongParam extends PathParam {
   override def check(in: String): Boolean = {
     if (in.isEmpty || in.contains(".")) {
       false
@@ -32,7 +33,7 @@ case object LongParam extends Param {
 
   override def toString: String = ":long"
 }
-case object UUIDParam extends Param {
+case object UUIDParam extends PathParam {
   override def check(in: String): Boolean = {
     if (in.length == 36) {
       Try(UUID.fromString(in)).isSuccess
@@ -44,7 +45,7 @@ case object UUIDParam extends Param {
   override def toString: String = ":uuid"
 }
 
-case class RegexParam(re: Regex) extends Param {
+case class RegexParam(re: Regex) extends PathParam {
   override def check(in: String): Boolean = {
     re.findFirstIn(in).isDefined
   }
@@ -52,7 +53,7 @@ case class RegexParam(re: Regex) extends Param {
   override def toString: String = s"$re.re"
 }
 
-case object * extends Param {
+case object * extends PathParam {
   override def check(in: String): Boolean = true
   override def isRestParam: Boolean = true
 
@@ -76,29 +77,27 @@ case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
 }
 
 
-case class ParseResult(success: Boolean, defs: Vector[ParamDef[_]]) {
+case class ParseResult(success: Boolean, defs: List[PathParamDef[_]]) {
   val isSuccess: Boolean = success
 }
 object ParseResult {
-  val failed: ParseResult = ParseResult(success = false, Vector.empty)
+  val failed: ParseResult = ParseResult(success = false, Nil)
 }
 
 object Param {
 
-  def convert(p: Param, in: String): ParamDef[_] = {
+  def convert(p: PathParam, in: String): PathParamDef[_] = {
     p match {
       case HardCodedParam(value) => EmptyDef(value)
       case LongParam => LongDef(in.toLong)
       case StringParam => StringDef(in)
       case UUIDParam => UUIDDef(UUID.fromString(in))
       case RegexParam(re) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
-      case * => TailDef(List(in))                 // unreachable
-      case _: BodyParam[_] => BodyDef(null)       // unreachable todo without
-      case HeaderParam(value) => HeaderDef(value) // unreachable
+      case _ => TailDef(List(in))                 // unreachable
     }
   }
 
-  def parse(target: String, params: Vector[Param]): ParseResult = {
+  def parse(target: String, params: Vector[PathParam]): ParseResult = {
     val tmp = target.replaceAll("""\?.*""", "")
       .split("/").map(_.trim).filterNot(_.isEmpty)
     if (tmp.isEmpty) {
@@ -107,7 +106,7 @@ object Param {
       var i = 0
       val tmpLength = tmp.length - 1
       val paramsLength = params.length - 1
-      val buffer = scala.collection.mutable.ArrayBuffer.empty[ParamDef[_]]
+      val buffer = scala.collection.mutable.ArrayBuffer.empty[PathParamDef[_]]
       var flag = true
       var doneByRest = false
       val useTmp = tmpLength > paramsLength
@@ -158,7 +157,7 @@ object Param {
         counter = counter - 1
       }
       if (flag) {
-        ParseResult(success = true, buffer.toVector)
+        ParseResult(success = true, buffer.toList)
       } else {
         ParseResult.failed
       }

@@ -6,14 +6,14 @@ import io.netty.handler.codec.http.HttpMethod
 import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Rule(val method: HttpMethod) {
-  private val paths: AB[Param] = new AB[Param]()
+  private val paths: AB[PathParam] = new AB[PathParam]()
   private val headers: AB[String] = new AB[String]()
 
   private var reader: BodyReader[_] = null // todo None instead
 
   private var isBodyNeeded = false
 
-  def params: Vector[Param] = paths.toVector
+  def params: Vector[PathParam] = paths.toVector
 
   def currentHeaders: Vector[String] = headers.toVector
 
@@ -33,7 +33,7 @@ class Rule(val method: HttpMethod) {
     this
   }
 
-  def path(x: Param): Rule = {
+  def path(x: PathParam): Rule = {
     paths += x
     this
   }
