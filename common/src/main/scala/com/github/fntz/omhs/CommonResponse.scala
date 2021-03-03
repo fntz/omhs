@@ -13,7 +13,7 @@ case class CommonResponse(
 
 case class AsyncResponse[T](asyncResult: AsyncResult[T]) extends Response
 object CommonResponse {
-  val empty = CommonResponse(200, "text/plain", "")
+  val empty = CommonResponse(HttpResponseStatus.OK, "text/plain", "")
 
   def json(content: String): CommonResponse = {
     json(HttpResponseStatus.OK.code(), content)
