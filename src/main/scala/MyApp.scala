@@ -21,7 +21,7 @@ object MyApp extends App {
   }
   implicit val bodyWriter = new BodyWriter[String] {
     override def write(w: String): CommonResponse = {
-      new CommonResponse(
+      CommonResponse(
         200, "text/plain", w
       )
     }
@@ -29,9 +29,7 @@ object MyApp extends App {
 
   implicit val bodyWriterPerson = new BodyWriter[Person] {
     override def write(w: Person): CommonResponse = {
-      new CommonResponse(
-        200,
-        "application/json",
+      CommonResponse.json(
         Json.toJson(w)(Json.writes[Person]).toString
       )
     }

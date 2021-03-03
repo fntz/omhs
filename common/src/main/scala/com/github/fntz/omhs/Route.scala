@@ -5,7 +5,7 @@ import scala.collection.mutable.{ArrayBuffer => AB}
 class Route {
   private val rules: AB[RuleAndF] = new AB[RuleAndF]()
   private var unhandledDefault = (_: UnhandledReason) => {
-    new CommonResponse(
+    CommonResponse(
       status = 500, // todo by reason plz
       contentType = "text/plain",
       content = "boom"

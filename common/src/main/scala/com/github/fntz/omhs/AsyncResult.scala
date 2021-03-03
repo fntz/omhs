@@ -41,4 +41,5 @@ object AsyncResult {
       fu.map(complete)
     }
   }
+
 }

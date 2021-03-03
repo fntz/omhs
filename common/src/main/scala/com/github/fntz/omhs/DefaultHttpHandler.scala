@@ -77,7 +77,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             done(
               ctx = ctx,
               request = request,
-              response = empty.replace(Unpooled.copiedBuffer(c.content.getBytes)),
+              response = empty.replace(Unpooled.copiedBuffer(c.content)),
               userResponse = c
             )
 
@@ -89,7 +89,8 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
               done(
                 ctx = ctx,
                 request = request,
-                response = empty.replace(Unpooled.copiedBuffer(responseResult.content.getBytes)),
+                response = empty.replace(
+                  Unpooled.copiedBuffer(responseResult.content)),
                 userResponse = responseResult
               )
             }
