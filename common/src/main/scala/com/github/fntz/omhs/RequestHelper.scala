@@ -4,8 +4,8 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.util.CharsetUtil
 import scala.language.existentials
 
-object RequestParser {
-  def run(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[ParamDef[_]]] = {
+object RequestHelper {
+  def materialize(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[ParamDef[_]]] = {
     val bodyDefE = if (rule.isParseBody) {
       if (request.decoderResult().isSuccess) {
         val strBody = request.content.toString(CharsetUtil.UTF_8)

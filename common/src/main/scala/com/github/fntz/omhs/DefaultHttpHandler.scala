@@ -2,12 +2,13 @@ package com.github.fntz.omhs
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter, SimpleChannelInboundHandler}
+import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.{CharsetUtil, Version}
+import io.netty.util.Version
+import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
 import scala.language.existentials
-import org.slf4j.LoggerFactory
 
 @Sharable
 class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAdapter {
@@ -54,7 +55,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
           case Some((r, ParseResult(_, defs))) =>
             val real = defs.filterNot(_.skip).toList
             try {
-              RequestParser.run(request, r.rule) match {
+              RequestHelper.materialize(request, r.rule) match {
                 case Right(defs) =>
                   r.run(real ++ defs)
                 case Left(reason) =>

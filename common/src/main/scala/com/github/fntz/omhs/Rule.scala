@@ -1,6 +1,7 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.HttpMethod.HttpMethod
+
+import io.netty.handler.codec.http.HttpMethod
 
 import scala.collection.mutable.{ArrayBuffer => AB}
 
