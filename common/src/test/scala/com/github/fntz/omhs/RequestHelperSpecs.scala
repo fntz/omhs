@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
 import io.netty.handler.codec.DecoderResult
-import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpVersion, HttpMethod => HM}
+import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpMethod, HttpVersion}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
@@ -9,7 +9,7 @@ class RequestHelperSpecs extends Specification {
 
   private val uri = "/test"
   private val version = HttpVersion.HTTP_1_1
-  private val method = HM.POST
+  private val method = HttpMethod.POST
   private val header = "User-Agent"
   private val hValue = "test-suite"
   private def default = new DefaultFullHttpRequest(
@@ -76,7 +76,7 @@ class RequestHelperSpecs extends Specification {
 
   trait Test extends Scope {
     val request = default
-    val rule = Post().path(uri)
+    val rule = new Rule(method).path(uri)
   }
 
 }

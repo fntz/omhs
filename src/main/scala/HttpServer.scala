@@ -4,8 +4,9 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.http.{HttpObjectAggregator, HttpRequestDecoder, HttpResponseEncoder, HttpServerCodec}
+import io.netty.handler.codec.http.{HttpContentCompressor, HttpObjectAggregator, HttpRequestDecoder, HttpResponseEncoder, HttpServerCodec}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
+import io.netty.handler.stream.ChunkedWriteHandler
 
 object DefaultServer {
   def run(port: Int, handler: DefaultHttpHandler): Unit = {
@@ -20,6 +21,8 @@ object DefaultServer {
           ch.pipeline().addLast("codec", new HttpServerCodec())
           ch.pipeline().addLast("aggregator",
             new HttpObjectAggregator(512*1024))
+//          ch.pipeline().addLast("compressor",    new HttpContentCompressor())
+          ch.pipeline().addLast(new ChunkedWriteHandler)
           p.addLast(handler)
         }
       })

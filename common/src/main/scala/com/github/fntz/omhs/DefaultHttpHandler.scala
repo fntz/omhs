@@ -3,7 +3,7 @@ package com.github.fntz.omhs
 import com.github.fntz.omhs.util.UtilImplicits
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelFuture, ChannelHandlerContext, ChannelInboundHandlerAdapter}
+import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
@@ -51,11 +51,12 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             fail(PathNotFound(request.uri()))
         }
 
-        matchResult.onComplete { v: CommonResponse =>
+        matchResult.onComplete { outResponse: CommonResponse =>
           write(
             ctx = ctx,
+            request = request,
             isKeepAlive = HttpUtil.isKeepAlive(request),
-            userResponse = v
+            userResponse = outResponse
           )
         }
 
@@ -78,21 +79,33 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   }
 
   private def write(ctx: ChannelHandlerContext,
+                    request: FullHttpRequest,
                      isKeepAlive: Boolean,
-                     userResponse: CommonResponse): ChannelFuture = {
+                     userResponse: CommonResponse): Unit = {
 
     val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
 
-    if (isKeepAlive) {
-      response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content.readableBytes)
-      response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
-    }
+    processKeepAlive(isKeepAlive, request, response)
 
     response.setStatus(userResponse.status)
     response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
     response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
 
-    ctx.writeAndFlush(response)
+    val f = ctx.writeAndFlush(response)
+
+    if (!isKeepAlive) {
+      f.addListener(ChannelFutureListener.CLOSE)
+    }
+  }
+
+  private def processKeepAlive(isKeepAlive: Boolean, request: FullHttpRequest, response: HttpResponse): Unit = {
+    if (isKeepAlive) {
+      if (!request.protocolVersion.isKeepAliveDefault) {
+        response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
+      }
+    } else {
+      response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
+    }
   }
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {

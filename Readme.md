@@ -2,17 +2,33 @@
 # One More Http Server
 
 todo:
-1. async - done
-2. req as parameter to function  (check with unit functions) - done 
-3. improve macro compilation - done 
-3.1 query params materializer ???    
-4. add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
-5. streaming https://github.com/lks21c/netty-http-streaming-server/blob/master/src/main/java/com/creamsugardonut/HttpStaticFileServerHandler2.java
-6. http2
-7. cookie param
-8. swagger
-9. resolve todos
-10. websockets 
+ async - done
+ req as parameter to function  (check with unit functions) - done 
+ improve macro compilation - done 
+ pass additional headers into CommonResponse
+ file transfer
+ query params materializer ???    
+ add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
+ streaming https://github.com/lks21c/netty-http-streaming-server/blob/master/src/main/java/com/creamsugardonut/HttpStaticFileServerHandler2.java
+ http2
+ cookie param
+ swagger
+ resolve todos
+ websockets 
+
+idea: 
+```
+scala 
+
+// add headers into response (common response)
+// (x: String) is not a function but some object ? how to do it ?
+get(string) ~> { (x: String) => 
+   contentType ("asd")
+   header "asd", "qwe"
+   
+}
+```
+  
 
 
 [] routing dsl

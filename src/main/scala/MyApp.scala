@@ -57,27 +57,9 @@ object MyApp extends App {
 //  val t = r :: r1
 
   DefaultServer.run(9000, t.toHandler)
-/*
-  val defs = List(LongDef(1), LongDef(2), StringDef("asd"), HeaderDef("test"))
-  // header / long / string / long
-  val lst = List("header", "long", "string", "long")
-  val wmap = Map(
-    HeaderDef.getClass -> List(0),
-    StringDef.getClass -> List(1),
-    LongDef.getClass -> List(2, 3)
-  )
 
-  val defsm = defs.groupBy(_.sortProp).map { x =>
-    x._1 -> x._2.to[scala.collection.mutable.ArrayBuffer]
-  }
-
-  val t = lst.map { x =>
-    val ar = defsm(x)
-    ar.remove(0)
-  }
-  println(t)
-
- */
+//  val s = new HttpServer
+//  s.run(9000)
 
 
 
