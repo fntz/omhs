@@ -39,26 +39,47 @@ object MyApp extends App {
   val x = "test"
   val xx = "/a/".r
   val k = RegexParam(xx)
-
+/*
   val r1 = post("api" / BodyParam[Person]) ~> { (x: Person, req: CurrentHttpRequest) =>
     println(s"----> ${req.headers}")
     Future {
       x
     }
+  } */
+
+  val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
+    s"tst: $y ----> ${x} and $z"
   }
-
-  val r = get(x / LongParam / HeaderParam("User-Agent")) ~> {
-      (y: Long, x: String, req: CurrentHttpRequest) =>
-    println(s"-------- ${x} + $y")
-    s"tst: $y ----> ${x} ${req.uri}"
-  }
-
-
-
-//  val t = (new Route).addRule(r)
-  val t = r :: r1
+//
+//
+//
+  val t = (new Route).addRule(r)
+//  val t = r :: r1
 
   DefaultServer.run(9000, t.toHandler)
+/*
+  val defs = List(LongDef(1), LongDef(2), StringDef("asd"), HeaderDef("test"))
+  // header / long / string / long
+  val lst = List("header", "long", "string", "long")
+  val wmap = Map(
+    HeaderDef.getClass -> List(0),
+    StringDef.getClass -> List(1),
+    LongDef.getClass -> List(2, 3)
+  )
+
+  val defsm = defs.groupBy(_.sortProp).map { x =>
+    x._1 -> x._2.to[scala.collection.mutable.ArrayBuffer]
+  }
+
+  val t = lst.map { x =>
+    val ar = defsm(x)
+    ar.remove(0)
+  }
+  println(t)
+
+ */
+
+
 
 
 

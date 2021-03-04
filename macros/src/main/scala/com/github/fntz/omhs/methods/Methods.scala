@@ -155,7 +155,6 @@ object MethodsImpl {
       }
     }
 
-
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
         UUIDToken
@@ -192,6 +191,7 @@ object MethodsImpl {
         c.error(focus, "Function is required")
         Seq.empty
     }
+
     println(s"actual parameters: $actualFunctionParameters")
 
     val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
@@ -200,12 +200,12 @@ object MethodsImpl {
 
     println(s"need to pass requestParam? $isReqParamNeeded")
 
-    if (!(isReqParamNeeded && isReqParam(actualFunctionParameters.last._1))) {
-      c.error(focus, s"${reqType} must the last argument in the function")
-    }
-
     if (isReqParamNeeded) {
-      tokens += CurrentRequestToken
+      if (!isReqParam(actualFunctionParameters.last._1)) {
+        c.error(focus, s"${reqType} must the last argument in the function")
+      } else {
+        tokens += CurrentRequestToken
+      }
     }
 
     if (tokens.size != actualFunctionParameters.size) {
@@ -232,36 +232,40 @@ object MethodsImpl {
     // val fresh = f _
     // fresh(n)(n)(n) ???
     //
-    val ts = tokens.map { t =>
-      val n = TermName(c.freshName())
-      t match {
+    val ts = tokens.map { token  =>
+      val valName = TermName(c.freshName())
+      token match {
         case StringToken =>
-          (pq"_root_.com.github.fntz.omhs.StringDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.StringDef($valName)", valName, StringDef.sortProp)
         case LongToken =>
-          (pq"_root_.com.github.fntz.omhs.LongDef($n : Long)", n)
+          (pq"_root_.com.github.fntz.omhs.LongDef($valName : Long)", valName, LongDef.sortProp)
         case RegexToken =>
-          (pq"_root_.com.github.fntz.omhs.RegexDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.RegexDef($valName)", valName, RegexDef.sortProp)
         case UUIDToken =>
-          (pq"_root_.com.github.fntz.omhs.UUIDDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.UUIDDef($valName)", valName, UUIDDef.sortProp)
         case RestToken =>
-          (pq"_root_.com.github.fntz.omhs.TailDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.TailDef($valName)", valName, TailDef.sortProp)
         case BodyToken(tpt, _) =>
-          (pq"_root_.com.github.fntz.omhs.BodyDef($n: ${tpt.typeSymbol})", n)
+          (pq"_root_.com.github.fntz.omhs.BodyDef($valName: ${tpt.typeSymbol})", valName, BodyDef.sortProp)
         case HeaderToken =>
-          (pq"_root_.com.github.fntz.omhs.HeaderDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.HeaderDef($valName)", valName, HeaderDef.sortProp)
         case CurrentRequestToken =>
-          (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($n)", n)
+          (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($valName)", valName, CurrentHttpRequestDef.sortProp)
       }
     }
 
     val caseClause = q"List(..${ts.map(_._1)})"
     val args = ts.map(_._2)
+    val defsPositions = ts.map(_._3).toList
 
     // skip cookies for now
     val funName = TermName(c.freshName())
-    // todo we should sort defs by tokens:
-    // (header / long) => {str, lng => }
-    // but currently I will pass defs in lng/header positions => runtime error
+
+    // orig: header / string / long
+    // defs: List(long, string, header) <- after apply to rule
+    // cause: header, string, long
+    // maybe I need to rewrite sorting in more effective way
+
     val instance =
       q"""
         {
@@ -285,7 +289,12 @@ object MethodsImpl {
               val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
-                  defs match {
+                  val defsMap = defs.groupBy(_.sortProp).map { x =>
+                    x._1 -> x._2.to[scala.collection.mutable.ArrayBuffer]
+                  }
+                  val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
+
+                  sorted match {
                     case $caseClause =>
                       $f(..$args)
                     case _ =>
@@ -302,7 +311,7 @@ object MethodsImpl {
         }
         """
 
-    println(instance)
+//    println(instance)
 
     c.Expr[RuleAndF](instance)
   }
