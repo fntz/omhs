@@ -35,10 +35,9 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
         val matchResult = result match {
           case Some((r, ParseResult(_, defs))) =>
-            val real = defs.filterNot(_.skip)
             try {
               r.rule.materialize(request)
-                .map(real ++ _)
+                .map(defs.filterNot(_.skip) ++ _)
                 .map(r.run)
                 .fold(fail, identity)
             } catch {
