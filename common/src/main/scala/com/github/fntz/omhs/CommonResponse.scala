@@ -8,11 +8,29 @@ sealed trait Response
 case class CommonResponse(
                            status: HttpResponseStatus,
                            contentType: String,
-                           content: Array[Byte]
-                         ) extends Response
+                           content: Array[Byte],
+                           headers: Map[String, String] = Map.empty
+                         ) extends Response {
+  def withHeaders(add: Map[String, String]): CommonResponse = {
+    copy(headers = headers ++ add)
+  }
 
-case class StreamResponse(contentType: String, it: Iterator[Array[Byte]]) extends Response {
-  def toAsync: AsyncResult = AsyncResult.chunked(this)
+  def withHeader(header: String, value: String): CommonResponse = {
+    copy(headers = headers ++ Map(header -> value))
+  }
+}
+
+case class StreamResponse(contentType: String,
+                          it: Iterator[Array[Byte]],
+                          headers: Map[String, String] = Map.empty
+                         ) extends Response {
+  def withHeaders(add: Map[String, String]): StreamResponse = {
+    copy(headers = headers ++ add)
+  }
+
+  def withHeader(header: String, value: String): StreamResponse = {
+    copy(headers = headers ++ Map(header -> value))
+  }
 }
 
 object CommonResponse {

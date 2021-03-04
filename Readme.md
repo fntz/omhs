@@ -5,7 +5,7 @@ todo:
  async - done
  req as parameter to function  (check with unit functions) - done 
  improve macro compilation - done 
- pass additional headers into CommonResponse
+ pass additional headers into CommonResponse - done
  file transfer (send/upload)
  query params materializer ???    
  add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)

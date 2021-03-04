@@ -100,6 +100,10 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
       .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
       .set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
 
+    userResponse.headers.foreach { case (h, v) =>
+      response.headers().set(h, v)
+    }
+
     processKeepAlive(isKeepAlive, request, response)
 
     ctx.write(response) // empty first
@@ -127,6 +131,10 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
 
     processKeepAlive(isKeepAlive, request, response)
+
+    userResponse.headers.foreach { case (h, v) =>
+      response.headers().set(h, v)
+    }
 
     response.setStatus(userResponse.status)
     response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)

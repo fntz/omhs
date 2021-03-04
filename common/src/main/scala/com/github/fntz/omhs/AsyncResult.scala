@@ -39,7 +39,7 @@ object AsyncResult {
   object Streaming {
     implicit class IteratorToAsync[T](it: Iterator[Array[Byte]]) {
       def toAsync(contentType: String): AsyncResult = {
-        StreamResponse(contentType, it).toAsync
+        AsyncResult.chunked(StreamResponse(contentType, it))
       }
     }
   }
