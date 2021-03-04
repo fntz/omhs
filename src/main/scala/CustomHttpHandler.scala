@@ -25,7 +25,8 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
         ctx.write(response) // empty
 
         (0 to 10).foreach { x =>
-          ctx.write(new DefaultHttpContent(Unpooled.copiedBuffer(s"$x hello there", CharsetUtil.UTF_8)))
+          ctx.write(new DefaultHttpContent(
+            Unpooled.copiedBuffer(s"$x hello there", CharsetUtil.UTF_8)))
           if (x % 3 == 0) {
             ctx.flush()
           }

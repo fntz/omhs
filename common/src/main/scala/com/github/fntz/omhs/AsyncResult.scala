@@ -4,17 +4,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AsyncResult {
 // todo atomic: set in one thread, read in another
-  private var value: CommonResponse = null.asInstanceOf[CommonResponse]
-  private var completeWith: CommonResponse => Unit = null
+  private var value: Response = null.asInstanceOf[Response]
+  private var completeWith: Response => Unit = null
 
-  def onComplete(f: CommonResponse => Unit): Unit = {
+  def onComplete(f: Response => Unit): Unit = {
     completeWith = f
     if (value != null) {
       completeWith.apply(value)
     }
   }
 
-  def complete(x: CommonResponse): Unit = {
+  def complete(x: Response): Unit = {
     value = x
     if (completeWith != null) {
       completeWith.apply(x)
@@ -28,6 +28,20 @@ object AsyncResult {
     val result = new AsyncResult()
     result.complete(response)
     result
+  }
+
+  def chunked(response: StreamResponse): AsyncResult = {
+    val result = new AsyncResult()
+    result.complete(response)
+    result
+  }
+
+  object Streaming {
+    implicit class IteratorToAsync[T](it: Iterator[Array[Byte]]) {
+      def toAsync(contentType: String): AsyncResult = {
+        StreamResponse(contentType, it).toAsync
+      }
+    }
   }
 
   object Implicits {

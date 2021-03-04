@@ -51,13 +51,23 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
             fail(PathNotFound(request.uri()))
         }
 
-        matchResult.onComplete { outResponse: CommonResponse =>
-          write(
-            ctx = ctx,
-            request = request,
-            isKeepAlive = HttpUtil.isKeepAlive(request),
-            userResponse = outResponse
-          )
+        matchResult.onComplete {
+          case outResponse: CommonResponse =>
+            write(
+              ctx = ctx,
+              request = request,
+              isKeepAlive = HttpUtil.isKeepAlive(request),
+              userResponse = outResponse
+            )
+
+          case streamResponse: StreamResponse =>
+            write(
+              ctx = ctx,
+              request = request,
+              isKeepAlive = HttpUtil.isKeepAlive(request),
+              userResponse = streamResponse
+            )
+
         }
 
       case _ =>
@@ -76,6 +86,37 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
   private def fail(reason: UnhandledReason): AsyncResult = {
     AsyncResult.completed(unhanded.apply(reason))
+  }
+
+  private def write(
+                     ctx: ChannelHandlerContext,
+                     request: FullHttpRequest,
+                     isKeepAlive: Boolean,
+                     userResponse: StreamResponse
+                   ): Unit = {
+
+    val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
+    response.headers()
+      .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
+      .set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
+
+    processKeepAlive(isKeepAlive, request, response)
+
+    ctx.write(response) // empty first
+
+    userResponse.it.zipWithIndex.foreach { case (chunk, index) =>
+      ctx.write(new DefaultHttpContent(
+        Unpooled.copiedBuffer(chunk)
+      ))
+      if (index % 3 == 0) {
+        ctx.flush()
+      }
+    }
+
+    val f = ctx.write(LastHttpContent.EMPTY_LAST_CONTENT)
+    if (!isKeepAlive) {
+      f.addListener(ChannelFutureListener.CLOSE)
+    }
   }
 
   private def write(ctx: ChannelHandlerContext,

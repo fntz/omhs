@@ -11,6 +11,7 @@ object MyApp extends App {
   import p._
   import AsyncResult._
   import AsyncResult.Implicits._
+  import AsyncResult.Streaming._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -50,10 +51,15 @@ object MyApp extends App {
   val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
     s"tst: $y ----> ${x} and $z"
   }
+
+  val rc = get("chunks" / LongParam) ~> { (x: Long) =>
+    (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
+      .toAsync("text/plain")
+  }
 //
 //
 //
-  val t = (new Route).addRule(r)
+  val t = (new Route).addRule(r).addRule(rc)
 //  val t = r :: r1
 
   DefaultServer.run(9000, t.toHandler)

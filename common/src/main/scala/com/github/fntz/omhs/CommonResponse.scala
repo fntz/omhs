@@ -3,12 +3,17 @@ package com.github.fntz.omhs
 import io.netty.handler.codec.http.{HttpHeaderValues, HttpResponseStatus}
 import io.netty.util.CharsetUtil
 
+sealed trait Response
 // content-type
 case class CommonResponse(
                            status: HttpResponseStatus,
                            contentType: String,
                            content: Array[Byte]
-                         )
+                         ) extends Response
+
+case class StreamResponse(contentType: String, it: Iterator[Array[Byte]]) extends Response {
+  def toAsync: AsyncResult = AsyncResult.chunked(this)
+}
 
 object CommonResponse {
   val empty = new CommonResponse(

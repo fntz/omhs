@@ -6,15 +6,16 @@ todo:
  req as parameter to function  (check with unit functions) - done 
  improve macro compilation - done 
  pass additional headers into CommonResponse
- file transfer
+ file transfer (send/upload)
  query params materializer ???    
  add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
- streaming https://github.com/lks21c/netty-http-streaming-server/blob/master/src/main/java/com/creamsugardonut/HttpStaticFileServerHandler2.java
+ chunk responses - done ??? is it ok do not have Future(Iterator()) 
  http2
  cookie param
+ compressing 
  swagger
  resolve todos
- websockets 
+ websockets
 
 idea: 
 ```
