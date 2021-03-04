@@ -192,7 +192,7 @@ object MethodsImpl {
         Seq.empty
     }
 
-    println(s"actual parameters: $actualFunctionParameters")
+    println(s"actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}")
 
     val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
     def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
@@ -228,10 +228,6 @@ object MethodsImpl {
 
     // todo check on empty
 
-    // todo with carrying
-    // val fresh = f _
-    // fresh(n)(n)(n) ???
-    //
     val ts = tokens.map { token  =>
       val valName = TermName(c.freshName())
       token match {
