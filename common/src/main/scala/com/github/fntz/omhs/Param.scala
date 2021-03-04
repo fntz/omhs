@@ -96,7 +96,7 @@ object Param {
       case _ => TailDef(List(in))                 // unreachable
     }
   }
-
+  // todo make functional
   def parse(target: String, params: Vector[PathParam]): ParseResult = {
     val tmp = target.replaceAll("""\?.*""", "")
       .split("/").map(_.trim).filterNot(_.isEmpty)

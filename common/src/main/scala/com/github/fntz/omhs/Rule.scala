@@ -19,11 +19,11 @@ class Rule(val method: HttpMethod) {
 
   def currentHeaders: Vector[String] = headers.toVector
 
-  def isParseBody = isBodyNeeded
+  def isParseBody: Boolean = isBodyNeeded
 
-  def isRunWithRequest = isCurrentRequestNeeded
+  def isRunWithRequest: Boolean = isCurrentRequestNeeded
 
-  def currentReader = reader
+  def currentReader: BodyReader[_] = reader
 
   def withRequest(): Rule = {
     isCurrentRequestNeeded = true
@@ -62,15 +62,3 @@ class Rule(val method: HttpMethod) {
 
 }
 
-object Get {
-  def apply(): Rule = new Rule(HttpMethod.GET)
-}
-object Post {
-  def apply(): Rule = new Rule(HttpMethod.POST)
-}
-object Put {
-  def apply(): Rule = new Rule(HttpMethod.PUT)
-}
-object Delete {
-  def apply(): Rule = new Rule(HttpMethod.DELETE)
-}

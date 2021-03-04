@@ -259,6 +259,9 @@ object MethodsImpl {
 
     // skip cookies for now
     val funName = TermName(c.freshName())
+    // todo we should sort defs by tokens:
+    // (header / long) => {str, lng => }
+    // but currently I will pass defs in lng/header positions => runtime error
     val instance =
       q"""
         {

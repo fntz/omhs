@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+// todo rename somehow
 abstract class RuleAndF(val rule: Rule) {
   def ::[T <: RuleAndF](other: T): Route = {
     val r = new Route

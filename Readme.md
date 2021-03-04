@@ -7,7 +7,7 @@ todo:
 3. improve macro compilation ?
 3.1 query materializer   
 4. add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
-5. streaming
+5. streaming https://github.com/lks21c/netty-http-streaming-server/blob/master/src/main/java/com/creamsugardonut/HttpStaticFileServerHandler2.java
 6. http2
 7. cookie param
 8. swagger
