@@ -10,9 +10,14 @@ todo:
  query params materializer ???    
  add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
  chunk responses - done ??? is it ok do not have Future(Iterator()) 
+ setup: 
+ chunk size 
+ file size 
+ date local/timezone
+ 
  http2
  cookie param
- compressing 
+ compressing - done 
  swagger
  resolve todos
  websockets
@@ -25,9 +30,19 @@ scala
 // (x: String) is not a function but some object ? how to do it ?
 get(string) ~> { (x: String) => 
    contentType ("asd")
-   header "asd", "qwe"
-   
+   header "asd", "qwe"  
 }
+
+^ is not possible, but 
+
+case class action {
+  ... 
+}
+
+get(string) ~> action { (x: String) => 
+  .... 
+}
+
 ```
   
 

@@ -21,7 +21,8 @@ object DefaultServer {
           ch.pipeline().addLast("codec", new HttpServerCodec())
           ch.pipeline().addLast("aggregator",
             new HttpObjectAggregator(512*1024))
-//          ch.pipeline().addLast("compressor",    new HttpContentCompressor())
+// by option or pass before pipelines
+          ch.pipeline().addLast("compressor",    new HttpContentCompressor())
           ch.pipeline().addLast(new ChunkedWriteHandler)
           p.addLast(handler)
         }

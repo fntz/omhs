@@ -3,6 +3,7 @@ package com.github.fntz.omhs
 
 import io.netty.handler.codec.http.HttpMethod
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Rule(val method: HttpMethod) {
@@ -57,7 +58,12 @@ class Rule(val method: HttpMethod) {
   }
 
   override def toString: String = {
-    s"$method ${paths.mkString("/")}"
+    val tmpHeaders = s"\n headers: ${headers.mkString(", ")}"
+    val tmpReq = s"\n useRequest: $isRunWithRequest"
+    val tmpIsBodyNeeded = s"\n isBodyNeeded: $isBodyNeeded"
+    val tmpMethod = s"\n ---- $method"
+    val tmpPath = s"\n path: ${paths.mkString("/")}"
+    s"$tmpMethod $tmpPath $tmpHeaders $tmpReq $tmpIsBodyNeeded"
   }
 
 }

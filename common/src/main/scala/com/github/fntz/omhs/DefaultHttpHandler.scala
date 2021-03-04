@@ -8,6 +8,10 @@ import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
+import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
+import java.time.format.DateTimeFormatter
+import java.util.Formatter.DateTime
+import java.util.Locale
 import scala.collection.JavaConverters._
 import scala.language.existentials
 
@@ -20,6 +24,10 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.method)
   private val unhanded = route.currentUnhandled
+
+  // todo pass with params probably
+  private val formatter = DateTimeFormatter.RFC_1123_DATE_TIME
+    .withZone(ZoneOffset.UTC).withLocale(Locale.US)
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     // todo from setup
@@ -139,6 +147,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     response.setStatus(userResponse.status)
     response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
     response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
+    response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(formatter))
 
     val f = ctx.writeAndFlush(response)
 
