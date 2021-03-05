@@ -49,8 +49,15 @@ object RequestHelper {
   private def fetchBodyDef(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[BodyDef[_]]] = {
     if (rule.isParseBody) {
       if (request.decoderResult().isSuccess) {
-        val strBody = request.content.toString(CharsetUtil.UTF_8)
-        Right(List(BodyDef(rule.currentReader.read(strBody))))
+        try {
+          val strBody = request.content.toString(CharsetUtil.UTF_8)
+          Right(List(BodyDef(rule.currentReader.read(strBody))))
+        } catch {
+          case ex: Throwable =>
+            // todo push into exception
+            Left(BodyIsUnparsable)
+        }
+
       } else {
         Left(BodyIsUnparsable)
       }
