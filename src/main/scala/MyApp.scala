@@ -59,7 +59,7 @@ object MyApp extends App {
   }
 
   val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
-    println(s"====> ${files}")
+    println(s"====> ${files.map(_.getFilename)}")
     println(s"===> ${req.remoteAddress}")
     "done upload"
   }

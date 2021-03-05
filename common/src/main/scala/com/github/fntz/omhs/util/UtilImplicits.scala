@@ -26,7 +26,11 @@ object UtilImplicits {
   }
 
   implicit class ChannelHandlerContextExt(val ctx: ChannelHandlerContext) extends AnyVal {
-    // todo x-forward-from for checking proxy
+    // todo x-forward-from for checking proxy see notes
+    // enum:
+    // hostName
+    // forwardFrom
+    // Unknown
     def remoteAddress: String = {
       ctx.channel().remoteAddress() match {
         case i: InetSocketAddress => i.getAddress.getHostAddress
