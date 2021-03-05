@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
+import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
 import java.net.InetSocketAddress
@@ -34,7 +35,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     empty.headers().set(serverHeader, nettyVersion)
 
     msg match {
-      case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request)  =>
+      case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request) =>
         ctx.writeAndFlush(continue)
 
       case request: FullHttpRequest =>
@@ -152,7 +153,6 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(formatter))
 
     val f = ctx.writeAndFlush(response)
-
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }
