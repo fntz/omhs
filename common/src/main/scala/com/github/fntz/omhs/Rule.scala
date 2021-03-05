@@ -14,6 +14,8 @@ class Rule(val method: HttpMethod) {
 
   private var isBodyNeeded = false
 
+  private var isFileNeeded = false
+
   private var isCurrentRequestNeeded: Boolean = false
 
   def params: Vector[PathParam] = paths.toVector
@@ -24,10 +26,17 @@ class Rule(val method: HttpMethod) {
 
   def isRunWithRequest: Boolean = isCurrentRequestNeeded
 
+  def isFilePassed: Boolean = isFileNeeded
+
   def currentReader: BodyReader[_] = reader
 
   def withRequest(): Rule = {
     isCurrentRequestNeeded = true
+    this
+  }
+
+  def withFiles(): Rule = {
+    isFileNeeded = true
     this
   }
 

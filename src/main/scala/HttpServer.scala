@@ -9,22 +9,25 @@ import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.handler.stream.ChunkedWriteHandler
 
 object DefaultServer {
+  // todo how to stop server?
   def run(port: Int, handler: DefaultHttpHandler): Unit = {
-    val group = new NioEventLoopGroup()
+    val boss = new NioEventLoopGroup()
+    val worker = new NioEventLoopGroup()
     val b = new ServerBootstrap()
-    b.group(group)
+    b.group(boss, worker)
       .channel(classOf[NioServerSocketChannel])
       .handler(new LoggingHandler(LogLevel.INFO))
       .childHandler(new ChannelInitializer[SocketChannel] {
         override def initChannel(ch: SocketChannel): Unit = {
           val p = ch.pipeline()
-          ch.pipeline().addLast("codec", new HttpServerCodec())
-          ch.pipeline().addLast("aggregator",
+          p.addLast("codec", new HttpServerCodec())
+          p.addLast("aggregator",
             new HttpObjectAggregator(512*1024))
-// by option or pass before pipelines
-          ch.pipeline().addLast("compressor",    new HttpContentCompressor())
-          ch.pipeline().addLast(new ChunkedWriteHandler)
-          p.addLast(handler)
+
+          // TODO by option or pass before pipelines
+          p.addLast("compressor", new HttpContentCompressor())
+          p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
+          p.addLast("user_defined", handler)
         }
       })
 

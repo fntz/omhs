@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.util
 
-import com.github.fntz.omhs.{CurrentHttpRequest, CurrentHttpRequestDef, ParamDef, RequestHelper, Rule, UnhandledReason}
+import com.github.fntz.omhs._
 import io.netty.handler.codec.http.FullHttpRequest
 
 object UtilImplicits {
@@ -16,10 +16,12 @@ object UtilImplicits {
     }
 
     def materialize(request: FullHttpRequest): Either[UnhandledReason, List[ParamDef[_]]] = {
-      RequestHelper.materialize(request, rule).map { bodyHeaderDefs =>
-        bodyHeaderDefs ++ rule.toDefs(request)
+      RequestHelper.fetchAdditionalDefs(request, rule).map { additionalDefs =>
+        additionalDefs ++ rule.toDefs(request)
       }
     }
+
+
   }
 
 }

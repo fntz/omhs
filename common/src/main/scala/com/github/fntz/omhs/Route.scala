@@ -2,6 +2,10 @@ package com.github.fntz.omhs
 
 import scala.collection.mutable.{ArrayBuffer => AB}
 
+// todo add something like
+// new Route().adRule(r).onEveryResponseHeader("h-v", "value")
+// .onEveryResponseHeader((request) => ("h-v", request.get_somethng + "!")
+
 class Route {
   private val rules: AB[RuleAndF] = new AB[RuleAndF]()
   private var unhandledDefault = (reason: UnhandledReason) => {
@@ -10,6 +14,7 @@ class Route {
       case CookieIsMissing(value) => (400, s"cookie: $value is missing")
       case HeaderIsMissing(value) => (400, s"header: $value is missing")
       case BodyIsUnparsable => (400, s"body is incorrect")
+      case FilesIsUnparsable(t) => (500, s"files is corrupted")
       case UnhandledException(ex) => (500, s"$ex")
     }
     CommonResponse(

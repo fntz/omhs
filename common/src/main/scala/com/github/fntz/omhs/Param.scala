@@ -73,9 +73,16 @@ case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
 
   override val isPathParam: Boolean = false
 
-  override def toString: String = s"body[]" // todo typeOf[T]
+  override def toString: String = "body[]" // todo typeOf[T]
 }
 
+case object FileParam extends Param {
+  override def check(in: String): Boolean = true
+
+  override val isPathParam: Boolean = false
+
+  override def toString: String = "file"
+}
 
 case class ParseResult(success: Boolean, defs: List[PathParamDef[_]]) {
   val isSuccess: Boolean = success

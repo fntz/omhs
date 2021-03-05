@@ -1,5 +1,7 @@
 package com.github.fntz.omhs
 
+import io.netty.handler.codec.http.multipart.MixedFileUpload
+
 import java.util.UUID
 
 sealed trait ParamDef[T] {
@@ -69,4 +71,12 @@ case class CurrentHttpRequestDef(value: CurrentHttpRequest) extends ParamDef[Cur
 }
 object CurrentHttpRequestDef {
   val sortProp = 8
+}
+case class FileDef(value: List[MixedFileUpload]) extends ParamDef[List[MixedFileUpload]] {
+  override val sortProp: Int = FileDef.sortProp
+
+  override def toString: String = s"files: ${value.map(_.getFilename).mkString(", ")}"
+}
+object FileDef {
+  val sortProp = 9
 }

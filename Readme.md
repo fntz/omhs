@@ -14,7 +14,9 @@ todo:
  chunk size 
  file size 
  date local/timezone
- 
+ chunked requests 
+remote address: 
+ how to test ? 
  http2
  cookie param
  compressing - done 

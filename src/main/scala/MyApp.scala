@@ -1,5 +1,6 @@
 import com.github.fntz.omhs.methods.Methods
 import com.github.fntz.omhs._
+import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,11 +57,14 @@ object MyApp extends App {
     (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
       .toAsync("text/plain")
   }
-//
-//
-//
-  val t = (new Route).addRule(r).addRule(rc)
-//  val t = r :: r1
+
+  val rf = post("file" / FileParam / BodyParam[Person]) ~> { (files: List[MixedFileUpload], b: Person) =>
+    println(s"===> ${b}")
+    println(s"====> ${files}")
+    "done upload"
+  }
+
+  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
 
   DefaultServer.run(9000, t.toHandler)
 

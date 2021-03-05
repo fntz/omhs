@@ -30,39 +30,39 @@ class RequestHelperSpecs extends Specification {
     "body" should {
       "do not parse body when not need" in new Test {
         rule.isParseBody must beFalse
-        RequestHelper.materialize(request, rule) ==== Right(Nil)
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(Nil)
       }
       "parse body with error for some reason" in new Test {
         rule.body[Foo]
         request.setDecoderResult(DecoderResult.failure(new RuntimeException("boom")))
 
         rule.isParseBody must beTrue
-        RequestHelper.materialize(request, rule) ==== Left(BodyIsUnparsable)
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(BodyIsUnparsable)
       }
       "parse body with success" in new Test {
         rule.body[Foo]
         rule.isParseBody must beTrue
 
-        RequestHelper.materialize(request, rule) ==== Right(List(BodyDef(Foo(1))))
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(BodyDef(Foo(1))))
       }
     }
     "header" should {
       "do not return error when headers is empty in Rule" in new Test {
         rule.currentHeaders must be empty
 
-        RequestHelper.materialize(request, rule) ==== Right(Nil)
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(Nil)
       }
       "fail when header is missing" in new Test {
         rule.header(header)
         rule.currentHeaders must not be empty
 
-        RequestHelper.materialize(request, rule) ==== Left(HeaderIsMissing(header))
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(HeaderIsMissing(header))
       }
       "parse header with success" in new Test {
         rule.header(header)
         request.headers().add(header, hValue)
 
-        RequestHelper.materialize(request, rule) ==== Right(List(HeaderDef(hValue)))
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(HeaderDef(hValue)))
       }
     }
 
@@ -70,7 +70,7 @@ class RequestHelperSpecs extends Specification {
       rule.body[Foo].header(header)
       request.headers().add(header, hValue)
 
-      RequestHelper.materialize(request, rule) ==== Right(List(BodyDef(Foo(1)), HeaderDef(hValue)))
+      RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(BodyDef(Foo(1)), HeaderDef(hValue)))
     }
   }
 

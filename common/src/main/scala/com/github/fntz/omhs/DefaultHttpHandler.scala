@@ -3,14 +3,13 @@ package com.github.fntz.omhs
 import com.github.fntz.omhs.util.UtilImplicits
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
+import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
-import java.time.{LocalDateTime, ZoneId, ZoneOffset, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.util.Formatter.DateTime
+import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.Locale
 import scala.collection.JavaConverters._
 import scala.language.existentials
@@ -44,6 +43,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         val matchResult = result match {
           case Some((r, ParseResult(_, defs))) =>
             try {
+              // todo mixed files should be released !!!
               r.rule.materialize(request)
                 .map(defs.filterNot(_.skip) ++ _)
                 .map(r.run)

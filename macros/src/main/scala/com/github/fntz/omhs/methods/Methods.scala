@@ -2,6 +2,7 @@ package com.github.fntz.omhs.methods
 
 import scala.language.experimental.macros
 import com.github.fntz.omhs.{BodyWriter, _}
+import io.netty.handler.codec.http.multipart.MixedFileUpload
 
 import java.util.UUID
 import scala.reflect.api.Trees
@@ -129,6 +130,7 @@ object MethodsImpl {
     // TODO make sharable
     sealed trait ParamToken {
       def isBody = false
+      def isFile = false
     }
     case object StringToken extends ParamToken
     case object LongToken extends ParamToken
@@ -141,6 +143,9 @@ object MethodsImpl {
     }
     case object HeaderToken extends ParamToken
     case object CurrentRequestToken extends ParamToken
+    case object FileToken extends ParamToken {
+      override def isFile = true
+    }
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
       p match {
@@ -152,6 +157,7 @@ object MethodsImpl {
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
         case HeaderToken => c.typeTag[String].tpe
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
+        case FileToken => c.typeTag[List[MixedFileUpload]].tpe
       }
     }
 
@@ -168,8 +174,10 @@ object MethodsImpl {
         RestToken
       case q"com.github.fntz.omhs.HeaderParam" =>
         HeaderToken
+      case q"com.github.fntz.omhs.FileParam" =>
+        FileToken
       case Apply(Apply(TypeApply(
-      Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
+        Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
     }.to[scala.collection.mutable.ArrayBuffer]
 
@@ -179,6 +187,7 @@ object MethodsImpl {
       }
       c.abort(focus, s"Too many BodyParam(${where.mkString(", ")}) arguments, but expected one")
     }
+
 
     val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
@@ -228,6 +237,19 @@ object MethodsImpl {
 
     // todo check on empty
 
+    val bodyCount = tokens.count(x => x.isBody)
+    if (bodyCount > 1) {
+      c.abort(focus, s"BodyParam must be one per rule, given: ${bodyCount}")
+    }
+    val fileCount = tokens.count(x => x.isFile)
+    if (fileCount > 1) {
+      c.abort(focus, s"FileParam must be one per rule, given: ${fileCount}")
+    }
+
+    if (fileCount == 1 && bodyCount == 1) {
+      c.abort(focus, s"You can not mix BodyParam with FileParam, choose one")
+    }
+
     val ts = tokens.map { token  =>
       val valName = TermName(c.freshName())
       token match {
@@ -247,6 +269,8 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.HeaderDef($valName)", valName, HeaderDef.sortProp)
         case CurrentRequestToken =>
           (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($valName)", valName, CurrentHttpRequestDef.sortProp)
+        case FileToken =>
+          (pq"_root_.com.github.fntz.omhs.FileDef($valName)", valName, FileDef.sortProp)
       }
     }
 
@@ -274,6 +298,8 @@ object MethodsImpl {
                   rule.body()(b.reader)
                 case _root_.com.github.fntz.omhs.HeaderParam(value) =>
                   rule.header(value)
+                case _root_.com.github.fntz.omhs.FileParam =>
+                  rule.withFiles()
                 case param: _root_.com.github.fntz.omhs.PathParam =>
                   rule.path(param)
               }
