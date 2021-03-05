@@ -1,11 +1,10 @@
 package com.github.fntz.omhs.methods
 
 import scala.language.experimental.macros
-import com.github.fntz.omhs.{BodyWriter, _}
+import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 
 import java.util.UUID
-import scala.reflect.api.Trees
 import scala.reflect.macros.whitebox
 
 object Methods {
@@ -181,14 +180,6 @@ object MethodsImpl {
         BodyToken(tpt.tpe, reader)
     }.to[scala.collection.mutable.ArrayBuffer]
 
-    if (tokens.count(_.isBody) > 1) {
-      val where = tokens.collect {
-        case BodyToken(tpe, _) => tpe.resultType.toString
-      }
-      c.abort(focus, s"Too many BodyParam(${where.mkString(", ")}) arguments, but expected one")
-    }
-
-
     val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
         params.collect {
@@ -201,6 +192,11 @@ object MethodsImpl {
         Seq.empty
     }
 
+    // or currentrequest todo
+    val isEmptyFunction = actualFunctionParameters.isEmpty
+
+    println(s"isEmptyFunction: $isEmptyFunction")
+
     println(s"actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}")
 
     val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
@@ -211,39 +207,40 @@ object MethodsImpl {
 
     if (isReqParamNeeded) {
       if (!isReqParam(actualFunctionParameters.last._1)) {
-        c.error(focus, s"${reqType} must the last argument in the function")
+        c.error(focus, s"$reqType must be the last argument in the function")
       } else {
         tokens += CurrentRequestToken
       }
     }
 
-    if (tokens.size != actualFunctionParameters.size) {
+    if (tokens.size != actualFunctionParameters.size && !isEmptyFunction) {
       c.error(focus, "Args lengths are not the same")
     }
 
-    tokens.zip(actualFunctionParameters).foreach { case (paramToken, (funcTypeParam, argName)) =>
-      // check against arguments
-      val at = getType(c, paramToken)
-      if (at.toString != funcTypeParam.toString) {
-        c.abort(focus, s"Incorrect type for `$argName`, " +
-          s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
+    // otherwise just ignore all parameters
+    if (!isEmptyFunction) {
+      tokens.zip(actualFunctionParameters).foreach { case (paramToken, (funcTypeParam, argName)) =>
+        // check against arguments
+        val at = getType(c, paramToken)
+        if (at.toString != funcTypeParam.toString) {
+          c.abort(focus, s"Incorrect type for `$argName`, " +
+            s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
+        }
+        //      TODO doesn't work with List[String]
+        //      if (!(fp.typeSymbol.asType.toType =:= at)) {
+        //        c.abort(focus, s"Incorrect type for `$argName`, " +
+        //              s"required: ${at.typeSymbol.name}, given: ${fp}")
+        //      }
       }
-      //      TODO doesn't work with List[String]
-      //      if (!(fp.typeSymbol.asType.toType =:= at)) {
-      //        c.abort(focus, s"Incorrect type for `$argName`, " +
-      //              s"required: ${at.typeSymbol.name}, given: ${fp}")
-      //      }
     }
-
-    // todo check on empty
 
     val bodyCount = tokens.count(x => x.isBody)
     if (bodyCount > 1) {
-      c.abort(focus, s"BodyParam must be one per rule, given: ${bodyCount}")
+      c.abort(focus, s"BodyParam must be one per rule, given: $bodyCount")
     }
     val fileCount = tokens.count(x => x.isFile)
     if (fileCount > 1) {
-      c.abort(focus, s"FileParam must be one per rule, given: ${fileCount}")
+      c.abort(focus, s"FileParam must be one per rule, given: $fileCount")
     }
 
     if (fileCount == 1 && bodyCount == 1) {
@@ -281,11 +278,17 @@ object MethodsImpl {
     // skip cookies for now
     val funName = TermName(c.freshName())
 
+    // generate according to parameters or ignore them
+    val callFunction = if (isEmptyFunction) {
+      q"$f()"
+    } else {
+      q"$f(..$args)"
+    }
+
     // orig: header / string / long
     // defs: List(long, string, header) <- after apply to rule
     // cause: header, string, long
     // maybe I need to rewrite sorting in more effective way
-
     val instance =
       q"""
         {
@@ -318,7 +321,7 @@ object MethodsImpl {
 
                   sorted match {
                     case $caseClause =>
-                      $f(..$args)
+                      $callFunction
                     case _ =>
                       println("======TODO==============")
                       _root_.com.github.fntz.omhs.AsyncResult.completed(
@@ -332,8 +335,6 @@ object MethodsImpl {
             $funName()
         }
         """
-
-//    println(instance)
 
     c.Expr[RuleAndF](instance)
   }

@@ -52,7 +52,8 @@ lazy val mainProject = Project("test", file("."))
   .settings(
     opts,
     libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
     )
   )
   .dependsOn(common, macros)

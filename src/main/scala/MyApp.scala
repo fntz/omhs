@@ -49,22 +49,26 @@ object MyApp extends App {
     }
   } */
 
-  val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
-    s"tst: $y ----> ${x} and $z"
-  }
+//  val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
+//    s"tst: $y ----> ${x} and $z"
+//  }
+//
+//  val rc = get("chunks" / LongParam) ~> { (x: Long) =>
+//    (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
+//      .toAsync("text/plain")
+//  }
+//
+//  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
+//    println(s"====> ${files.map(_.getFilename)}")
+//    println(s"===> ${req.remoteAddress}")
+//    "done upload"
+//  }
+//  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
 
-  val rc = get("chunks" / LongParam) ~> { (x: Long) =>
-    (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
-      .toAsync("text/plain")
+  val re = get(StringParam / LongParam) ~> { () =>
+    "asd"
   }
-
-  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
-    println(s"====> ${files.map(_.getFilename)}")
-    println(s"===> ${req.remoteAddress}")
-    "done upload"
-  }
-
-  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
+  val t= (new Route).addRule(re)
 
   DefaultServer.run(9000, t.toHandler)
 
