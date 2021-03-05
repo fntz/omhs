@@ -58,9 +58,9 @@ object MyApp extends App {
       .toAsync("text/plain")
   }
 
-  val rf = post("file" / FileParam / BodyParam[Person]) ~> { (files: List[MixedFileUpload], b: Person) =>
-    println(s"===> ${b}")
+  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
     println(s"====> ${files}")
+    println(s"===> ${req.remoteAddress}")
     "done upload"
   }
 

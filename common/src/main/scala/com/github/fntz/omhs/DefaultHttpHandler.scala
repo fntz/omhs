@@ -8,6 +8,7 @@ import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
+import java.net.InetSocketAddress
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.Locale
@@ -37,14 +38,15 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         ctx.writeAndFlush(continue)
 
       case request: FullHttpRequest =>
-        logger.debug(s"${request.method()} -> ${request.uri()}")
+        val remoteAddress = ctx.remoteAddress
+        logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
         val result = findRule(request)
 
         val matchResult = result match {
           case Some((r, ParseResult(_, defs))) =>
             try {
               // todo mixed files should be released !!!
-              r.rule.materialize(request)
+              r.rule.materialize(request, remoteAddress)
                 .map(defs.filterNot(_.skip) ++ _)
                 .map(r.run)
                 .fold(fail, identity)
