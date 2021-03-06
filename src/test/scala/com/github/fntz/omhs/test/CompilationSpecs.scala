@@ -14,8 +14,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / StringParam / StringParam) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
+           p.get("file" / string / string) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
               "done"
            }
            """.stripMargin, s"CurrentHttpRequest must be the last argument in the function")
@@ -29,6 +30,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -49,6 +51,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            p.post("file" / FileParam / FileParam) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
               "done"
@@ -65,6 +68,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -86,8 +90,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.post("file" / LongParam / StringParam) ~> { (s: String) =>
+           p.post("file" / long / string) ~> { (s: String) =>
               "done"
            }
            """.stripMargin, "Args lengths are not the same")
@@ -102,8 +107,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.post("file" / LongParam / StringParam) ~> { (s: String, l: Long) =>
+           p.post("file" / long / string) ~> { (s: String, l: Long) =>
               "done"
            }
            """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
@@ -118,8 +124,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / StringParam) ~> { () =>
+           p.get("file" / string) ~> { () =>
               "done"
            }
            """.stripMargin)
@@ -134,8 +141,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / StringParam) ~> { (a: String, req: CurrentHttpRequest) =>
+           p.get("file" / string) ~> { (a: String, req: CurrentHttpRequest) =>
               "done"
            }
            """.stripMargin)
@@ -150,8 +158,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / LongParam) ~> { (l: Long) =>
+           p.get("file" / long) ~> { (l: Long) =>
               "done"
            }
            """.stripMargin)
@@ -166,8 +175,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / StringParam) ~> { (l: String) =>
+           p.get("file" / string) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -183,8 +193,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult.Implicits._
            import ParamDSL._
            import java.util.UUID
+           import ParamD._
 
-           p.get("file" / UUIDParam) ~> { (l: UUID) =>
+           p.get("file" / uuid) ~> { (l: UUID) =>
               "done"
            }
            """.stripMargin)
@@ -199,8 +210,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / RegexParam("".r)) ~> { (l: String) =>
+           p.get("file" / regex("".r)) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -215,6 +227,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            p.get("file" / *) ~> { (l: List[String]) =>
               "done"
@@ -231,8 +244,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
-           p.get("file" / HeaderParam("User-Agent")) ~> { (l: String) =>
+           p.get("file" / header("User-Agent")) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -247,6 +261,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -268,6 +283,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
+           import ParamD._
 
            p.get("file" / FileParam) ~> { (l: List[MixedFileUpload]) =>
               "done"
@@ -282,8 +298,9 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
+          import ParamD._
 
-          p.get(StringParam) ~> { (x: String) => "done" }
+          p.get(string) ~> { (x: String) => "done" }
 
         """.stripMargin)
     }

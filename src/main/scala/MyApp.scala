@@ -10,6 +10,7 @@ object MyApp extends App {
   import Methods._
   import ParamDSL._
   import p._
+  import ParamD._
   import AsyncResult._
   import AsyncResult.Implicits._
   import AsyncResult.Streaming._
@@ -38,39 +39,17 @@ object MyApp extends App {
     }
   }
 
-  val x = "test"
-  val xx = "/a/".r
-  val k = RegexParam(xx)
-/*
-  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person, req: CurrentHttpRequest) =>
-    println(s"----> ${req.headers}")
-    Future {
-      x
-    }
-  } */
 
-//  val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
-//    s"tst: $y ----> ${x} and $z"
-//  }
-//
-//  val rc = get("chunks" / LongParam) ~> { (x: Long) =>
-//    (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
-//      .toAsync("text/plain")
-//  }
-//
-  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
-    println(s"====> ${files.map(_.getFilename)}")
-    println(s"===> ${req.remoteAddress}")
-    "done upload"
+  val q = "asd"
+  val rs = get("test" / header("dasd")) ~> { (x: String) =>
+    println("~"*100)
+    println("done")
+    ""
   }
-//  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
-
-//  val re = get(StringParam / LongParam) ~> { () =>
-//    "asd"
-//  }
-  val t = (new Route).addRule(rf)
-
-  DefaultServer.run(9000, t.toHandler)
+//
+//  val t = (new Route).addRule(rs)
+//
+//  DefaultServer.run(9000, t.toHandler)
 
 //  val s = new HttpServer
 //  s.run(9000)

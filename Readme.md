@@ -12,9 +12,9 @@ query params materializer ???
 add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
 chunk responses - done ??? is it ok do not have Future(Iterator()) 
 setup: 
-chunk size 
-file size 
-date local/timezone
+    chunk size 
+    file size 
+    date local/timezone
 chunked requests 
 remote address - done  
 how to test ? 

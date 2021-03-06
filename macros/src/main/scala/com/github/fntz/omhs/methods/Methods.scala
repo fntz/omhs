@@ -160,6 +160,14 @@ object MethodsImpl {
       }
     }
 
+    val paramDMap = Map(
+      "string" -> StringToken,
+      "long" -> LongToken,
+      "uuid" -> UUIDToken,
+      "regex" -> RegexToken,
+      "header" -> HeaderToken
+    )
+
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
         UUIDToken
@@ -173,12 +181,21 @@ object MethodsImpl {
         RestToken
       case q"com.github.fntz.omhs.HeaderParam" =>
         HeaderToken
+      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) =>
+        paramDMap.get(term) match {
+          case Some(value) => value
+          case None =>
+           c.abort(focus, s"Unexpected term: $term, available: ${paramDMap.keys.mkString(", ")}")
+        }
+
       case q"com.github.fntz.omhs.FileParam" =>
         FileToken
       case Apply(Apply(TypeApply(
         Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
     }.to[scala.collection.mutable.ArrayBuffer]
+
+    println(s"=============> ${tokens.size}")
 
     val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
@@ -299,7 +316,7 @@ object MethodsImpl {
               ${c.prefix.tree}.obj.xs.map {
                 case b: _root_.com.github.fntz.omhs.BodyParam[_] =>
                   rule.body()(b.reader)
-                case _root_.com.github.fntz.omhs.HeaderParam(value) =>
+                case _root_.com.github.fntz.omhs.HeaderParam(value, _) =>
                   rule.header(value)
                 case _root_.com.github.fntz.omhs.FileParam =>
                   rule.withFiles()

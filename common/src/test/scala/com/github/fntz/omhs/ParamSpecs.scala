@@ -7,19 +7,20 @@ import java.util.UUID
 class ParamSpecs extends Specification {
 
   import ParamDSL._
+  import ParamD._
 
-  private val uuid = UUID.randomUUID()
+  private val genUuid = UUID.randomUUID()
 
   "params check" should {
     "#check" in {
-      val a = "test" / LongParam / "abc"
+      val a = "test" / long / "abc"
       parse("/test/123/abc", a) ==== ParseResult(
         success = true, List(EmptyDef("test"), LongDef(123), EmptyDef("abc"))
       )
       parse("/test/asd/abc", a).isSuccess must beFalse
       parse("test/", a.asInstanceOf[Vector[PathParam]]).isSuccess must beFalse
 
-      val b = LongParam / "test"
+      val b = long / "test"
       parse("/test/123", b).isSuccess must beFalse
       parse("/123/123", b).isSuccess must beFalse
       parse("123", b).isSuccess must beFalse
@@ -34,49 +35,49 @@ class ParamSpecs extends Specification {
         success = true, List(EmptyDef("test"), EmptyDef("abc"))
       )
 
-      val d = "test" / UUIDParam / "abc" / *
-      parse(s"/test/$uuid", d).isSuccess must beFalse
-      parse(s"/foo/$uuid/abc/123/bar", d).isSuccess must beFalse
-      parse(s"/test/$uuid/abc/123", d) ==== ParseResult(
-        success = true, List(EmptyDef("test"), UUIDDef(uuid),
+      val d = "test" / uuid / "abc" / *
+      parse(s"/test/$genUuid", d).isSuccess must beFalse
+      parse(s"/foo/$genUuid/abc/123/bar", d).isSuccess must beFalse
+      parse(s"/test/$genUuid/abc/123", d) ==== ParseResult(
+        success = true, List(EmptyDef("test"), UUIDDef(genUuid),
           EmptyDef("abc"), TailDef(List("123")))
       )
-      parse(s"/test/$uuid/abc/123/bar", d) ==== ParseResult(
-        success = true, List(EmptyDef("test"), UUIDDef(uuid),
+      parse(s"/test/$genUuid/abc/123/bar", d) ==== ParseResult(
+        success = true, List(EmptyDef("test"), UUIDDef(genUuid),
           EmptyDef("abc"), TailDef(List("123", "bar")))
       )
 
-      val e = UUIDParam / LongParam
-      parse(s"/test/$uuid", e).isSuccess must beFalse
-      parse(s"/$uuid/asd", e).isSuccess must beFalse
-      parse(s"/$uuid/123/asd", e).isSuccess must beFalse
-      parse(s"/$uuid/123/123", e).isSuccess must beFalse
-      parse(s"/$uuid/123", e) ==== ParseResult(
-        success = true, List(UUIDDef(uuid), LongDef(123))
+      val e = uuid / long
+      parse(s"/test/$genUuid", e).isSuccess must beFalse
+      parse(s"/$genUuid/asd", e).isSuccess must beFalse
+      parse(s"/$genUuid/123/asd", e).isSuccess must beFalse
+      parse(s"/$genUuid/123/123", e).isSuccess must beFalse
+      parse(s"/$genUuid/123", e) ==== ParseResult(
+        success = true, List(UUIDDef(genUuid), LongDef(123))
       )
 
-      val f = UUIDParam / "test"
-      parse(s"$uuid/test?asd=123", f) ==== ParseResult(
-        success = true, List(UUIDDef(uuid), EmptyDef("test"))
+      val f = uuid / "test"
+      parse(s"$genUuid/test?asd=123", f) ==== ParseResult(
+        success = true, List(UUIDDef(genUuid), EmptyDef("test"))
       )
     }
 
     "long" in {
-      LongParam.check("123") must beTrue
-      LongParam.check("-123") must beTrue
-      LongParam.check("123.0") must beFalse
-      LongParam.check("asd") must beFalse
-      LongParam.check(s"${Long.MaxValue}") must beTrue
+      long.check("123") must beTrue
+      long.check("-123") must beTrue
+      long.check("123.0") must beFalse
+      long.check("asd") must beFalse
+      long.check(s"${Long.MaxValue}") must beTrue
     }
 
     "uuid" in {
-      UUIDParam.check(UUID.randomUUID().toString) must beTrue
-      UUIDParam.check(UUID.randomUUID().toString + "asd") must beFalse
-      UUIDParam.check("asd") must beFalse
+      uuid.check(UUID.randomUUID().toString) must beTrue
+      uuid.check(UUID.randomUUID().toString + "asd") must beFalse
+      uuid.check("asd") must beFalse
     }
 
     "regex" in {
-      val re = RegexParam("gr[ae]y".r)
+      val re = regex("gr[ae]y".r)
       re.check("asd") must beFalse
       re.check("grey") must beTrue
       re.check("gray") must beTrue

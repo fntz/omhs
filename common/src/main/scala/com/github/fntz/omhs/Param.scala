@@ -10,6 +10,32 @@ sealed trait Param {
   def isPathParam: Boolean = true
   def check(in: String): Boolean
 }
+
+// todo rename
+object ParamD {
+  def string(name: String, description: Option[String]): StringParam = StringParam(name, description)
+  def string(name: String): StringParam = string(name, None)
+  def string: StringParam = string("string-param", None)
+
+  def long(name: String, description: Option[String]): LongParam = LongParam(name, description)
+  def long(name: String): LongParam = long(name, None)
+  def long: LongParam = long("long-param", None)
+
+  def uuid(name: String, description: Option[String]): UUIDParam = UUIDParam(name, description)
+  def uuid(name: String): UUIDParam = uuid(name, None)
+  def uuid: UUIDParam = uuid("uuid-param", None)
+
+  def regex(re: Regex, name: String, description: Option[String]): RegexParam =
+    RegexParam(re, name, description)
+  def regex(re: Regex, name: String): RegexParam = RegexParam(re, name, None)
+  def regex(re: Regex): RegexParam = RegexParam(re, "regex-param", None)
+
+  def header(headerName: String): HeaderParam =
+    header(headerName, None)
+  def header(headerName: String, description: Option[String]): HeaderParam =
+    HeaderParam(headerName, description)
+}
+
 sealed trait PathParam extends Param
 case class HardCodedParam(value: String) extends PathParam {
   override val isUserDefined: Boolean = true
@@ -17,12 +43,13 @@ case class HardCodedParam(value: String) extends PathParam {
 
   override def toString: String = value
 }
-case object StringParam extends PathParam {
-  override def check(in: String): Boolean = true
 
+case class StringParam(name: String, description: Option[String]) extends PathParam {
+  override def check(in: String): Boolean = true
   override def toString: String = ":string"
 }
-case object LongParam extends PathParam {
+
+case class LongParam(name: String, description: Option[String]) extends PathParam {
   override def check(in: String): Boolean = {
     if (in.isEmpty || in.contains(".")) {
       false
@@ -33,7 +60,7 @@ case object LongParam extends PathParam {
 
   override def toString: String = ":long"
 }
-case object UUIDParam extends PathParam {
+case class UUIDParam(name: String, description: Option[String]) extends PathParam {
   override def check(in: String): Boolean = {
     if (in.length == 36) {
       Try(UUID.fromString(in)).isSuccess
@@ -45,7 +72,7 @@ case object UUIDParam extends PathParam {
   override def toString: String = ":uuid"
 }
 
-case class RegexParam(re: Regex) extends PathParam {
+case class RegexParam(re: Regex, name: String, description: Option[String]) extends PathParam {
   override def check(in: String): Boolean = {
     re.findFirstIn(in).isDefined
   }
@@ -60,7 +87,7 @@ case object * extends PathParam {
   override def toString: String = "*"
 }
 
-case class HeaderParam(name: String) extends Param {
+case class HeaderParam(headerName: String, description: Option[String]) extends Param {
   override def check(in: String): Boolean = true
 
   override val isPathParam: Boolean = false
@@ -96,10 +123,10 @@ object Param {
   def convert(p: PathParam, in: String): PathParamDef[_] = {
     p match {
       case HardCodedParam(value) => EmptyDef(value)
-      case LongParam => LongDef(in.toLong)
-      case StringParam => StringDef(in)
-      case UUIDParam => UUIDDef(UUID.fromString(in))
-      case RegexParam(re) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
+      case _: LongParam => LongDef(in.toLong)
+      case _: StringParam => StringDef(in)
+      case _: UUIDParam => UUIDDef(UUID.fromString(in))
+      case RegexParam(re, _, _) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
       case _ => TailDef(List(in))                 // unreachable
     }
   }

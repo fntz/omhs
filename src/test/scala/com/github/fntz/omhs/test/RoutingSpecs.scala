@@ -23,6 +23,7 @@ class RoutingSpecs extends Specification with AfterAll {
   import ParamDSL._
   import com.github.fntz.omhs.p._
   import AsyncResult.Implicits._
+  import ParamD._
 
   case class Foo(id: Int)
   implicit val fooReader: BodyReader[Foo] = (str: String) => {
@@ -38,27 +39,27 @@ class RoutingSpecs extends Specification with AfterAll {
   Files.write(file1.toPath, "test".getBytes(CharsetUtil.UTF_8))
 
   "routing" in {
-    val r1 = get("test" / StringParam) ~> { (x: String) => x }
+    val r1 = get("test" / string) ~> { (x: String) => x }
 
     "match string" in new RouteTest(r1, "/test/foo") {
       status ==== HttpResponseStatus.OK
       content ==== "foo"
     }
 
-    val r2 = get("test" / LongParam) ~> { (x: Long) => s"$x" }
+    val r2 = get("test" / long) ~> { (x: Long) => s"$x" }
     "match long" in new RouteTest(r2, "/test/123") {
       status ==== HttpResponseStatus.OK
       content ==== "123"
     }
 
-    val uuid = UUID.randomUUID()
-    val r3 = get("test" / UUIDParam) ~> {(x: UUID) => s"$x"}
-    "match uuid"  in new RouteTest(r3, s"/test/$uuid") {
+    val genUuid = UUID.randomUUID()
+    val r3 = get("test" / uuid) ~> {(x: UUID) => s"$x"}
+    "match uuid"  in new RouteTest(r3, s"/test/$genUuid") {
       status ==== HttpResponseStatus.OK
-      content ==== s"$uuid"
+      content ==== s"$genUuid"
     }
 
-    val r4 = get("test" / RegexParam("^foo".r)) ~> { (x: String) => s"$x" }
+    val r4 = get("test" / regex("^foo".r)) ~> { (x: String) => s"$x" }
     "match regex/200" in new RouteTest(r4, "/test/foobar") {
       status ==== HttpResponseStatus.OK
       content ==== "foo"
@@ -74,7 +75,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== s"123.foo.bar.$uuid"
     }
 
-    val r6 = get("test" / HeaderParam(headerName)) ~> { (x: String) => x }
+    val r6 = get("test" / header(headerName)) ~> { (x: String) => x }
     "match header" in new RouteTest(r6, "/test") {
       override def makeRequest(path: String): FullHttpRequest = {
         val r =  req(path)
@@ -125,19 +126,19 @@ class RoutingSpecs extends Specification with AfterAll {
       pending
     }
 
-    val r11 = get("test" / HeaderParam(headerValue)) ~> {() => "ok"}
+    val r11 = get("test" / header(headerValue)) ~> {() => "ok"}
     "header is missing" in new RouteTest(r11, "/test") {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain("")
     }
 
-    val r12 = get("test" / LongParam) ~> {() => "ok" }
+    val r12 = get("test" / long) ~> {() => "ok" }
     "path is not matched" in new RouteTest(r12, "/test/foo") {
       status ==== HttpResponseStatus.NOT_FOUND
       content must contain("/test/foo")
     }
 
-    val r13 = get("test" / LongParam) ~> {() =>
+    val r13 = get("test" / long) ~> {() =>
       throw new RuntimeException("boom")
       "ok"
     }
