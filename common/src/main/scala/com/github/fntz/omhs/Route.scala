@@ -7,7 +7,7 @@ import scala.collection.mutable.{ArrayBuffer => AB}
 // .onEveryResponseHeader((request) => ("h-v", request.get_somethng + "!")
 
 class Route {
-  private val rules: AB[RuleAndF] = new AB[RuleAndF]()
+  private val rules: AB[ExecutableRule] = new AB[ExecutableRule]()
   private var unhandledDefault = (reason: UnhandledReason) => {
     val result = reason match {
       case PathNotFound(value) => (404, value)
@@ -24,9 +24,9 @@ class Route {
     )
   }
 
-  def current: Vector[RuleAndF] = rules.toVector
+  def current: Vector[ExecutableRule] = rules.toVector
 
-  def addRule[T <: RuleAndF](x: T): Route = {
+  def addRule[T <: ExecutableRule](x: T): Route = {
     rules += x
     this
   }
@@ -36,7 +36,7 @@ class Route {
     this
   }
 
-  def ::[T <: RuleAndF](other: T): Route = {
+  def ::[T <: ExecutableRule](other: T): Route = {
     addRule(other)
     this
   }

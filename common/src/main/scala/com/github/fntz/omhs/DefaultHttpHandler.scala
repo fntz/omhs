@@ -87,7 +87,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     }
   }
 
-  private def findRule(request: FullHttpRequest): Option[(RuleAndF, ParseResult)] = {
+  private def findRule(request: FullHttpRequest): Option[(ExecutableRule, ParseResult)] = {
     val decoder = new QueryStringDecoder(request.uri)
     val target = decoder.rawPath()
     byMethod

@@ -36,10 +36,15 @@ object ParamD {
     HeaderParam(headerName, description)
 }
 
-sealed trait PathParam extends Param
+sealed trait PathParam extends Param {
+  def name: String
+  def description: Option[String]
+}
 case class HardCodedParam(value: String) extends PathParam {
   override val isUserDefined: Boolean = true
   override def check(in: String): Boolean = in == value
+  override def name: String = value
+  override def description: Option[String] = None
 
   override def toString: String = value
 }

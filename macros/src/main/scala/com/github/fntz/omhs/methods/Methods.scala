@@ -10,25 +10,25 @@ import scala.reflect.macros.whitebox
 object Methods {
 
   implicit class PExt(val obj: p) extends AnyVal {
-    implicit def ~>[R](f: () => R): RuleAndF =
+    implicit def ~>[R](f: () => R): ExecutableRule =
     macro MethodsImpl.run0[R]
-    implicit def ~>[T, R](f: T => R): RuleAndF =
+    implicit def ~>[T, R](f: T => R): ExecutableRule =
       macro MethodsImpl.run1[T, R]
-    implicit def ~>[T1, T2, R](f: (T1, T2) => R): RuleAndF =
+    implicit def ~>[T1, T2, R](f: (T1, T2) => R): ExecutableRule =
       macro MethodsImpl.run2[T1, T2, R]
-    implicit def ~>[T1, T2, T3, R](f: (T1, T2, T3) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, R](f: (T1, T2, T3) => R): ExecutableRule =
       macro MethodsImpl.run3[T1, T2, T3, R]
-    implicit def ~>[T1, T2, T3, T4, R](f: (T1, T2, T3, T4) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, R](f: (T1, T2, T3, T4) => R): ExecutableRule =
       macro MethodsImpl.run4[T1, T2, T3, T4,  R]
-    implicit def ~>[T1, T2, T3, T4, T5, R](f: (T1, T2, T3, T4, T5) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, T5, R](f: (T1, T2, T3, T4, T5) => R): ExecutableRule =
       macro MethodsImpl.run5[T1, T2, T3, T4, T5, R]
-    implicit def ~>[T1, T2, T3, T4, T5, T6, R](f: (T1, T2, T3, T4, T5, T6) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, T5, T6, R](f: (T1, T2, T3, T4, T5, T6) => R): ExecutableRule =
       macro MethodsImpl.run6[T1, T2, T3, T4, T5, T6, R]
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, R](f: (T1, T2, T3, T4, T5, T6, T7) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, R](f: (T1, T2, T3, T4, T5, T6, T7) => R): ExecutableRule =
       macro MethodsImpl.run7[T1, T2, T3, T4, T5, T6, T7, R]
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, R](f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, R](f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): ExecutableRule =
       macro MethodsImpl.run8[T1, T2, T3, T4, T5, T6, T7, T8, R]
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R): RuleAndF =
+    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R): ExecutableRule =
       macro MethodsImpl.run9[T1, T2, T3, T4, T5, T6, T7, T8, T9, R]
   }
 
@@ -39,22 +39,22 @@ object Methods {
 object MethodsImpl {
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
-                           (f: c.Expr[() => R]): c.Expr[RuleAndF] = {
+                           (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
   def run1[T: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                              (f: c.Expr[T => R]): c.Expr[RuleAndF] = {
+                                              (f: c.Expr[T => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
   def run2[T1: c.WeakTypeTag, T2: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                              (f: c.Expr[(T1, T2) => R]): c.Expr[RuleAndF] = {
+                                              (f: c.Expr[(T1, T2) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
   def run3[T1: c.WeakTypeTag, T2: c.WeakTypeTag, T3: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                                                  (f: c.Expr[(T1, T2, T3) => R]): c.Expr[RuleAndF] = {
+                                                                  (f: c.Expr[(T1, T2, T3) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -62,7 +62,7 @@ object MethodsImpl {
            T2: c.WeakTypeTag,
            T3: c.WeakTypeTag,
            T4: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                  (f: c.Expr[(T1, T2, T3, T4) => R]): c.Expr[RuleAndF] = {
+                  (f: c.Expr[(T1, T2, T3, T4) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -71,7 +71,7 @@ object MethodsImpl {
     T3: c.WeakTypeTag,
     T4: c.WeakTypeTag,
     T5: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5) => R]): c.Expr[RuleAndF] = {
+                                        (f: c.Expr[(T1, T2, T3, T4, T5) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -81,7 +81,7 @@ object MethodsImpl {
     T4: c.WeakTypeTag,
     T5: c.WeakTypeTag,
     T6: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6) => R]): c.Expr[RuleAndF] = {
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -92,7 +92,7 @@ object MethodsImpl {
     T5: c.WeakTypeTag,
     T6: c.WeakTypeTag,
     T7: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7) => R]): c.Expr[RuleAndF] = {
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -104,7 +104,7 @@ object MethodsImpl {
     T6: c.WeakTypeTag,
     T7: c.WeakTypeTag,
     T8: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8) => R]): c.Expr[RuleAndF] = {
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
@@ -117,12 +117,12 @@ object MethodsImpl {
     T7: c.WeakTypeTag,
     T8: c.WeakTypeTag,
     T9: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9) => R]): c.Expr[RuleAndF] = {
+                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9) => R]): c.Expr[ExecutableRule] = {
     generate(c)(f.tree)
   }
 
 
-  private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[RuleAndF] = {
+  private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
@@ -328,7 +328,7 @@ object MethodsImpl {
                 rule.withRequest()
               }
 
-              val rf = new _root_.com.github.fntz.omhs.RuleAndF(rule) {
+              val rf = new _root_.com.github.fntz.omhs.ExecutableRule(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   val defsMap = defs.groupBy(_.sortProp).map { x =>
@@ -353,7 +353,7 @@ object MethodsImpl {
         }
         """
 
-    c.Expr[RuleAndF](instance)
+    c.Expr[ExecutableRule](instance)
   }
 
 

@@ -154,7 +154,7 @@ class RoutingSpecs extends Specification with AfterAll {
     )
   }
 
-  private class RouteTest(rule: RuleAndF, path: String) extends Scope {
+  private class RouteTest(rule: ExecutableRule, path: String) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
     val ro = (new Route).addRule(rule).toHandler
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
