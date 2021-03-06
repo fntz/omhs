@@ -58,17 +58,17 @@ object MyApp extends App {
 //      .toAsync("text/plain")
 //  }
 //
-//  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
-//    println(s"====> ${files.map(_.getFilename)}")
-//    println(s"===> ${req.remoteAddress}")
-//    "done upload"
-//  }
+  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
+    println(s"====> ${files.map(_.getFilename)}")
+    println(s"===> ${req.remoteAddress}")
+    "done upload"
+  }
 //  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
 
-  val re = get(StringParam / LongParam) ~> { () =>
-    "asd"
-  }
-  val t= (new Route).addRule(re)
+//  val re = get(StringParam / LongParam) ~> { () =>
+//    "asd"
+//  }
+  val t = (new Route).addRule(rf)
 
   DefaultServer.run(9000, t.toHandler)
 

@@ -2,10 +2,16 @@ package com.github.fntz.omhs
 
 import scala.concurrent.{ExecutionContext, Future}
 
+/*
+  ChannelHandler is not thread safe be design in netty
+  I use volatile vars because we want to set value in one thread where we run Future (sep: Executor)
+  but completeWith will run in Eventloop thread
+  value and completeWith is sort of flags
+ */
 class AsyncResult {
-// todo atomic: set in one thread, read in another
-  private var value: Response = null.asInstanceOf[Response]
-  private var completeWith: Response => Unit = null
+  // todo tests multithreading
+  @volatile private var value: Response = null.asInstanceOf[Response]
+  @volatile private var completeWith: Response => Unit = null
 
   def onComplete(f: Response => Unit): Unit = {
     completeWith = f

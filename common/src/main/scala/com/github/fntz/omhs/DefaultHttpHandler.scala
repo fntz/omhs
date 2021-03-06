@@ -82,6 +82,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         }
 
       case _ =>
+
         super.channelRead(ctx, msg)
     }
   }
@@ -119,6 +120,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
 
     ctx.write(response) // empty first
 
+    // somehow depends on sslContext check stackoverflow TODO
     userResponse.it.zipWithIndex.foreach { case (chunk, index) =>
       ctx.write(new DefaultHttpContent(
         Unpooled.copiedBuffer(chunk)

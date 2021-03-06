@@ -6,6 +6,7 @@ import io.netty.buffer.{ByteBuf, Unpooled}
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
+import io.netty.handler.codec.http.multipart.{DefaultHttpDataFactory, HttpPostRequestEncoder, MemoryFileUpload, MixedFileUpload}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
@@ -13,6 +14,8 @@ import org.specs2.specification.{AfterAll, Scope}
 
 import java.util.UUID
 import play.api.libs.json._
+
+import java.nio.file.Files
 
 class RoutingSpecs extends Specification with AfterAll {
 
@@ -23,8 +26,6 @@ class RoutingSpecs extends Specification with AfterAll {
 
   case class Foo(id: Int)
   implicit val fooReader: BodyReader[Foo] = (str: String) => {
-    println("$"*100)
-    println(str)
     Json.parse(str).as[Foo](Json.reads[Foo])
   }
 
@@ -32,6 +33,9 @@ class RoutingSpecs extends Specification with AfterAll {
   private val headerName = "X-foo"
   private val headerValue = "bar"
 
+  private val file1 = java.io.File.createTempFile("tests", ".txt")
+  file1.deleteOnExit()
+  Files.write(file1.toPath, "test".getBytes(CharsetUtil.UTF_8))
 
   "routing" in {
     val r1 = get("test" / StringParam) ~> { (x: String) => x }
@@ -72,7 +76,7 @@ class RoutingSpecs extends Specification with AfterAll {
 
     val r6 = get("test" / HeaderParam(headerName)) ~> { (x: String) => x }
     "match header" in new RouteTest(r6, "/test") {
-      override def makeRequest(path: String): DefaultFullHttpRequest = {
+      override def makeRequest(path: String): FullHttpRequest = {
         val r =  req(path)
         r.headers().set(headerName, headerValue)
         r
@@ -87,16 +91,21 @@ class RoutingSpecs extends Specification with AfterAll {
     }
     val foo = Foo(1000)
     "fetch body" in new RouteTest(r7, "/test") {
-      override def makeRequest(path: String): DefaultFullHttpRequest = {
+      override def makeRequest(path: String): FullHttpRequest = {
         val r = req(path)
         r.setMethod(HttpMethod.POST)
         val z = r.replace(Unpooled.copiedBuffer(write(foo).getBytes(CharsetUtil.UTF_8)))
-        z.asInstanceOf[DefaultFullHttpRequest]
+        z
       }
       status ==== HttpResponseStatus.OK
       content ==== write(foo)
     }
 
+    val r8 = post("test" / FileParam) ~> { (xs: List[MixedFileUpload]) =>
+      println("~"*100)
+      println(xs)
+      s"${xs.map(_.getName).mkString(", ")}"
+    }
     "fetch files" in {
       pending
     }
@@ -145,8 +154,7 @@ class RoutingSpecs extends Specification with AfterAll {
   }
 
   private class RouteTest(rule: RuleAndF, path: String) extends Scope {
-    def makeRequest(path: String): DefaultFullHttpRequest = req(path)
-    println(s"------------__> ${path}")
+    def makeRequest(path: String): FullHttpRequest = req(path)
     val ro = (new Route).addRule(rule).toHandler
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
     channel.pipeline()

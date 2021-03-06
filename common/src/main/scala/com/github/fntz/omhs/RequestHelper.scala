@@ -2,7 +2,7 @@ package com.github.fntz.omhs
 
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
-import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
+import io.netty.handler.codec.http.multipart.{Attribute, HttpPostRequestDecoder, MixedFileUpload}
 import io.netty.util.CharsetUtil
 
 import scala.collection.JavaConverters._
