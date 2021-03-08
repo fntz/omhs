@@ -1,4 +1,4 @@
 package com.github.fntz.omhs.swagger
 
 // todo schema -> type
-case class Header(description: String)
+case class Hea1der(description: String)

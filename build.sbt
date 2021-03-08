@@ -37,7 +37,7 @@ val playJson = Seq(
 val common = project.settings(opts)
   .settings(
     name := "common",
-    libraryDependencies ++= specs2 ++ netty ++ logback
+    libraryDependencies ++= specs2 ++ netty ++ logback ++ playJson
   )
 
 val macros = project.settings(opts)

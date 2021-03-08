@@ -25,6 +25,16 @@ swagger
 resolve todos
 websockets
 
+swagger: 
+  - swagger object 
+    - info object -> user defined => Route
+    pathItem (get/post/put...) <- from Rule
+      rule is an operation 
+    set of operation transforms to PathItem
+      PathItem forms swagger
+      fin!
+
+
 idea: 
 ```
 scala 

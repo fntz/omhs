@@ -1,14 +1,25 @@
 package com.github.fntz.omhs
 
-
 import io.netty.handler.codec.http.HttpMethod
-
-import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer => AB}
 
-class Rule(val method: HttpMethod) {
+case class Rule(method: HttpMethod) {
+
   private val paths: AB[PathParam] = new AB[PathParam]()
-  private val headers: AB[String] = new AB[String]()
+  private val headers: AB[HeaderParam] = new AB[HeaderParam]()
+
+  def currentUrl: String = {
+    val tmp = params.map {
+      case HardCodedParam(v) => v
+      case * => "*"
+      case p: PathParam => s"{${p.name}}"
+    }.mkString("/")
+    if (tmp.startsWith("/")) {
+      tmp
+    } else {
+      s"/$tmp"
+    }
+  }
 
   private var reader: BodyReader[_] = null // todo None instead
 
@@ -20,7 +31,7 @@ class Rule(val method: HttpMethod) {
 
   def params: Vector[PathParam] = paths.toVector
 
-  def currentHeaders: Vector[String] = headers.toVector
+  def currentHeaders: Vector[HeaderParam] = headers.toVector
 
   def isParseBody: Boolean = isBodyNeeded
 
@@ -61,7 +72,7 @@ class Rule(val method: HttpMethod) {
     this
   }
 
-  def header(header: String): Rule = {
+  def header(header: HeaderParam): Rule = {
     headers += header
     this
   }

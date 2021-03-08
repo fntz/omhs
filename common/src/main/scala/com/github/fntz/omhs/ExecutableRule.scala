@@ -1,6 +1,10 @@
 package com.github.fntz.omhs
 
+import io.netty.handler.codec.http.HttpMethod
+
 class ExecutableRule(val rule: Rule) {
+
+  lazy val method: HttpMethod = rule.method
 
   def ::[T <: ExecutableRule](other: T): Route = {
     val r = new Route

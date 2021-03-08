@@ -26,7 +26,7 @@ class Route {
 
   def current: Vector[ExecutableRule] = rules.toVector
 
-  def addRule[T <: ExecutableRule](x: T): Route = {
+  def addRule(x: ExecutableRule): Route = {
     rules += x
     this
   }

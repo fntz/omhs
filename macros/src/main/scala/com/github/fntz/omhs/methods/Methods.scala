@@ -316,8 +316,8 @@ object MethodsImpl {
               ${c.prefix.tree}.obj.xs.map {
                 case b: _root_.com.github.fntz.omhs.BodyParam[_] =>
                   rule.body()(b.reader)
-                case _root_.com.github.fntz.omhs.HeaderParam(value, _) =>
-                  rule.header(value)
+                case h: _root_.com.github.fntz.omhs.HeaderParam =>
+                  rule.header(h)
                 case _root_.com.github.fntz.omhs.FileParam =>
                   rule.withFiles()
                 case param: _root_.com.github.fntz.omhs.PathParam =>

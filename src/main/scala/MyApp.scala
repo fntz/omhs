@@ -2,6 +2,7 @@ import com.github.fntz.omhs.methods.Methods
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
+import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,17 +40,26 @@ object MyApp extends App {
     }
   }
 
-
+  import SwaggerImplicits._
   val q = "asd"
-  val rs = get("test" / header("dasd")) ~> { (x: String) =>
+  val rs = get("test" / header("asd")) ~> { () =>
     println("~"*100)
     println("done")
-    ""
+    "ok"
   }
-//
-//  val t = (new Route).addRule(rs)
-//
-//  DefaultServer.run(9000, t.toHandler)
+  val rss = rs.toSwagger.withTags("foo", "bar")
+    .withResponse(200, Response("description"))
+    .withDescription("test api")
+    .withExternalDocs(ExternalDocumentation("http://example.com", Some("ext")))
+    .withOperationId("opId")
+    .withSummary("summary")
+    .withDeprecated(false)
+
+
+  val t = (new Route).addRule(rss)
+    .swagger("swagger")
+
+  DefaultServer.run(9000, t.toHandler)
 
 //  val s = new HttpServer
 //  s.run(9000)

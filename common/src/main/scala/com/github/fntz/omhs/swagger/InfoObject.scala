@@ -17,3 +17,14 @@ case class InfoObject(
                               contact: Option[Contact] = None,
                               license: Option[License] = None
                             )
+
+object InfoObject {
+  val empty: InfoObject = InfoObject(
+    version = "0.0.1",
+    title = "auto-generated api",
+    description = None,
+    termsOfService = None,
+    contact = None,
+    license = None
+  )
+}

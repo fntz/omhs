@@ -6,10 +6,8 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
-import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
-import java.net.InetSocketAddress
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.Locale

@@ -2,6 +2,18 @@ package com.github.fntz.omhs.swagger
 
 import com.github.fntz.omhs.swagger.In.In
 
+object In extends Enumeration {
+  type In = Value
+  val query, header, path, cookie = Value
+}
+
+// swagger data types
+// note I use only limited set because currently dsl does not support all of them
+object DataType extends Enumeration {
+  type DateType = Value
+  val int64, uuid, string = Value
+}
+
 /**
  * Describes a single operation parameter.
  * A unique parameter is defined by a combination of a name and location.
@@ -22,15 +34,13 @@ sealed trait Parameter {
   def name: String
   def description: Option[String]
   def required: Boolean = false
-  def deprecated: Boolean = false
-  def allowEmptyValue: Boolean = false
   def in: In
 }
 case class Query(name: String,
                  description: Option[String],
                  override val required: Boolean = false,
-                 override val deprecated: Boolean = false,
-                 override val allowEmptyValue: Boolean = false
+                 deprecated: Boolean = false,
+                 allowEmptyValue: Boolean = false
                 ) extends Parameter {
   override def in: In = In.query
 }
@@ -38,33 +48,28 @@ case class Query(name: String,
 
 case class Header(name: String,
                  description: Option[String],
-                 override val required: Boolean = false,
-                 override val deprecated: Boolean = false,
-                 override val allowEmptyValue: Boolean = false
+                 dataType: DataType.Value,
+                 override val required: Boolean = false
                 ) extends Parameter {
   override def in: In = In.header
 }
 
 case class Path(name: String,
-                  description: Option[String],
-                  override val deprecated: Boolean = false,
-                  override val allowEmptyValue: Boolean = false
-                 ) extends Parameter {
+                description: Option[String],
+                dataType: DataType.Value
+              ) extends Parameter {
   override def in: In = In.path
   override def required: Boolean = true
 }
 
 case class Cookie(name: String,
                 description: Option[String],
-                override val deprecated: Boolean = false,
+                deprecated: Boolean = false,
                 override val required: Boolean = false,
-                override val allowEmptyValue: Boolean = false
+                allowEmptyValue: Boolean = false
                ) extends Parameter {
   override def in: In = In.path
 }
 
 
-object In extends Enumeration {
-  type In = Value
-  val query, header, path, cookie = Value
-}
+

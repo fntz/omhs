@@ -69,7 +69,7 @@ object RequestHelper {
   private def fetchHeadersDef(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[HeaderDef]] = {
     val fetchedHeaders = if (rule.currentHeaders.nonEmpty) {
       rule.currentHeaders.map { need =>
-        (request.headers.get(need), need)
+        (request.headers.get(need.headerName), need)
       }.toList
     } else {
       Nil
@@ -79,7 +79,7 @@ object RequestHelper {
       val headerDefs = fetchedHeaders.map(x => HeaderDef(x._1))
       Right(headerDefs)
     } else {
-      Left(HeaderIsMissing(nullHeader.get._2))
+      Left(HeaderIsMissing(nullHeader.get._2.headerName))
     }
   }
 

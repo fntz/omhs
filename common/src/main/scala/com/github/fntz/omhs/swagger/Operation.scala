@@ -8,8 +8,7 @@ case class Operation(
                      operationId: Option[String],
                      parameters: List[Parameter],
                      requestBody: Option[RequestBody],
-                     responses: List[Response],
-                     deprecated: Boolean = false,
+                     responses: Map[Int, Response],
+                     deprecated: Boolean = false
                      // todo security
-                     servers: List[Server]
                    )

@@ -90,6 +90,10 @@ case object * extends PathParam {
   override def isRestParam: Boolean = true
 
   override def toString: String = "*"
+
+  override def name: String = "*"
+
+  override def description: Option[String] = None
 }
 
 case class HeaderParam(headerName: String, description: Option[String]) extends Param {
