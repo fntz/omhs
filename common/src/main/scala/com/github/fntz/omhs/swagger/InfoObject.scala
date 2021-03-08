@@ -9,11 +9,11 @@ package com.github.fntz.omhs.swagger
  * @param contact - The contact information for the exposed API.
  * @param license - The license information for the exposed API.
  */
-case class SwaggerInfoObject(
+case class InfoObject(
                               version: String,
                               title: String,
                               description: Option[String] = None,
                               termsOfService: Option[String] = None,
-                              contact: Option[SwaggerContact] = None,
-                              license: Option[SwaggerLicense] = None
+                              contact: Option[Contact] = None,
+                              license: Option[License] = None
                             )

@@ -12,8 +12,8 @@ package com.github.fntz.omhs.swagger
  *                  The value is used for substitution in the server's URL template.
  *
  */
-case class SwaggerServer(
+case class Server(
                           url: String,
                           description: Option[String],
-                          variables: Map[String, SwaggerServerVariable]
+                          variables: Map[String, Variable]
                         )

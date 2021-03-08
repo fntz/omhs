@@ -12,7 +12,7 @@ package com.github.fntz.omhs.swagger
  * @param description - An optional description for the server variable.
  *                    CommonMark syntax MAY be used for rich text representation.
  */
-case class SwaggerServerVariable(
+case class Variable(
                                   enum: List[String],
                                   default: String,
                                   description: Option[String] = None

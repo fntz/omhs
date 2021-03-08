@@ -5,7 +5,7 @@ package com.github.fntz.omhs.swagger
  * @param name - The license name used for the API.
  * @param url - A URL to the license used for the API. MUST be in the format of a URL.
  */
-case class SwaggerLicense(
+case class License(
                            name: String,
                            url: Option[String]
                          )

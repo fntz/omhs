@@ -6,7 +6,7 @@ package com.github.fntz.omhs.swagger
  * @param description - A short description of the target documentation.
  *                    CommonMark syntax MAY be used for rich text representation.
  */
-case class SwaggerExternalDocumentation(
+case class ExternalDocumentation(
                                          url: String,
                                          description: Option[String]
                                        )
