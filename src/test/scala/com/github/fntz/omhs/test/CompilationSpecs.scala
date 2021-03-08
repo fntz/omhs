@@ -252,6 +252,23 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin)
     }
 
+    "pass cookie" in {
+      compile(
+        s"""
+           import io.netty.handler.codec.http.cookie.Cookie
+           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import ParamDSL._
+           import ParamD._
+
+           p.get("file" / cookie("foo")) ~> { (l: Cookie) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
     "pass Body" in {
       compile(
         s"""

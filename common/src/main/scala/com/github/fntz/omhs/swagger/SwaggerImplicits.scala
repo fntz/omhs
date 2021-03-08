@@ -14,7 +14,6 @@ object SwaggerImplicits {
         parameters = Nil,
         requestBody = None,
         responses = Map.empty,
-        deprecated = false,
         summary = None
       )
     }

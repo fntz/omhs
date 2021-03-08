@@ -3,6 +3,7 @@ package com.github.fntz.omhs.methods
 import scala.language.experimental.macros
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
+import io.netty.handler.codec.http.cookie.Cookie
 
 import java.util.UUID
 import scala.reflect.macros.whitebox
@@ -145,6 +146,7 @@ object MethodsImpl {
     case object FileToken extends ParamToken {
       override def isFile = true
     }
+    case object CookieToken extends ParamToken
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
       p match {
@@ -157,6 +159,7 @@ object MethodsImpl {
         case HeaderToken => c.typeTag[String].tpe
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
         case FileToken => c.typeTag[List[MixedFileUpload]].tpe
+        case CookieToken => c.typeTag[Cookie].tpe
       }
     }
 
@@ -165,7 +168,8 @@ object MethodsImpl {
       "long" -> LongToken,
       "uuid" -> UUIDToken,
       "regex" -> RegexToken,
-      "header" -> HeaderToken
+      "header" -> HeaderToken,
+      "cookie" -> CookieToken
     )
 
     val tokens = c.prefix.tree.collect {
@@ -181,6 +185,8 @@ object MethodsImpl {
         RestToken
       case q"com.github.fntz.omhs.HeaderParam" =>
         HeaderToken
+      case q"com.github.fntz.omhs.CookieParam" =>
+        CookieToken
       case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) =>
         paramDMap.get(term) match {
           case Some(value) => value
@@ -285,6 +291,8 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($valName)", valName, CurrentHttpRequestDef.sortProp)
         case FileToken =>
           (pq"_root_.com.github.fntz.omhs.FileDef($valName)", valName, FileDef.sortProp)
+        case CookieToken =>
+          (pq"_root_.com.github.fntz.omhs.CookieDef($valName)", valName, CookieDef.sortProp)
       }
     }
 
@@ -318,6 +326,8 @@ object MethodsImpl {
                   rule.body()(b.reader)
                 case h: _root_.com.github.fntz.omhs.HeaderParam =>
                   rule.header(h)
+                case h: _root_.com.github.fntz.omhs.CookieParam =>
+                  rule.cookie(h)
                 case _root_.com.github.fntz.omhs.FileParam =>
                   rule.withFiles()
                 case param: _root_.com.github.fntz.omhs.PathParam =>

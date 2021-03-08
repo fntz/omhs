@@ -1,7 +1,8 @@
 package com.github.fntz.omhs
 
 import io.netty.handler.codec.DecoderResult
-import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpMethod, HttpVersion}
+import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, DefaultCookie}
+import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpHeaderNames, HttpMethod, HttpVersion}
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
@@ -10,7 +11,8 @@ class RequestHelperSpecs extends Specification {
   private val uri = "/test"
   private val version = HttpVersion.HTTP_1_1
   private val method = HttpMethod.POST
-  private val header = "User-Agent"
+  private val header = HeaderParam("User-Agent", None)
+  private val cookie = CookieParam("ABC", None)
   private val hValue = "test-suite"
   private def default = new DefaultFullHttpRequest(
     version,
@@ -56,19 +58,41 @@ class RequestHelperSpecs extends Specification {
         rule.header(header)
         rule.currentHeaders must not be empty
 
-        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(HeaderIsMissing(header))
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(HeaderIsMissing(header.headerName))
       }
       "parse header with success" in new Test {
         rule.header(header)
-        request.headers().add(header, hValue)
+        request.headers().add(header.headerName, hValue)
 
         RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(HeaderDef(hValue)))
       }
     }
 
+    "cookie" should {
+      "do not return error when cookies is empty in Rule" in new Test {
+        rule.currentCookies must be empty
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(Nil)
+      }
+      "fail when cookie is missing" in new Test {
+        rule.cookie(cookie)
+        rule.currentCookies must not be empty
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(CookieIsMissing(cookie.cookieName))
+      }
+      "parse cookie with success" in new Test {
+        rule.cookie(cookie)
+        val c = new DefaultCookie(cookie.cookieName, "foo")
+        val add = ClientCookieEncoder.STRICT.encode(c)
+        request.headers().add(HttpHeaderNames.COOKIE, add)
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(CookieDef(c)))
+      }
+    }
+
     "both success" in new Test {
       rule.body[Foo].header(header)
-      request.headers().add(header, hValue)
+      request.headers().add(header.headerName, hValue)
 
       RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(BodyDef(Foo(1)), HeaderDef(hValue)))
     }

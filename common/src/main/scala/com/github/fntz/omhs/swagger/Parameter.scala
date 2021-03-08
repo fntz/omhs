@@ -64,12 +64,11 @@ case class Path(name: String,
 
 case class Cookie(name: String,
                 description: Option[String],
-                deprecated: Boolean = false,
                 override val required: Boolean = false,
-                allowEmptyValue: Boolean = false
+                dataType: DataType.Value
                ) extends Parameter {
-  override def in: In = In.path
+  override def in: In = In.header
 }
-
-
+// todo
+//  body, header, formData, query, path
 

@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.swagger
 
-import com.github.fntz.omhs.{ExecutableRule, LongParam, StringParam, UUIDParam}
+import com.github.fntz.omhs.{ExecutableRule, LongParam, UUIDParam}
 
 case class SwaggeredRule(rule: ExecutableRule,
                          tags: List[String],
@@ -60,8 +60,16 @@ case class SwaggeredRule(rule: ExecutableRule,
         dataType = DataType.string
       )
     }
+    val currentCookies = rule.rule.currentCookies.map { c =>
+      Cookie(
+        name = c.cookieName,
+        description = c.description,
+        required = true,
+        dataType = DataType.string
+      )
+    }
 
-    (currentPaths ++ currentHeaders).toList
+    (currentPaths ++ currentHeaders ++ currentCookies).toList
   }
 
   def toOperation: Operation = {

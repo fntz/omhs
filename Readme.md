@@ -18,12 +18,12 @@ setup:
 chunked requests 
 remote address - done  
 how to test ? 
-http2
 cookie param
 compressing - done 
 swagger
 resolve todos
-websockets
+swagger for file
+todo add cookie headers if present in response
 
 swagger: 
   - swagger object 

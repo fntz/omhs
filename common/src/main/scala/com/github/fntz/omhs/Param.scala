@@ -34,6 +34,11 @@ object ParamD {
     header(headerName, None)
   def header(headerName: String, description: Option[String]): HeaderParam =
     HeaderParam(headerName, description)
+
+  def cookie(headerName: String): CookieParam =
+    cookie(headerName, None)
+  def cookie(headerName: String, description: Option[String]): CookieParam =
+    CookieParam(headerName, description)
 }
 
 sealed trait PathParam extends Param {
@@ -97,6 +102,12 @@ case object * extends PathParam {
 }
 
 case class HeaderParam(headerName: String, description: Option[String]) extends Param {
+  override def check(in: String): Boolean = true
+
+  override val isPathParam: Boolean = false
+}
+
+case class CookieParam(cookieName: String, description: Option[String]) extends Param {
   override def check(in: String): Boolean = true
 
   override val isPathParam: Boolean = false

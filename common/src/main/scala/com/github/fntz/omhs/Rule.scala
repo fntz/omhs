@@ -7,6 +7,7 @@ case class Rule(method: HttpMethod) {
 
   private val paths: AB[PathParam] = new AB[PathParam]()
   private val headers: AB[HeaderParam] = new AB[HeaderParam]()
+  private val cookies: AB[CookieParam] = new AB[CookieParam]()
 
   def currentUrl: String = {
     val tmp = params.map {
@@ -41,6 +42,8 @@ case class Rule(method: HttpMethod) {
 
   def currentReader: BodyReader[_] = reader
 
+  def currentCookies: Vector[CookieParam] = cookies.toVector
+
   def withRequest(): Rule = {
     isCurrentRequestNeeded = true
     this
@@ -68,7 +71,8 @@ case class Rule(method: HttpMethod) {
     this
   }
 
-  def cookie(x: String): Rule = {
+  def cookie(cookie: CookieParam): Rule = {
+    cookies += cookie
     this
   }
 

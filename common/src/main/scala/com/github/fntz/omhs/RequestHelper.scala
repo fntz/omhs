@@ -1,8 +1,9 @@
 package com.github.fntz.omhs
 
-import io.netty.handler.codec.http.FullHttpRequest
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
-import io.netty.handler.codec.http.multipart.{Attribute, HttpPostRequestDecoder, MixedFileUpload}
+import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
+import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames}
 import io.netty.util.CharsetUtil
 
 import scala.collection.JavaConverters._
@@ -10,23 +11,28 @@ import scala.language.existentials
 
 object RequestHelper {
 
-  def fetchAdditionalDefs(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[ParamDef[_]]] = {
+  type E[R] = Either[UnhandledReason, List[R]]
+
+  def fetchAdditionalDefs(request: FullHttpRequest, rule: Rule): E[ParamDef[_]] = {
     val filesDef = fetchFileDef(request, rule)
 
     val bodyDefE = fetchBodyDef(request, rule)
 
     val headersDefE = fetchHeadersDef(request, rule)
 
+    val cookieDefE = fetchCookies(request, rule)
+
     // todo: ++
-    (bodyDefE, headersDefE, filesDef) match {
-      case (Right(b), Right(h), Right(f)) => Right(b ++ h ++ f)
-      case (_, _, Left(e)) => Left(e)
-      case (_, Left(e), _) => Left(e)
-      case (Left(e), _, _) => Left(e)
+    (bodyDefE, headersDefE, filesDef, cookieDefE) match {
+      case (Right(b), Right(h), Right(f), Right(c)) => Right(b ++ h ++ f ++ c)
+      case (_, _, _, Left(e)) => Left(e)
+      case (_, _, Left(e), _) => Left(e)
+      case (_, Left(e), _, _) => Left(e)
+      case (Left(e), _, _, _) => Left(e)
     }
   }
 
-  private def fetchFileDef(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[FileDef]] = {
+  private def fetchFileDef(request: FullHttpRequest, rule: Rule): E[FileDef] = {
     if (rule.isFilePassed) {
       val decoder = new HttpPostRequestDecoder(request)
       try {
@@ -46,14 +52,14 @@ object RequestHelper {
     }
   }
 
-  private def fetchBodyDef(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[BodyDef[_]]] = {
+  private def fetchBodyDef(request: FullHttpRequest, rule: Rule): E[BodyDef[_]] = {
     if (rule.isParseBody) {
       if (request.decoderResult().isSuccess) {
         try {
           val strBody = request.content.toString(CharsetUtil.UTF_8)
           Right(List(BodyDef(rule.currentReader.read(strBody))))
         } catch {
-          case ex: Throwable =>
+          case _: Throwable =>
             // todo push into exception
             Left(BodyIsUnparsable)
         }
@@ -66,7 +72,28 @@ object RequestHelper {
     }
   }
 
-  private def fetchHeadersDef(request: FullHttpRequest, rule: Rule): Either[UnhandledReason, List[HeaderDef]] = {
+  private def fetchCookies(request: FullHttpRequest, rule: Rule): E[CookieDef] = {
+    if (rule.currentCookies.nonEmpty) {
+      val cookies = Option(request.headers.get(HttpHeaderNames.COOKIE)).map { x =>
+        // todo strategy
+        ServerCookieDecoder.STRICT.decode(x).asScala
+      }.getOrElse(Set.empty)
+      val result = rule.currentCookies.map { need =>
+        need.cookieName -> cookies.find(need.cookieName == _.name())
+      }
+      val nullCookie = result.find(_._2.isEmpty)
+      nullCookie match {
+        case Some(v) => Left(CookieIsMissing(v._1))
+        case _ =>
+          val tmp = result.flatMap(_._2).map(x => CookieDef(x)).toList
+          Right(tmp)
+      }
+    } else {
+      Right(Nil)
+    }
+  }
+
+  private def fetchHeadersDef(request: FullHttpRequest, rule: Rule): E[HeaderDef] = {
     val fetchedHeaders = if (rule.currentHeaders.nonEmpty) {
       rule.currentHeaders.map { need =>
         (request.headers.get(need.headerName), need)

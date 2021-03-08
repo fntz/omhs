@@ -2,6 +2,7 @@ package com.github.fntz.omhs.test
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.methods.Methods._
+import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
 import io.netty.buffer.{ByteBuf, Unpooled}
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
@@ -145,6 +146,28 @@ class RoutingSpecs extends Specification with AfterAll {
     "function throw exception: UnhandledException" in new RouteTest(r13, "test/123") {
       status ==== HttpResponseStatus.INTERNAL_SERVER_ERROR
       content must contain("boom")
+    }
+
+    val cookieName = "foo"
+    val r14 = get("test" / cookie(cookieName)) ~> { (c: Cookie) =>
+      c.value()
+    }
+    "pass cookie" in new RouteTest(r14, "test") {
+      def v = "bar"
+      override def makeRequest(path: String): FullHttpRequest = {
+        val r = req("test")
+        val c = new DefaultCookie(cookieName, v)
+        val add = ClientCookieEncoder.STRICT.encode(c)
+        r.headers().add(HttpHeaderNames.COOKIE, add)
+        r
+      }
+      status ==== HttpResponseStatus.OK
+      content ==== v
+    }
+
+    "cookie is missing" in new RouteTest(r14, "test") {
+      status ==== HttpResponseStatus.BAD_REQUEST
+      content must contain(s"cookie: foo is missing")
     }
   }
 

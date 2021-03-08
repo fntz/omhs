@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import io.netty.handler.codec.http.cookie.Cookie
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 
 import java.util.UUID
@@ -79,4 +80,10 @@ case class FileDef(value: List[MixedFileUpload]) extends ParamDef[List[MixedFile
 }
 object FileDef {
   val sortProp = 9
+}
+case class CookieDef(value: Cookie) extends ParamDef[Cookie] {
+  override val sortProp: Int = CookieDef.sortProp
+}
+object CookieDef {
+  val sortProp = 10
 }

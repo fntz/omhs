@@ -71,6 +71,7 @@ object PlayJsonSupport {
     final val headerJson = Json.writes[Header]
     final val cookieJson = Json.writes[Cookie]
     override def writes(o: Parameter): JsValue = {
+      // todo with play generators
       val where = Json.obj("in" -> inJson.writes(o.in))
       val required = Json.obj("required" -> JsBoolean(o.required))
       val tmp = o match {
@@ -80,7 +81,7 @@ object PlayJsonSupport {
             "description" -> p.description.map(JsString).getOrElse(JsNull)
           )).rmNulls ++ dataTypeJson.writes(p.dataType).as[JsObject]
         case h: Header => headerJson.writes(h) - "dataType" ++ dataTypeJson.writes(h.dataType).as[JsObject]
-        case c: Cookie => cookieJson.writes(c)
+        case c: Cookie => cookieJson.writes(c) - "dataType" ++ dataTypeJson.writes(c.dataType).as[JsObject]
         case q: Query => queryJson.writes(q)
       }
       tmp ++ where ++ required

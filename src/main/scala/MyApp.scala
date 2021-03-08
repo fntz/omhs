@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
 
+import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 
 object MyApp extends App {
@@ -42,7 +43,8 @@ object MyApp extends App {
 
   import SwaggerImplicits._
   val q = "asd"
-  val rs = get("test" / header("asd")) ~> { () =>
+
+  val rs = get("test" / cookie("asd")) ~> { () =>
     println("~"*100)
     println("done")
     "ok"
