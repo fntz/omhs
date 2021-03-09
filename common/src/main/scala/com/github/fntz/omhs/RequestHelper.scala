@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}

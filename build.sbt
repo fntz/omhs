@@ -59,8 +59,9 @@ val playJsonSupport = Project("play-json-support", file("play-json-support"))
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
+    publish := false,
     libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     )
   )
-  .dependsOn(common, playJsonSupport, swagger)
+  .aggregate(common, playJsonSupport, swagger)

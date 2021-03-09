@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal.ParamDef
 import io.netty.handler.codec.http.HttpMethod
 
 class ExecutableRule(val rule: Rule) {

@@ -1,12 +1,14 @@
 package com.github.fntz.omhs.macros
 
 import com.github.fntz.omhs._
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.cookie.Cookie
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 
 import java.util.UUID
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
+import scala.collection.mutable.{ArrayBuffer => AB}
 
 object Methods {
 
@@ -184,21 +186,6 @@ object MethodsImpl {
     val banned: Vector[String] = Vector("StringToParamImplicits", "ParamImplicits", "VectorParamsImplicits")
 
     val tokens = c.prefix.tree.collect {
-      case q"com.github.fntz.omhs.UUIDParam" =>
-        UUIDToken
-      case q"com.github.fntz.omhs.StringParam" =>
-        StringToken
-      case q"com.github.fntz.omhs.LongParam" =>
-        LongToken
-      case q"com.github.fntz.omhs.RegexParam" =>
-        RegexToken
-      case q"com.github.fntz.omhs.TailParam" =>
-        TailToken
-      case q"com.github.fntz.omhs.HeaderParam" =>
-        HeaderToken
-      case q"com.github.fntz.omhs.CookieParam" =>
-        CookieToken
-
       case Apply(TypeApply(
         Select(Select(Select(_, TermName("omhs")), TermName("ParamDSL")),
         TermName("query")), List(tpt)), List(reader)) =>
@@ -217,14 +204,11 @@ object MethodsImpl {
            c.abort(focus, s"Unexpected term: $term, available: ${availableParams.keys.mkString(", ")}")
         }
 
-      case q"com.github.fntz.omhs.FileParam" =>
-        FileToken
-
       case Apply(Apply(TypeApply(
         Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
 
-    }.to[scala.collection.mutable.ArrayBuffer]
+    }.to[AB]
 
     println(s"=============> ${tokens.size}")
 
@@ -298,27 +282,27 @@ object MethodsImpl {
       val valName = TermName(c.freshName())
       token match {
         case StringToken =>
-          (pq"_root_.com.github.fntz.omhs.StringDef($valName)", valName, StringDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.StringDef($valName)", valName, StringDef.sortProp)
         case LongToken =>
-          (pq"_root_.com.github.fntz.omhs.LongDef($valName : Long)", valName, LongDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.LongDef($valName : Long)", valName, LongDef.sortProp)
         case RegexToken =>
-          (pq"_root_.com.github.fntz.omhs.RegexDef($valName)", valName, RegexDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.RegexDef($valName)", valName, RegexDef.sortProp)
         case UUIDToken =>
-          (pq"_root_.com.github.fntz.omhs.UUIDDef($valName)", valName, UUIDDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.UUIDDef($valName)", valName, UUIDDef.sortProp)
         case TailToken =>
-          (pq"_root_.com.github.fntz.omhs.TailDef($valName)", valName, TailDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.TailDef($valName)", valName, TailDef.sortProp)
         case BodyToken(tpt, _) =>
-          (pq"_root_.com.github.fntz.omhs.BodyDef($valName: ${tpt.typeSymbol})", valName, BodyDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.BodyDef($valName: ${tpt.typeSymbol})", valName, BodyDef.sortProp)
         case HeaderToken =>
-          (pq"_root_.com.github.fntz.omhs.HeaderDef($valName)", valName, HeaderDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.HeaderDef($valName)", valName, HeaderDef.sortProp)
         case CurrentRequestToken =>
-          (pq"_root_.com.github.fntz.omhs.CurrentHttpRequestDef($valName)", valName, CurrentHttpRequestDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.CurrentHttpRequestDef($valName)", valName, CurrentHttpRequestDef.sortProp)
         case FileToken =>
-          (pq"_root_.com.github.fntz.omhs.FileDef($valName)", valName, FileDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.FileDef($valName)", valName, FileDef.sortProp)
         case CookieToken =>
-          (pq"_root_.com.github.fntz.omhs.CookieDef($valName)", valName, CookieDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.CookieDef($valName)", valName, CookieDef.sortProp)
         case QueryToken(tpt, _) =>
-          (pq"_root_.com.github.fntz.omhs.QueryDef($valName: ${tpt.typeSymbol})", valName, QueryDef.sortProp)
+          (pq"_root_.com.github.fntz.omhs.internal.QueryDef($valName: ${tpt.typeSymbol})", valName, QueryDef.sortProp)
       }
     }
 
@@ -348,17 +332,17 @@ object MethodsImpl {
                 ${c.prefix.tree}.obj.method
               )
               ${c.prefix.tree}.obj.xs.map {
-                case b: _root_.com.github.fntz.omhs.BodyParam[_] =>
+                case b: _root_.com.github.fntz.omhs.internal.BodyParam[_] =>
                   rule.body()(b.reader)
-                case q: _root_.com.github.fntz.omhs.QueryParam[_] =>
+                case q: _root_.com.github.fntz.omhs.internal.QueryParam[_] =>
                   rule.query()(q.reader)
-                case h: _root_.com.github.fntz.omhs.HeaderParam =>
+                case h: _root_.com.github.fntz.omhs.internal.HeaderParam =>
                   rule.header(h)
-                case h: _root_.com.github.fntz.omhs.CookieParam =>
+                case h: _root_.com.github.fntz.omhs.internal.CookieParam =>
                   rule.cookie(h)
-                case f: _root_.com.github.fntz.omhs.FileParam =>
+                case f: _root_.com.github.fntz.omhs.internal.FileParam =>
                   rule.withFiles(f)
-                case param: _root_.com.github.fntz.omhs.PathParam =>
+                case param: _root_.com.github.fntz.omhs.internal.PathParam =>
                   rule.path(param)
               }
 
@@ -367,7 +351,7 @@ object MethodsImpl {
               }
 
               val rf = new _root_.com.github.fntz.omhs.ExecutableRule(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
+                override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   val defsMap = defs.groupBy(_.sortProp).map { x =>
                     x._1 -> x._2.to[scala.collection.mutable.ArrayBuffer]

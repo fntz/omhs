@@ -1,4 +1,6 @@
-package com.github.fntz.omhs
+package com.github.fntz.omhs.internal
+
+import com.github.fntz.omhs.{BodyReader, QueryReader}
 
 import scala.util.matching.Regex
 import java.util.UUID

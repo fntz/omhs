@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.util
 
 import com.github.fntz.omhs._
+import com.github.fntz.omhs.internal.{CurrentHttpRequestDef, ParamDef}
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaders}
 

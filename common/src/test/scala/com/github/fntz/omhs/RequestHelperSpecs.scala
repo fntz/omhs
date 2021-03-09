@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.DecoderResult
 import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, DefaultCookie}
 import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpHeaderNames, HttpMethod, HttpVersion}

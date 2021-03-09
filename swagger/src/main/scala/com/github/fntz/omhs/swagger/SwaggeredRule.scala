@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.swagger
 
-import com.github.fntz.omhs.{ExecutableRule, LongParam, UUIDParam}
+import com.github.fntz.omhs.ExecutableRule
+import com.github.fntz.omhs.internal.{LongParam, UUIDParam}
 
 case class SwaggeredRule(rule: ExecutableRule,
                          tags: List[String],

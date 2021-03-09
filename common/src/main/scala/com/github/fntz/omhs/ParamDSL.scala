@@ -1,5 +1,7 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal._
+
 import scala.util.matching.Regex
 
 object ParamDSL {

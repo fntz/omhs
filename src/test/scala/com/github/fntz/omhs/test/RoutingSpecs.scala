@@ -86,7 +86,7 @@ class RoutingSpecs extends Specification with AfterAll {
     }
 
     def write(x: Foo): String = Json.toJson(x)(Json.writes[Foo]).toString
-    val r7 = post("test" / BodyParam[Foo]) ~> { (x: Foo) =>
+    val r7 = post("test" / body[Foo]) ~> { (x: Foo) =>
       write(x)
     }
     val foo = Foo(1000)

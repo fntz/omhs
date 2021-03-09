@@ -1,4 +1,4 @@
-package com.github.fntz.omhs
+package com.github.fntz.omhs.internal
 
 import java.util.UUID
 import scala.collection.mutable.{ArrayBuffer => AB}

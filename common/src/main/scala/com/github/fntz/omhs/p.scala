@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal.{HardCodedParam, Param}
 import io.netty.handler.codec.http.HttpMethod
 
 case class p(xs: Vector[Param], method: HttpMethod)

@@ -1,6 +1,8 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.HttpMethod
+
 import scala.collection.mutable.{ArrayBuffer => AB}
 
 case class Rule(method: HttpMethod) {

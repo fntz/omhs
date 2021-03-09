@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal._
 import org.specs2.mutable.Specification
 
 import java.util.UUID
