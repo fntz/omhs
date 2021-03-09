@@ -57,7 +57,11 @@ object MyApp extends App {
     "ok"
   }
 
-  val rf = get("file" / file) ~> { (l: List[MixedFileUpload]) =>
+  implicit val bodyReader = new BodyReader[Search] {
+    override def read(str: String): Search = Search("dsa")
+  }
+
+  val rf = get("file" / body[Search]) ~> { (l: Search) =>
     "done"
   }
 

@@ -178,6 +178,8 @@ object MethodsImpl {
       "file" -> FileToken
     )
 
+    val complex: Vector[String] = Vector("body", "query")
+
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
         UUIDToken
@@ -194,12 +196,17 @@ object MethodsImpl {
       case q"com.github.fntz.omhs.CookieParam" =>
         CookieToken
 
-      case  Apply(TypeApply(
+      case Apply(TypeApply(
         Select(Select(Select(_, TermName("omhs")), TermName("ParamD")),
         TermName("query")), List(tpt)), List(reader)) =>
           QueryToken(tpt.tpe, reader)
 
-      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) if term != "query" =>
+      case Apply(TypeApply(
+        Select(Select(Select(_, TermName("omhs")), TermName("ParamD")),
+        TermName("body")), List(tpt)), List(reader)) =>
+          BodyToken(tpt.tpe, reader)
+
+      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) if !complex.contains(term) =>
         paramDMap.get(term) match {
           case Some(value) => value
           case None =>
@@ -208,6 +215,7 @@ object MethodsImpl {
 
       case q"com.github.fntz.omhs.FileParam" =>
         FileToken
+
       case Apply(Apply(TypeApply(
         Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)

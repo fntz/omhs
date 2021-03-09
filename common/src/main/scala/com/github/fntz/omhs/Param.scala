@@ -47,6 +47,9 @@ object ParamD {
   def file(name: String): FileParam = FileParam(name, None)
   def file(name: String, description: String): FileParam =
     FileParam(name, Some(description))
+
+  def body[T](implicit r: BodyReader[T]): BodyParam[T] =
+    BodyParam[T]()(r)
 }
 
 sealed trait PathParam extends Param {
