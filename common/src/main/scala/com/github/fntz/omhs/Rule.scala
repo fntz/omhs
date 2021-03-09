@@ -22,11 +22,11 @@ case class Rule(method: HttpMethod) {
     }
   }
 
-  private var reader: BodyReader[_] = null // todo None instead
+  private var reader: BodyReader[_] = _
 
-  private var queryReader: QueryReader[_] = null // todo ^
+  private var queryReader: QueryReader[_] = _ 
 
-  private var fileParam: FileParam = null
+  private var fileParam: FileParam = _
 
   private var isBodyNeeded = false
 

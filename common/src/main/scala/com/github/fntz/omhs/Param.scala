@@ -84,7 +84,6 @@ case class CookieParam(cookieName: String, description: Option[String]) extends 
   override val isPathParam: Boolean = false
 }
 
-
 case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
   override def check(in: String): Boolean = false
 
