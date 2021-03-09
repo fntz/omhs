@@ -120,7 +120,7 @@ class RoutingSpecs extends Specification with AfterAll {
         r
       }
       status ==== HttpResponseStatus.BAD_REQUEST
-      content ==== "body is incorrect"
+      content must contain("body is incorrect")
     }
 
     "unparsed files" in {

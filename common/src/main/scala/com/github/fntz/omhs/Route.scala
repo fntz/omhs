@@ -13,7 +13,7 @@ class Route {
       case PathNotFound(value) => (404, value)
       case CookieIsMissing(value) => (400, s"cookie: $value is missing")
       case HeaderIsMissing(value) => (400, s"header: $value is missing")
-      case BodyIsUnparsable => (400, s"body is incorrect")
+      case BodyIsUnparsable(ex) => (400, s"body is incorrect: $ex")
       case FilesIsUnparsable(_) => (500, s"files is corrupted")
       case QueryIsUnparsable(params) =>
         val q = params.map(x => s"${x._1}=${x._2.mkString(",")}").mkString(",")

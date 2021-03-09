@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, QueryStringDecoder}
 import io.netty.util.CharsetUtil
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.language.existentials
@@ -74,13 +75,12 @@ object RequestHelper {
           val strBody = request.content.toString(CharsetUtil.UTF_8)
           Right(List(BodyDef(rule.currentReader.read(strBody))))
         } catch {
-          case _: Throwable =>
-            // todo push into exception
-            Left(BodyIsUnparsable)
+          case ex: Throwable =>
+            Left(BodyIsUnparsable(ex))
         }
 
       } else {
-        Left(BodyIsUnparsable)
+        Left(BodyIsUnparsable(request.decoderResult().cause()))
       }
     } else {
       Right(Nil)
