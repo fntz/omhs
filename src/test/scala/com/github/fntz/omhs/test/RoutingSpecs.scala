@@ -103,7 +103,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== write(foo)
     }
 
-    val r8 = post("test" / FileParam) ~> { (xs: List[MixedFileUpload]) =>
+    val r8 = post("test" / file) ~> { (xs: List[MixedFileUpload]) =>
       println("~"*100)
       println(xs)
       s"${xs.map(_.getName).mkString(", ")}"

@@ -70,6 +70,7 @@ object PlayJsonSupport {
     final val queryJson = Json.writes[Query]
     final val headerJson = Json.writes[Header]
     final val cookieJson = Json.writes[Cookie]
+    final val formDataJson = Json.writes[FormData]
     override def writes(o: Parameter): JsValue = {
       // todo with play generators
       val where = Json.obj("in" -> inJson.writes(o.in))
@@ -83,6 +84,8 @@ object PlayJsonSupport {
         case h: Header => headerJson.writes(h) - "dataType" ++ dataTypeJson.writes(h.dataType).as[JsObject]
         case c: Cookie => cookieJson.writes(c) - "dataType" ++ dataTypeJson.writes(c.dataType).as[JsObject]
         case q: Query => queryJson.writes(q)
+        case f: FormData =>
+          formDataJson.writes(f) ++ JsObject(Seq("type" -> JsString("file")))
       }
       tmp ++ where ++ required
     }

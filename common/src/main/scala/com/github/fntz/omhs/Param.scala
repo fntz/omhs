@@ -42,6 +42,11 @@ object ParamD {
 
   def query[T](implicit qr: QueryReader[T]): QueryParam[T] =
     QueryParam[T]()(qr)
+
+  def file: FileParam = FileParam("file", None)
+  def file(name: String): FileParam = FileParam(name, None)
+  def file(name: String, description: String): FileParam =
+    FileParam(name, Some(description))
 }
 
 sealed trait PathParam extends Param {
@@ -125,7 +130,7 @@ case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
   override def toString: String = "body[]" // todo typeOf[T]
 }
 
-case object FileParam extends Param {
+case class FileParam(name: String, description: Option[String]) extends Param {
   override def check(in: String): Boolean = false
 
   override val isPathParam: Boolean = false

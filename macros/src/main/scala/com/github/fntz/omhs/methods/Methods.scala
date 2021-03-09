@@ -174,7 +174,8 @@ object MethodsImpl {
       "uuid" -> UUIDToken,
       "regex" -> RegexToken,
       "header" -> HeaderToken,
-      "cookie" -> CookieToken
+      "cookie" -> CookieToken,
+      "file" -> FileToken
     )
 
     val tokens = c.prefix.tree.collect {
@@ -344,8 +345,8 @@ object MethodsImpl {
                   rule.header(h)
                 case h: _root_.com.github.fntz.omhs.CookieParam =>
                   rule.cookie(h)
-                case _root_.com.github.fntz.omhs.FileParam =>
-                  rule.withFiles()
+                case f: _root_.com.github.fntz.omhs.FileParam =>
+                  rule.withFiles(f)
                 case param: _root_.com.github.fntz.omhs.PathParam =>
                   rule.path(param)
               }

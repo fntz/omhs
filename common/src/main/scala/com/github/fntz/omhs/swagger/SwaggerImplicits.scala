@@ -23,6 +23,10 @@ object SwaggerImplicits {
     def addRule(r: SwaggeredRule): SwaggerRoute = {
       SwaggerRoute(route = route).addRule(r)
     }
+
+    def toSwagger: SwaggerRoute = {
+      SwaggerRoute(route = route)
+    }
   }
 
   implicit class SwaggerRouteExt(val s: SwaggerRoute) extends AnyVal {

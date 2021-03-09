@@ -2,37 +2,17 @@
 # One More Http Server
 
 todo:
-async - done
-req as parameter to function  (check with unit functions) - done 
-improve macro compilation - done 
-pass additional headers into CommonResponse - done
-file upload - done 
-file send -> done with streaming probably (need to update streams)
-query params materializer ???    
-add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
-chunk responses - done ??? is it ok do not have Future(Iterator()) 
+* setup
+* chunked responses
+* tests for files
+* resolve todo
+* swagger
+* todo add cookie headers if present in response
+
 setup: 
     chunk size 
     file size 
     date local/timezone
-chunked requests 
-remote address - done  
-how to test ? 
-cookie param
-compressing - done 
-swagger
-resolve todos
-swagger for file
-todo add cookie headers if present in response
-
-swagger: 
-  - swagger object 
-    - info object -> user defined => Route
-    pathItem (get/post/put...) <- from Rule
-      rule is an operation 
-    set of operation transforms to PathItem
-      PathItem forms swagger
-      fin!
 
 
 idea: 
@@ -63,7 +43,6 @@ get(string) ~> action { (x: String) =>
 [] routing dsl
 [] streaming 
 [] swagger
-[] websocket ? 
 
 
 ```scala

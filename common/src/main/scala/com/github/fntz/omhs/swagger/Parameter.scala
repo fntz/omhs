@@ -4,7 +4,7 @@ import com.github.fntz.omhs.swagger.In.In
 
 object In extends Enumeration {
   type In = Value
-  val query, header, path, cookie = Value
+  val query, header, path, cookie, formData = Value
 }
 
 // swagger data types
@@ -69,6 +69,12 @@ case class Cookie(name: String,
                ) extends Parameter {
   override def in: In = In.header
 }
-// todo
-// body, header, formData, query, path
+
+case class FormData(
+                     name: String,
+                     description: Option[String]
+                   ) extends Parameter {
+  override def in: In = In.formData
+}
+
 

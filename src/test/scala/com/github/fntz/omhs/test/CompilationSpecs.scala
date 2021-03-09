@@ -53,7 +53,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import ParamDSL._
            import ParamD._
 
-           p.post("file" / FileParam / FileParam) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
+           p.post("file" / file / file("test")) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
               "done"
            }
            """.stripMargin, s"FileParam must be one per rule, given: 2")
@@ -75,7 +75,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.post("file" / FileParam / BodyParam[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
+           p.post("file" / file / BodyParam[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
               "done"
            }
            """.stripMargin, "You can not mix BodyParam with FileParam, choose one")
@@ -326,7 +326,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import ParamDSL._
            import ParamD._
 
-           p.get("file" / FileParam) ~> { (l: List[MixedFileUpload]) =>
+           p.get("file" / file) ~> { (l: List[MixedFileUpload]) =>
               "done"
            }
            """.stripMargin)

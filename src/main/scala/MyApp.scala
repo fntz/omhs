@@ -57,6 +57,10 @@ object MyApp extends App {
     "ok"
   }
 
+  val rf = get("file" / file) ~> { (l: List[MixedFileUpload]) =>
+    "done"
+  }
+
   val rss = rs
 //    .toSwagger.withTags("foo", "bar")
 //    .withResponse(200, Response("description"))
@@ -67,8 +71,8 @@ object MyApp extends App {
 //    .withDeprecated(false)
 
 
-  val t = (new Route).addRule(rss)
-//    .swagger("swagger")
+  val t = (new Route).addRule(rss).addRule(rf)
+    .toSwagger.swagger("swagger")
 
   DefaultServer.run(9000, t.toHandler)
 

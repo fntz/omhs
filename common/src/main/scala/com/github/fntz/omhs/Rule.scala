@@ -26,6 +26,8 @@ case class Rule(method: HttpMethod) {
 
   private var queryReader: QueryReader[_] = null // todo ^
 
+  private var fileParam: FileParam = null
+
   private var isBodyNeeded = false
 
   private var isQueryNeeded = false
@@ -37,6 +39,8 @@ case class Rule(method: HttpMethod) {
   def params: Vector[PathParam] = paths.toVector
 
   def currentHeaders: Vector[HeaderParam] = headers.toVector
+
+  def currentFileParam: FileParam = fileParam
 
   def isParseBody: Boolean = isBodyNeeded
 
@@ -57,7 +61,8 @@ case class Rule(method: HttpMethod) {
     this
   }
 
-  def withFiles(): Rule = {
+  def withFiles(fileParam: FileParam): Rule = {
+    this.fileParam = fileParam
     isFileNeeded = true
     this
   }

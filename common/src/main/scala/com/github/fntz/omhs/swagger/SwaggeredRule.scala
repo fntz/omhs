@@ -68,8 +68,16 @@ case class SwaggeredRule(rule: ExecutableRule,
         dataType = DataType.string
       )
     }
+    val formData = if (rule.rule.isFilePassed) {
+      FormData(
+        name = rule.rule.currentFileParam.name,
+        description = rule.rule.currentFileParam.description
+      ) :: Nil
+    } else {
+      Nil
+    }
 
-    (currentPaths ++ currentHeaders ++ currentCookies).toList
+    (currentPaths ++ currentHeaders ++ currentCookies ++ formData).toList
   }
 
   def toOperation: Operation = {

@@ -23,10 +23,15 @@ case class SwaggerRoute(route: Route) {
   }
 
   def toPathItems: Map[String, PathItem] = {
-    def fetch(method: HttpMethod, operations: Map[HttpMethod, AB[SwaggeredRule]]): Option[Operation] = {
+    def fetch(method: HttpMethod, operations: Map[HttpMethod, Iterable[SwaggeredRule]]): Option[Operation] = {
       operations.get(method).flatMap(_.headOption).map(_.toOperation)
     }
-    rules.groupBy(_.rule.rule.currentUrl).map { case (url, xs) =>
+    val tmp = if (rules.isEmpty) {
+      route.current.map(_.toSwagger)
+    } else {
+      rules.toVector
+    }
+    tmp.groupBy(_.rule.rule.currentUrl).map { case (url, xs) =>
       val operations = xs.groupBy(_.rule.method)
       url -> PathItem(
         get = fetch(HttpMethod.GET, operations),
