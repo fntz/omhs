@@ -9,5 +9,5 @@ trait BodyWriter[W] {
 }
 
 trait QueryReader[T] {
-  def read(queries: Map[String, List[String]]): Option[T]
+  def read(queries: Map[String, Iterable[String]]): Option[T]
 }

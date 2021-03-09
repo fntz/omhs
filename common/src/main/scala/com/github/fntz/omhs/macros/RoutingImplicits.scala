@@ -8,38 +8,36 @@ import io.netty.handler.codec.http.multipart.MixedFileUpload
 import java.util.UUID
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
-import scala.collection.mutable.{ArrayBuffer => AB}
 
-object Methods {
+object RoutingImplicits {
 
-  implicit class PExt(val obj: p) extends AnyVal {
+  // todo sbt.setup.logging options for checking output of code-gen
+  implicit class ExecutableRuleExtensions(val obj: p) extends AnyVal {
     implicit def ~>[R](f: () => R): ExecutableRule =
-    macro MethodsImpl.run0[R]
+    macro RoutingImpl.run0[R]
     implicit def ~>[T, R](f: T => R): ExecutableRule =
-      macro MethodsImpl.run1[T, R]
+      macro RoutingImpl.run1[T, R]
     implicit def ~>[T1, T2, R](f: (T1, T2) => R): ExecutableRule =
-      macro MethodsImpl.run2[T1, T2, R]
+      macro RoutingImpl.run2[T1, T2, R]
     implicit def ~>[T1, T2, T3, R](f: (T1, T2, T3) => R): ExecutableRule =
-      macro MethodsImpl.run3[T1, T2, T3, R]
+      macro RoutingImpl.run3[T1, T2, T3, R]
     implicit def ~>[T1, T2, T3, T4, R](f: (T1, T2, T3, T4) => R): ExecutableRule =
-      macro MethodsImpl.run4[T1, T2, T3, T4,  R]
+      macro RoutingImpl.run4[T1, T2, T3, T4,  R]
     implicit def ~>[T1, T2, T3, T4, T5, R](f: (T1, T2, T3, T4, T5) => R): ExecutableRule =
-      macro MethodsImpl.run5[T1, T2, T3, T4, T5, R]
+      macro RoutingImpl.run5[T1, T2, T3, T4, T5, R]
     implicit def ~>[T1, T2, T3, T4, T5, T6, R](f: (T1, T2, T3, T4, T5, T6) => R): ExecutableRule =
-      macro MethodsImpl.run6[T1, T2, T3, T4, T5, T6, R]
+      macro RoutingImpl.run6[T1, T2, T3, T4, T5, T6, R]
     implicit def ~>[T1, T2, T3, T4, T5, T6, T7, R](f: (T1, T2, T3, T4, T5, T6, T7) => R): ExecutableRule =
-      macro MethodsImpl.run7[T1, T2, T3, T4, T5, T6, T7, R]
+      macro RoutingImpl.run7[T1, T2, T3, T4, T5, T6, T7, R]
     implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, R](f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): ExecutableRule =
-      macro MethodsImpl.run8[T1, T2, T3, T4, T5, T6, T7, T8, R]
+      macro RoutingImpl.run8[T1, T2, T3, T4, T5, T6, T7, T8, R]
     implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R): ExecutableRule =
-      macro MethodsImpl.run9[T1, T2, T3, T4, T5, T6, T7, T8, T9, R]
+      macro RoutingImpl.run9[T1, T2, T3, T4, T5, T6, T7, T8, T9, R]
   }
-
-
 }
 
 
-object MethodsImpl {
+private object RoutingImpl {
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
                            (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
@@ -210,7 +208,7 @@ object MethodsImpl {
           case None =>
            c.abort(focus, s"Unexpected term: $term, available: ${availableParams.keys.mkString(", ")}")
         }
-    }.to[AB]
+    }.toBuffer[ParamToken]
 
     println(s"=============> ${tokens.size}")
 
@@ -335,9 +333,9 @@ object MethodsImpl {
               )
               ${c.prefix.tree}.obj.xs.map {
                 case b: _root_.com.github.fntz.omhs.internal.BodyParam[_] =>
-                  rule.body()(b.reader)
+                  rule.body(b.reader)
                 case q: _root_.com.github.fntz.omhs.internal.QueryParam[_] =>
-                  rule.query()(q.reader)
+                  rule.query(q.reader)
                 case h: _root_.com.github.fntz.omhs.internal.HeaderParam =>
                   rule.header(h)
                 case h: _root_.com.github.fntz.omhs.internal.CookieParam =>
@@ -356,7 +354,7 @@ object MethodsImpl {
                 override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   val defsMap = defs.groupBy(_.sortProp).map { x =>
-                    x._1 -> x._2.to[scala.collection.mutable.ArrayBuffer]
+                    x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
                   }
                   val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
 

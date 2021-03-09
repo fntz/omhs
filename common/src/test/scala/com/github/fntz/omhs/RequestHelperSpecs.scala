@@ -1,6 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal._
+import com.github.fntz.omhs.util.RequestHelper
 import io.netty.handler.codec.DecoderResult
 import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, DefaultCookie}
 import io.netty.handler.codec.http.{DefaultFullHttpRequest, HttpHeaderNames, HttpMethod, HttpVersion}
@@ -15,7 +16,7 @@ class RequestHelperSpecs extends Specification {
   private val setup = Setup.default
   case class Search(q: String)
   implicit val searchQueryParser = new QueryReader[Search] {
-    override def read(queries: Map[String, List[String]]): Option[Search] = {
+    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
       queries.get("q").flatMap(_.headOption).map(Search)
     }
   }
@@ -43,7 +44,7 @@ class RequestHelperSpecs extends Specification {
   "run method" should {
     "body" should {
       "do not parse body when not need" in new Test {
-        rule.isParseBody must beFalse
+        rule.isNeedToParseBody must beFalse
         fetch(request, rule) ==== Right(Nil)
       }
       "parse body with error for some reason" in new Test {
@@ -51,12 +52,12 @@ class RequestHelperSpecs extends Specification {
         val ex = new RuntimeException("boom")
         request.setDecoderResult(DecoderResult.failure(ex))
 
-        rule.isParseBody must beTrue
+        rule.isNeedToParseBody must beTrue
         fetch(request, rule) ==== Left(BodyIsUnparsable(ex))
       }
       "parse body with success" in new Test {
         rule.body[Foo]
-        rule.isParseBody must beTrue
+        rule.isNeedToParseBody must beTrue
 
         fetch(request, rule) ==== Right(List(BodyDef(Foo(1))))
       }
@@ -105,22 +106,22 @@ class RequestHelperSpecs extends Specification {
 
     "query" should {
       "fail when query is empty" in new Test {
-        rule.query()(searchQueryParser)
-        rule.isFetchQuery must beTrue
+        rule.query(searchQueryParser)
+        rule.isNeedToDecodeQuery must beTrue
 
         fetch(request, rule) ==== Left(QueryIsUnparsable(Map.empty))
       }
       "fail when query is unparsable" in new Test {
-        rule.query()(searchQueryParser)
-        rule.isFetchQuery must beTrue
+        rule.query(searchQueryParser)
+        rule.isNeedToDecodeQuery must beTrue
         request.setUri("test?q1=foo")
 
         fetch(request, rule) ==== Left(QueryIsUnparsable(Map("q1" -> List("foo"))))
       }
 
       "success parse query" in new Test {
-        rule.query()(searchQueryParser)
-        rule.isFetchQuery must beTrue
+        rule.query(searchQueryParser)
+        rule.isNeedToDecodeQuery must beTrue
         request.setUri("test?q=foo")
 
         fetch(request, rule) ==== Right(List(QueryDef(Search("foo"))))

@@ -1,4 +1,4 @@
-import com.github.fntz.omhs.macros.Methods
+import com.github.fntz.omhs.macros.RoutingImplicits
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
@@ -11,8 +11,8 @@ import com.github.fntz.omhs.playjson.JsonSupport
 import scala.concurrent.{ExecutionContext, Future}
 
 object MyApp extends App {
-  import DefaultHttpHandler._
-  import Methods._
+  import OMHSHttpHandler._
+  import RoutingImplicits._
   import ParamDSL._
   import p._
   import AsyncResult._
@@ -41,7 +41,7 @@ object MyApp extends App {
 
   case class Search(query: String)
   implicit val queryStringReader = new QueryReader[Search] {
-    override def read(queries: Map[String, List[String]]): Option[Search] = {
+    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
       queries.get("query").flatMap(_.headOption).map(Search)
     }
   }
@@ -54,6 +54,10 @@ object MyApp extends App {
 
   implicit val bodyReader = new BodyReader[Search] {
     override def read(str: String): Search = Search("dsa")
+  }
+
+  val z = get("asd" / "asd") ~> { () =>
+    "asd"
   }
 
   val rf = get("file" / string) ~> { (l: String) =>
@@ -77,7 +81,7 @@ object MyApp extends App {
     .addRule(rf)
     .toSwagger.swagger("swagger")
 
-  OHMSServer.run(9000, t.toHandler)
+  OMHSServer.run(9000, t.toHandler)
 
 //  DefaultServer.run(9000, t.toHandler)
 

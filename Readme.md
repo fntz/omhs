@@ -2,13 +2,17 @@
 # One More Http Server
 
 todo:
-* setup
 * chunked responses
 * tests for files
 * resolve todo
 * swagger
-* chunks  
-* todo add cookie headers if present in response
+
+todo: one import 
+now: 
+import RoutingImplicits._
+import ParamDsl._
+need: 
+import something._ 
 
 setup: 
     chunk size 

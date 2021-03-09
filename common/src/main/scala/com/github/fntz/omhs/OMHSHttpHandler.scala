@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamParser, ParseResult}
-import com.github.fntz.omhs.util.UtilImplicits
+import com.github.fntz.omhs.util.{UtilImplicits, CollectionsConverters}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
@@ -10,13 +10,12 @@ import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
 import java.time.ZonedDateTime
-import scala.collection.JavaConverters._
 import scala.language.existentials
 
 @Sharable
-case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
+case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
-  import DefaultHttpHandler._
+  import OMHSHttpHandler._
   import UtilImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
@@ -97,7 +96,7 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
     val target = decoder.rawPath()
     byMethod
       .getOrElse(request.method(), Vector.empty)
-      .map { x => (x, ParamParser.parse(target, x.rule.params)) }
+      .map { x => (x, ParamParser.parse(target, x.rule.currentParams)) }
       .find(_._2.isSuccess)
   }
 
@@ -191,10 +190,12 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
   }
 }
 
-object DefaultHttpHandler {
+object OMHSHttpHandler {
+
+  import CollectionsConverters._
 
   private val currentProject = "omhs"
-  private val nettyVersion = s"$currentProject on " + Version.identify().asScala.values.headOption
+  private val nettyVersion = s"$currentProject on " + Version.identify().values.toScala.headOption
     .map { v => s"netty-${v.artifactVersion()}"}
     .getOrElse("unknown")
   private val serverHeader = "X-Server-Version"
@@ -204,11 +205,6 @@ object DefaultHttpHandler {
     HttpResponseStatus.OK,
     Unpooled.EMPTY_BUFFER
   )
-
-  implicit class RouteExt(val route: Route) extends AnyVal {
-    def toHandler: DefaultHttpHandler = toHandler(Setup.default)
-    def toHandler(setup: Setup): DefaultHttpHandler = new DefaultHttpHandler(route, setup)
-  }
 }
 
 private case class ResourceResultContainer(

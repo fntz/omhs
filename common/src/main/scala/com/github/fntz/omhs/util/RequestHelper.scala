@@ -1,16 +1,18 @@
-package com.github.fntz.omhs
+package com.github.fntz.omhs.util
 
 import com.github.fntz.omhs.internal._
+import com.github.fntz.omhs._
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, QueryStringDecoder}
 import io.netty.util.CharsetUtil
 
-import scala.collection.JavaConverters._
 import scala.language.existentials
 
-object RequestHelper {
+private[omhs] object RequestHelper {
+
+  import CollectionsConverters._
 
   type E[R] = Either[UnhandledReason, List[R]]
 
@@ -35,11 +37,11 @@ object RequestHelper {
   }
 
   private def fetchQuery(request: FullHttpRequest, rule: Rule): E[QueryDef[_]] = {
-    if (rule.isFetchQuery) {
+    if (rule.isNeedToDecodeQuery) {
       val decoder = new QueryStringDecoder(request.uri)
       val queryParams = decoder.parameters()
-          .asScala.map(x => x._1 -> x._2.asScala.toList)
-          .toMap
+          .toScala
+          .map(x => x._1 -> x._2.toScala)
       rule.currentQueryReader.read(queryParams).map { result =>
         Right(List(QueryDef(result)))
       }.getOrElse(Left(QueryIsUnparsable(queryParams)))
@@ -49,10 +51,10 @@ object RequestHelper {
   }
 
   private def fetchFileDef(request: FullHttpRequest, rule: Rule): E[FileDef] = {
-    if (rule.isFilePassed) {
+    if (rule.isNeedToFetchFiles) {
       val decoder = new HttpPostRequestDecoder(request)
       try {
-        val files = decoder.getBodyHttpDatas.asScala.collect {
+        val files = decoder.getBodyHttpDatas.toScala.collect {
           case data: MixedFileUpload if data.getHttpDataType == HttpDataType.FileUpload =>
             data
         }.toList
@@ -69,11 +71,11 @@ object RequestHelper {
   }
 
   private def fetchBodyDef(request: FullHttpRequest, rule: Rule): E[BodyDef[_]] = {
-    if (rule.isParseBody) {
+    if (rule.isNeedToParseBody) {
       if (request.decoderResult().isSuccess) {
         try {
           val strBody = request.content.toString(CharsetUtil.UTF_8)
-          Right(List(BodyDef(rule.currentReader.read(strBody))))
+          Right(List(BodyDef(rule.currentBodyReader.read(strBody))))
         } catch {
           case ex: Throwable =>
             Left(BodyIsUnparsable(ex))
@@ -99,8 +101,7 @@ object RequestHelper {
           case CookieDecoderStrategies.Lax =>
             ServerCookieDecoder.LAX
         }
-
-        decoder.decode(x).asScala
+        decoder.decode(x).toScala
       }.getOrElse(Set.empty)
       val result = rule.currentCookies.map { need =>
         need.cookieName -> cookies.find(need.cookieName == _.name())

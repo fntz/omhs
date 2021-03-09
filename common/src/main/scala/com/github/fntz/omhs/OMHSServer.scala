@@ -10,7 +10,7 @@ import io.netty.handler.stream.ChunkedWriteHandler
 
 import java.net.InetSocketAddress
 
-object OHMSServer {
+object OMHSServer {
 
   type C2C = ChannelPipeline => ChannelPipeline
   type S2S = ServerBootstrap => ServerBootstrap
@@ -20,7 +20,7 @@ object OHMSServer {
 
 
   def run(address: InetSocketAddress,
-          handler: DefaultHttpHandler,
+          handler: OMHSHttpHandler,
           beforeHandlers: C2C,
           modifier: S2S
          ): ChannelFuture = {
@@ -56,7 +56,7 @@ object OHMSServer {
   }
 
   def run(host: String, port: Int,
-          handler: DefaultHttpHandler,
+          handler: OMHSHttpHandler,
           beforeHandlers: C2C,
           modifier: S2S
          ): ChannelFuture = {
@@ -69,7 +69,7 @@ object OHMSServer {
   }
 
   def run(port: Int,
-          handler: DefaultHttpHandler,
+          handler: OMHSHttpHandler,
           beforeHandlers: C2C = (c: ChannelPipeline) => c,
           modifier: S2S = (b: ServerBootstrap) => b
          ): ChannelFuture = {

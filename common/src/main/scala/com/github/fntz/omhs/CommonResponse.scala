@@ -4,7 +4,13 @@ import io.netty.handler.codec.http.{HttpHeaderValues, HttpResponseStatus}
 import io.netty.util.CharsetUtil
 
 sealed trait Response
-// content-type
+
+/**
+ * @param status - valid response status
+ * @param contentType - content-type for content
+ * @param content - information for sending to client
+ * @param headers - additional headers if needed
+ */
 case class CommonResponse(
                            status: HttpResponseStatus,
                            contentType: String,
@@ -36,7 +42,7 @@ case class StreamResponse(contentType: String,
 object CommonResponse {
   val empty = new CommonResponse(
     status = HttpResponseStatus.OK,
-    contentType = "text/plain",
+    contentType = HttpHeaderValues.TEXT_PLAIN.toString,
     content = Array.emptyByteArray
   )
 

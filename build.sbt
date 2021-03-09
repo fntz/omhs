@@ -1,10 +1,17 @@
 
-scalaVersion := "2.12.8"
+val scala12 = "2.12.13"
+val scala13 = "2.13.5"
+val supportedVersions = Seq(scala12, scala13)
 
-version := "0.0.1"
+version := "0.0.1-SNAPSHOT"
+
+ThisBuild / organization := "com.github.fntz"
+ThisBuild / version      := version.value
+ThisBuild / scalaVersion := scala12
+
 
 val opts = Seq(
-  scalaVersion := "2.12.8",
+  scalaVersion := scala12,
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8",
@@ -15,11 +22,9 @@ val opts = Seq(
     "-language:reflectiveCalls",
     "-unchecked",
     "-Xverify",
-    "-Xfuture",
     "-Ydelambdafy:inline" // todo https://github.com/scala/bug/issues/10554
   ),
-  scalacOptions in Test ++= Seq("-Yrangepos"),
-  javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+  scalacOptions in Test ++= Seq("-Yrangepos")
 )
 
 val netty = Seq("io.netty" % "netty-codec-http" % "4.1.59.Final")
@@ -36,26 +41,31 @@ val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2"
 )
 
+// todo rename to dsl
 val common = project.settings(opts)
   .settings(
-    name := "common",
-    libraryDependencies ++= specs2 ++ netty ++ logback ++ playJson ++ Seq(
+    name := "dsl",
+    libraryDependencies ++= netty.map(_ % "provided, test") ++ logback ++ specs2 ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-    )
+    ),
+    crossScalaVersions := supportedVersions
   )
 
 val swagger = project.in(file("swagger"))
   .settings(opts)
   .settings(
-    name := "omhs-swagger"
+    name := "omhs-swagger",
+    libraryDependencies ++= playJson ++ netty, // todo rm
+    crossScalaVersions := supportedVersions
   ).dependsOn(common)
 
 val playJsonSupport = Project("play-json-support", file("play-json-support"))
   .settings(opts)
   .settings(
     name := "omhs-play-support",
-    libraryDependencies ++= playJson
+    libraryDependencies ++= playJson.map(_ % "provided"),
+    crossScalaVersions := supportedVersions
   ).dependsOn(common)
 
 lazy val mainProject = Project("omhs", file("."))
@@ -63,7 +73,9 @@ lazy val mainProject = Project("omhs", file("."))
     opts,
     libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
-    )
+    ),
+    crossScalaVersions := Nil,
+    publish / skip := true
   )
   .dependsOn(common, playJsonSupport, swagger)
   .aggregate(common, playJsonSupport, swagger)

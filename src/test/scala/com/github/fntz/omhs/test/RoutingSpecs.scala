@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.test
 
-import com.github.fntz.omhs.macros.Methods._
+import com.github.fntz.omhs.macros.RoutingImplicits._
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
 import io.netty.buffer.Unpooled
@@ -20,7 +20,7 @@ import java.util.UUID
 
 class RoutingSpecs extends Specification with AfterAll {
 
-  import DefaultHttpHandler._
+  import OMHSHttpHandler._
   import ParamDSL._
   import com.github.fntz.omhs.p._
   import AsyncResult.Implicits._

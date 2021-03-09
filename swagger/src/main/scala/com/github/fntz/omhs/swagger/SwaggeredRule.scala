@@ -40,7 +40,7 @@ case class SwaggeredRule(rule: ExecutableRule,
 
   // user-defined params should be ignored ("test" / string) => only string is needed
   def toParameters: List[Parameter] = {
-    val currentPaths = rule.rule.params.filterNot(_.isUserDefined).map { p =>
+    val currentPaths = rule.rule.currentParams.filterNot(_.isUserDefined).map { p =>
       val dataType = p match {
         case _: LongParam => DataType.int64
         case _: UUIDParam => DataType.uuid
@@ -68,7 +68,7 @@ case class SwaggeredRule(rule: ExecutableRule,
         dataType = DataType.string
       )
     }
-    val formData = if (rule.rule.isFilePassed) {
+    val formData = if (rule.rule.isNeedToFetchFiles) {
       FormData(
         name = rule.rule.currentFileParam.name,
         description = rule.rule.currentFileParam.description

@@ -3,6 +3,17 @@ package com.github.fntz.omhs
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaders, HttpMethod, HttpVersion, QueryStringDecoder}
 import io.netty.util.CharsetUtil
 
+/**
+ * Describes incoming http request
+ * @param uri - full request path
+ * @param path - only path part
+ * @param query - query part
+ * @param method - current http method
+ * @param headers - request headers
+ * @param rawBody - body as a string
+ * @param version - http protocol version
+ * @param remoteAddress - remote address
+ */
 case class CurrentHttpRequest(
                              uri: String,
                              path: String,

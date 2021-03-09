@@ -7,11 +7,11 @@ import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaders}
 
 import java.net.InetSocketAddress
 
-object UtilImplicits {
+private[omhs] object UtilImplicits {
 
   implicit class RuleImplicits(val rule: Rule) extends AnyVal {
     def toDefs(request: FullHttpRequest, remoteAddress: RemoteAddress): List[CurrentHttpRequestDef] = {
-      if (rule.isRunWithRequest) {
+      if (rule.isNeedToPassCurrentRequest) {
         val currentRequest = CurrentHttpRequest(request, remoteAddress)
         List(CurrentHttpRequestDef(currentRequest))
       } else {

@@ -56,8 +56,7 @@ object ParamDSL {
   def body[T](implicit r: BodyReader[T]): BodyParam[T] =
     BodyParam[T]()(r)
 
-  def *(): TailParam.type = TailParam
-
+  def * : TailParam.type = TailParam
 
   implicit class ParamImplicits(val param: Param) extends AnyVal {
     def /(other: Param): Vector[Param] = Vector(param, other)
@@ -74,3 +73,4 @@ object ParamDSL {
     def /(o: String): Vector[Param] = xs :+ HardCodedParam(o)
   }
 }
+
