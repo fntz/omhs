@@ -3,7 +3,7 @@ package com.github.fntz.omhs
 import com.github.fntz.omhs.util.UtilImplicits
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
+import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
@@ -34,35 +34,35 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
       case request: FullHttpRequest =>
         val remoteAddress = ctx.remoteAddress(request.headers())
         logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
-        val result = findRule(request)
 
-        val matchResult = result match {
+        val result = findRule(request) match {
           case Some((r, ParseResult(_, defs))) =>
+            val materialized = r.rule.materialize(request, remoteAddress, setup)
+            val files = fetchFilesToRelease(materialized)
             try {
-              // todo mixed files should be released !!!
-              r.rule.materialize(request, remoteAddress, setup)
-                .map(defs.filterNot(_.skip) ++ _)
+              val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
                 .map(r.run)
                 .fold(fail, identity)
+              ResourceResultContainer(files, asyncResult)
             } catch {
               case t: Throwable =>
                 logger.warn("Failed to call function", t)
-                fail(UnhandledException(t))
+                ResourceResultContainer(files, fail(UnhandledException(t)))
             }
 
           case _ =>
             logger.warn(s"No matched route for ${request.uri()}")
-            fail(PathNotFound(request.uri()))
+            ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
         }
 
-        matchResult.onComplete {
+        result.asyncResult.onComplete {
           case outResponse: CommonResponse =>
             write(
               ctx = ctx,
               request = request,
               isKeepAlive = HttpUtil.isKeepAlive(request),
               userResponse = outResponse
-            )
+            ).addListener(fileCleaner(result.files))
 
           case streamResponse: StreamResponse =>
             write(
@@ -70,13 +70,24 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
               request = request,
               isKeepAlive = HttpUtil.isKeepAlive(request),
               userResponse = streamResponse
-            )
-
+            ).addListener(fileCleaner(result.files))
         }
 
-      case _ =>
 
+      case _ =>
         super.channelRead(ctx, msg)
+    }
+  }
+
+  private def fileCleaner(files: List[FileDef]): ChannelFutureListener = {
+    (future: ChannelFuture) => {
+      files.flatMap(_.value).foreach(_.release())
+    }
+  }
+
+  private def fetchFilesToRelease(defs: Either[UnhandledReason, List[ParamDef[_]]]): List[FileDef] = {
+    defs.getOrElse(Nil).collect {
+      case f: FileDef => f
     }
   }
 
@@ -98,7 +109,7 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
                      request: FullHttpRequest,
                      isKeepAlive: Boolean,
                      userResponse: StreamResponse
-                   ): Unit = {
+                   ): ChannelFuture = {
 
     val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
     response.headers()
@@ -127,12 +138,13 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }
+    f
   }
 
   private def write(ctx: ChannelHandlerContext,
                     request: FullHttpRequest,
                      isKeepAlive: Boolean,
-                     userResponse: CommonResponse): Unit = {
+                     userResponse: CommonResponse): ChannelFuture = {
 
     val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
 
@@ -151,6 +163,7 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }
+    f
   }
 
   private def processKeepAlive(isKeepAlive: Boolean, request: FullHttpRequest, response: HttpResponse): Unit = {
@@ -190,12 +203,13 @@ object DefaultHttpHandler {
     Unpooled.EMPTY_BUFFER
   )
 
-  // params:
-  // - do not pass X-Server-Version
-  // - ignore-case
-  // - netty ???
   implicit class RouteExt(val route: Route) extends AnyVal {
     def toHandler: DefaultHttpHandler = toHandler(Setup.default)
     def toHandler(setup: Setup): DefaultHttpHandler = new DefaultHttpHandler(route, setup)
   }
 }
+
+private case class ResourceResultContainer(
+                                            files: List[FileDef],
+                                            asyncResult: AsyncResult
+                                     )

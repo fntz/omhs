@@ -4,7 +4,6 @@ import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
 
-import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
 
 object MyApp extends App {
@@ -60,7 +59,7 @@ object MyApp extends App {
     override def read(str: String): Search = Search("dsa")
   }
 
-  val rf = get("file" / *) ~> { (l: List[String]) =>
+  val rf = post("file" / file) ~> { (l: List[MixedFileUpload]) =>
     "done"
   }
 

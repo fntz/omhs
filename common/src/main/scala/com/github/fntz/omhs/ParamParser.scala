@@ -12,7 +12,8 @@ object ParamParser {
       case _: UUIDParam => UUIDDef(UUID.fromString(in))
       // NOTE: normal, because we do it after `check`-call
       case RegexParam(re, _, _) => RegexDef(re.findFirstMatchIn(in).get.toString)
-      case _ => TailDef(List(in))                 // unreachable
+      // NOTE: unreachable
+      case _ => TailDef(List(in))
     }
   }
 
