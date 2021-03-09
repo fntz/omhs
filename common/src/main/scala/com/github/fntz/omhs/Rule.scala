@@ -24,7 +24,7 @@ case class Rule(method: HttpMethod) {
 
   private var reader: BodyReader[_] = _
 
-  private var queryReader: QueryReader[_] = _ 
+  private var queryReader: QueryReader[_] = _
 
   private var fileParam: FileParam = _
 

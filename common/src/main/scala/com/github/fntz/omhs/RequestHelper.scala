@@ -5,7 +5,6 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, QueryStringDecoder}
 import io.netty.util.CharsetUtil
-import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.language.existentials
@@ -14,14 +13,14 @@ object RequestHelper {
 
   type E[R] = Either[UnhandledReason, List[R]]
 
-  def fetchAdditionalDefs(request: FullHttpRequest, rule: Rule): E[ParamDef[_]] = {
+  def fetchAdditionalDefs(request: FullHttpRequest, rule: Rule, setup: Setup): E[ParamDef[_]] = {
     val filesDef = fetchFileDef(request, rule)
 
     val bodyDefE = fetchBodyDef(request, rule)
 
     val headersDefE = fetchHeadersDef(request, rule)
 
-    val cookieDefE = fetchCookies(request, rule)
+    val cookieDefE = fetchCookies(request, rule, setup)
 
     val queryDefE = fetchQuery(request, rule)
 
@@ -87,11 +86,20 @@ object RequestHelper {
     }
   }
 
-  private def fetchCookies(request: FullHttpRequest, rule: Rule): E[CookieDef] = {
+  private def fetchCookies(request: FullHttpRequest,
+                           rule: Rule,
+                           setup: Setup
+                          ): E[CookieDef] = {
     if (rule.currentCookies.nonEmpty) {
       val cookies = Option(request.headers.get(HttpHeaderNames.COOKIE)).map { x =>
-        // todo strategy
-        ServerCookieDecoder.STRICT.decode(x).asScala
+        val decoder = setup.cookieDecoderStrategy match {
+          case CookieDecoderStrategies.Strict =>
+            ServerCookieDecoder.STRICT
+          case CookieDecoderStrategies.Lax =>
+            ServerCookieDecoder.LAX
+        }
+
+        decoder.decode(x).asScala
       }.getOrElse(Set.empty)
       val result = rule.currentCookies.map { need =>
         need.cookieName -> cookies.find(need.cookieName == _.name())

@@ -8,14 +8,12 @@ import io.netty.handler.codec.http._
 import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneOffset, ZonedDateTime}
-import java.util.Locale
+import java.time.ZonedDateTime
 import scala.collection.JavaConverters._
 import scala.language.existentials
 
 @Sharable
-class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAdapter {
+case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
   import DefaultHttpHandler._
   import UtilImplicits._
@@ -24,13 +22,10 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
   private val byMethod = route.current.groupBy(_.rule.method)
   private val unhanded = route.currentUnhandled
 
-  // todo pass with params probably
-  private val formatter = DateTimeFormatter.RFC_1123_DATE_TIME
-    .withZone(ZoneOffset.UTC).withLocale(Locale.US)
-
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-    // todo from setup
-    empty.headers().set(serverHeader, nettyVersion)
+    if (setup.sendServerHeader) {
+      empty.headers().set(serverHeader, nettyVersion)
+    }
 
     msg match {
       case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request) =>
@@ -45,7 +40,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
           case Some((r, ParseResult(_, defs))) =>
             try {
               // todo mixed files should be released !!!
-              r.rule.materialize(request, remoteAddress)
+              r.rule.materialize(request, remoteAddress, setup)
                 .map(defs.filterNot(_.skip) ++ _)
                 .map(r.run)
                 .fold(fail, identity)
@@ -150,7 +145,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     response.setStatus(userResponse.status)
     response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
     response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
-    response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(formatter))
+    response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(setup.timeFormatter))
 
     val f = ctx.writeAndFlush(response)
     if (!isKeepAlive) {
@@ -199,7 +194,8 @@ object DefaultHttpHandler {
   // - do not pass X-Server-Version
   // - ignore-case
   // - netty ???
-  implicit class RouteExt(val r: Route) extends AnyVal {
-    def toHandler: DefaultHttpHandler = new DefaultHttpHandler(r)
+  implicit class RouteExt(val route: Route) extends AnyVal {
+    def toHandler: DefaultHttpHandler = toHandler(Setup.default)
+    def toHandler(setup: Setup): DefaultHttpHandler = new DefaultHttpHandler(route, setup)
   }
 }

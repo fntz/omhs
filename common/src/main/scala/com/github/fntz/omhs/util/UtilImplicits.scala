@@ -18,8 +18,11 @@ object UtilImplicits {
       }
     }
 
-    def materialize(request: FullHttpRequest, remoteAddress: RemoteAddress): Either[UnhandledReason, List[ParamDef[_]]] = {
-      RequestHelper.fetchAdditionalDefs(request, rule).map { additionalDefs =>
+    def materialize(request: FullHttpRequest,
+                    remoteAddress: RemoteAddress,
+                    setup: Setup
+                   ): Either[UnhandledReason, List[ParamDef[_]]] = {
+      RequestHelper.fetchAdditionalDefs(request, rule, setup).map { additionalDefs =>
         additionalDefs ++ rule.toDefs(request, remoteAddress)
       }
     }

@@ -7,7 +7,6 @@ import java.util.UUID
 class ParamParserSpecs extends Specification {
 
   import ParamDSL._
-  import ParamD._
 
   private val genUuid = UUID.randomUUID()
 
