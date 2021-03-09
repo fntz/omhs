@@ -1,6 +1,6 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.internal.{FileDef, ParamDef, ParamParser, ParseResult}
+import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamParser, ParseResult}
 import com.github.fntz.omhs.util.UtilImplicits
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable

@@ -2,7 +2,7 @@ package com.github.fntz.omhs.swagger
 
 
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.internal.ParamDef
+import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 
 import scala.collection.mutable.{ArrayBuffer => AB}

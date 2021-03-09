@@ -350,7 +350,7 @@ object MethodsImpl {
                 rule.withRequest()
               }
 
-              val rf = new _root_.com.github.fntz.omhs.ExecutableRule(rule) {
+              val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
                   println(defs)
                   val defsMap = defs.groupBy(_.sortProp).map { x =>

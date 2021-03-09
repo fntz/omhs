@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.internal.ExecutableRule
 import io.netty.handler.codec.http.FullHttpResponse
 
 import scala.collection.mutable.{ArrayBuffer => AB}

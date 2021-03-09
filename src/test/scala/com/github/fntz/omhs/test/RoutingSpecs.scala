@@ -2,6 +2,7 @@ package com.github.fntz.omhs.test
 
 import com.github.fntz.omhs.macros.Methods._
 import com.github.fntz.omhs._
+import com.github.fntz.omhs.internal.ExecutableRule
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel

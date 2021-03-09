@@ -1,41 +1,10 @@
-import com.github.fntz.omhs.DefaultHttpHandler
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.http.{HttpContentCompressor, HttpObjectAggregator, HttpRequestDecoder, HttpResponseEncoder, HttpServerCodec}
+import io.netty.handler.codec.http.{HttpObjectAggregator, HttpServerCodec}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
-import io.netty.handler.stream.ChunkedWriteHandler
-
-object DefaultServer {
-
-  def run(port: Int, handler: DefaultHttpHandler): Unit = {
-    val setup = handler.setup
-    val boss = new NioEventLoopGroup()
-    val worker = new NioEventLoopGroup()
-    val b = new ServerBootstrap()
-    b.group(boss, worker)
-      .channel(classOf[NioServerSocketChannel])
-      .handler(new LoggingHandler(LogLevel.INFO))
-      .childHandler(new ChannelInitializer[SocketChannel] {
-        override def initChannel(ch: SocketChannel): Unit = {
-          val p = ch.pipeline()
-          p.addLast("codec", new HttpServerCodec())
-          p.addLast("aggregator",
-            new HttpObjectAggregator(handler.setup.maxContentLength))
-          if (setup.enableCompression) {
-            p.addLast("compressor", new HttpContentCompressor())
-          }
-          p.addLast("chunked", new ChunkedWriteHandler)
-          p.addLast("user_defined", handler)
-        }
-      })
-
-    val f = b.bind(port).sync()
-    f.channel().closeFuture().sync()
-  }
-}
 
 class HttpServer {
 

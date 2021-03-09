@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.swagger
 
-import com.github.fntz.omhs.{DefaultHttpHandler, ExecutableRule, Route, Setup}
+import com.github.fntz.omhs.internal.ExecutableRule
+import com.github.fntz.omhs.{DefaultHttpHandler, Route, Setup}
 
 object SwaggerImplicits {
 

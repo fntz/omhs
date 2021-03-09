@@ -1,6 +1,6 @@
-package com.github.fntz.omhs
+package com.github.fntz.omhs.internal
 
-import com.github.fntz.omhs.internal.ParamDef
+import com.github.fntz.omhs.{AsyncResult, CommonResponse, Route, Rule}
 import io.netty.handler.codec.http.HttpMethod
 
 class ExecutableRule(val rule: Rule) {
