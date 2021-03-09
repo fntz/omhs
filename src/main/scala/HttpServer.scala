@@ -11,6 +11,7 @@ import io.netty.handler.stream.ChunkedWriteHandler
 object DefaultServer {
 
   def run(port: Int, handler: DefaultHttpHandler): Unit = {
+    val setup = handler.setup
     val boss = new NioEventLoopGroup()
     val worker = new NioEventLoopGroup()
     val b = new ServerBootstrap()
@@ -22,11 +23,11 @@ object DefaultServer {
           val p = ch.pipeline()
           p.addLast("codec", new HttpServerCodec())
           p.addLast("aggregator",
-            new HttpObjectAggregator(512*1024))
-
-          // TODO by option or pass before pipelines
-          p.addLast("compressor", new HttpContentCompressor())
-          p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
+            new HttpObjectAggregator(handler.setup.maxContentLength))
+          if (setup.enableCompression) {
+            p.addLast("compressor", new HttpContentCompressor())
+          }
+          p.addLast("chunked", new ChunkedWriteHandler)
           p.addLast("user_defined", handler)
         }
       })

@@ -24,6 +24,7 @@ object OHMSServer {
           beforeHandlers: C2C,
           modifier: S2S
          ): ChannelFuture = {
+    val setup = handler.setup
     val boss = new NioEventLoopGroup()
     val worker = new NioEventLoopGroup()
     val b = new ServerBootstrap()
@@ -34,11 +35,13 @@ object OHMSServer {
           val p = ch.pipeline()
           p.addLast("codec", new HttpServerCodec())
           p.addLast("aggregator",
-            new HttpObjectAggregator(512*1024))
+            new HttpObjectAggregator(setup.maxContentLength))
 
           beforeHandlers(p)
 
-          p.addLast("compressor", new HttpContentCompressor())
+          if (setup.enableCompression) {
+            p.addLast("compressor", new HttpContentCompressor())
+          }
           p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
           p.addLast("omhs", handler)
         }
