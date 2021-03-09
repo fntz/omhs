@@ -28,28 +28,31 @@ object OHMSServer {
     val boss = new NioEventLoopGroup()
     val worker = new NioEventLoopGroup()
     val b = new ServerBootstrap()
-    b.group(boss, worker)
-      .channel(classOf[NioServerSocketChannel])
-      .childHandler(new ChannelInitializer[SocketChannel] {
-        override def initChannel(ch: SocketChannel): Unit = {
-          val p = ch.pipeline()
-          p.addLast("codec", new HttpServerCodec())
-          p.addLast("aggregator",
-            new HttpObjectAggregator(setup.maxContentLength))
+    try {
+      b.group(boss, worker)
+        .channel(classOf[NioServerSocketChannel])
+        .childHandler(new ChannelInitializer[SocketChannel] {
+          override def initChannel(ch: SocketChannel): Unit = {
+            val p = ch.pipeline()
+            p.addLast("codec", new HttpServerCodec())
+            p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
 
-          beforeHandlers(p)
+            beforeHandlers(p)
 
-          if (setup.enableCompression) {
-            p.addLast("compressor", new HttpContentCompressor())
+            if (setup.enableCompression) {
+              p.addLast("compressor", new HttpContentCompressor())
+            }
+            p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
+            p.addLast("omhs", handler)
           }
-          p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
-          p.addLast("omhs", handler)
-        }
-    })
+        })
+      val f = modifier(b).bind(address).sync()
+      f.channel().closeFuture().sync()
+    } finally {
+      worker.shutdownGracefully()
+      boss.shutdownGracefully()
+    }
 
-
-    val f = modifier(b).bind(address).sync()
-    f.channel().closeFuture().sync()
   }
 
   def run(host: String, port: Int,
