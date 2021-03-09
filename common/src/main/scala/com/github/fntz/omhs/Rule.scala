@@ -1,18 +1,38 @@
 package com.github.fntz.omhs
 
-
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.HttpMethod
 
-import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer => AB}
 
-class Rule(val method: HttpMethod) {
-  private val paths: AB[PathParam] = new AB[PathParam]()
-  private val headers: AB[String] = new AB[String]()
+case class Rule(method: HttpMethod) {
 
-  private var reader: BodyReader[_] = null // todo None instead
+  private val paths: AB[PathParam] = new AB[PathParam]()
+  private val headers: AB[HeaderParam] = new AB[HeaderParam]()
+  private val cookies: AB[CookieParam] = new AB[CookieParam]()
+
+  def currentUrl: String = {
+    val tmp = params.map {
+      case HardCodedParam(v) => v
+      case TailParam => "*"
+      case p: PathParam => s"{${p.name}}"
+    }.mkString("/")
+    if (tmp.startsWith("/")) {
+      tmp
+    } else {
+      s"/$tmp"
+    }
+  }
+
+  private var reader: BodyReader[_] = _
+
+  private var queryReader: QueryReader[_] = _
+
+  private var fileParam: FileParam = _
 
   private var isBodyNeeded = false
+
+  private var isQueryNeeded = false
 
   private var isFileNeeded = false
 
@@ -20,9 +40,13 @@ class Rule(val method: HttpMethod) {
 
   def params: Vector[PathParam] = paths.toVector
 
-  def currentHeaders: Vector[String] = headers.toVector
+  def currentHeaders: Vector[HeaderParam] = headers.toVector
+
+  def currentFileParam: FileParam = fileParam
 
   def isParseBody: Boolean = isBodyNeeded
+
+  def isFetchQuery: Boolean = isQueryNeeded
 
   def isRunWithRequest: Boolean = isCurrentRequestNeeded
 
@@ -30,12 +54,17 @@ class Rule(val method: HttpMethod) {
 
   def currentReader: BodyReader[_] = reader
 
+  def currentQueryReader: QueryReader[_] = queryReader
+
+  def currentCookies: Vector[CookieParam] = cookies.toVector
+
   def withRequest(): Rule = {
     isCurrentRequestNeeded = true
     this
   }
 
-  def withFiles(): Rule = {
+  def withFiles(fileParam: FileParam): Rule = {
+    this.fileParam = fileParam
     isFileNeeded = true
     this
   }
@@ -44,6 +73,12 @@ class Rule(val method: HttpMethod) {
   def body[T]()(implicit reader: BodyReader[T]): Rule = {
     this.reader = reader
     this.isBodyNeeded = true
+    this
+  }
+
+  def query[T]()(implicit queryReader: QueryReader[T]): Rule = {
+    this.queryReader = queryReader
+    this.isQueryNeeded = true
     this
   }
 
@@ -57,11 +92,12 @@ class Rule(val method: HttpMethod) {
     this
   }
 
-  def cookie(x: String): Rule = {
+  def cookie(cookie: CookieParam): Rule = {
+    cookies += cookie
     this
   }
 
-  def header(header: String): Rule = {
+  def header(header: HeaderParam): Rule = {
     headers += header
     this
   }

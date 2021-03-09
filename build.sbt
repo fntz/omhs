@@ -1,6 +1,8 @@
 
 scalaVersion := "2.12.8"
 
+version := "0.0.1"
+
 val opts = Seq(
   scalaVersion := "2.12.8",
   scalacOptions ++= Seq(
@@ -37,23 +39,31 @@ val playJson = Seq(
 val common = project.settings(opts)
   .settings(
     name := "common",
-    libraryDependencies ++= specs2 ++ netty ++ logback
-  )
-
-val macros = project.settings(opts)
-  .settings(
-    name := "macro",
-    libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-    ) ++ specs2
-  ).dependsOn(common)
-
-lazy val mainProject = Project("test", file("."))
-  .settings(
-    opts,
-    libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+    libraryDependencies ++= specs2 ++ netty ++ logback ++ playJson ++ Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
     )
   )
-  .dependsOn(common, macros)
+
+val swagger = project.in(file("swagger"))
+  .settings(opts)
+  .settings(
+    name := "omhs-swagger"
+  ).dependsOn(common)
+
+val playJsonSupport = Project("play-json-support", file("play-json-support"))
+  .settings(opts)
+  .settings(
+    name := "omhs-play-support",
+    libraryDependencies ++= playJson
+  ).dependsOn(common)
+
+lazy val mainProject = Project("omhs", file("."))
+  .settings(
+    opts,
+    libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
+    )
+  )
+  .dependsOn(common, playJsonSupport, swagger)
+  .aggregate(common, playJsonSupport, swagger)

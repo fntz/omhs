@@ -2,28 +2,19 @@
 # One More Http Server
 
 todo:
-async - done
-req as parameter to function  (check with unit functions) - done 
-improve macro compilation - done 
-pass additional headers into CommonResponse - done
-file upload - done 
-file send -> done with streaming probably (need to update streams)
-query params materializer ???    
-add more ~> parameters macro - done (check when AnyParam ~> () => unit fn)
-chunk responses - done ??? is it ok do not have Future(Iterator()) 
+* setup
+* chunked responses
+* tests for files
+* resolve todo
+* swagger
+* chunks  
+* todo add cookie headers if present in response
+
 setup: 
-chunk size 
-file size 
-date local/timezone
-chunked requests 
-remote address - done  
-how to test ? 
-http2
-cookie param
-compressing - done 
-swagger
-resolve todos
-websockets
+    chunk size 
+    file size 
+    date local/timezone
+
 
 idea: 
 ```
@@ -48,12 +39,15 @@ get(string) ~> action { (x: String) =>
 
 ```
   
-
+```scala 
+// setup
+OHMSServer.run(9000, t.toHandler, (c: ChannelPipeline) =>
+    c.addLast("logger", new LoggingHandler(LogLevel.DEBUG)), OHMSServer.noSetup)
+```
 
 [] routing dsl
 [] streaming 
 [] swagger
-[] websocket ? 
 
 
 ```scala

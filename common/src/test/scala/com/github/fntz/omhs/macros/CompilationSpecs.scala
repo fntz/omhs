@@ -1,4 +1,4 @@
-package com.github.fntz.omhs.test
+package com.github.fntz.omhs.macros
 
 import org.specs2.mutable.Specification
 
@@ -9,13 +9,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / StringParam / StringParam) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
+           get("file" / string / string) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
               "done"
            }
            """.stripMargin, s"CurrentHttpRequest must be the last argument in the function")
@@ -24,7 +24,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -35,7 +35,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.post("file" / BodyParam[Foo] / BodyParam[Foo]) ~> { (a: Foo, b: Foo) =>
+           post("file" / body[Foo] / body[Foo]) ~> { (a: Foo, b: Foo) =>
               "done"
            }
            """.stripMargin, s"BodyParam must be one per rule, given: 2")
@@ -44,13 +44,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.post("file" / FileParam / FileParam) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
+           post("file" / file / file("test")) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
               "done"
            }
            """.stripMargin, s"FileParam must be one per rule, given: 2")
@@ -60,7 +60,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -71,7 +71,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.post("file" / FileParam / BodyParam[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
+           post("file" / file / body[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
               "done"
            }
            """.stripMargin, "You can not mix BodyParam with FileParam, choose one")
@@ -81,13 +81,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.post("file" / LongParam / StringParam) ~> { (s: String) =>
+           post("file" / long / string) ~> { (s: String) =>
               "done"
            }
            """.stripMargin, "Args lengths are not the same")
@@ -97,13 +97,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.post("file" / LongParam / StringParam) ~> { (s: String, l: Long) =>
+           post("file" / long / string) ~> { (s: String, l: Long) =>
               "done"
            }
            """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
@@ -113,13 +113,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / StringParam) ~> { () =>
+           get("file" / string) ~> { () =>
               "done"
            }
            """.stripMargin)
@@ -129,13 +129,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / StringParam) ~> { (a: String, req: CurrentHttpRequest) =>
+           get("file" / string) ~> { (a: String, req: CurrentHttpRequest) =>
               "done"
            }
            """.stripMargin)
@@ -145,13 +145,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / LongParam) ~> { (l: Long) =>
+           get("file" / long) ~> { (l: Long) =>
               "done"
            }
            """.stripMargin)
@@ -161,13 +161,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / StringParam) ~> { (l: String) =>
+           get("file" / string) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -177,14 +177,14 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
            import java.util.UUID
 
-           p.get("file" / UUIDParam) ~> { (l: UUID) =>
+           get("file" / uuid) ~> { (l: UUID) =>
               "done"
            }
            """.stripMargin)
@@ -194,13 +194,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / RegexParam("".r)) ~> { (l: String) =>
+           get("file" / regex("".r)) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -210,13 +210,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / *) ~> { (l: List[String]) =>
+           get("file" / *) ~> { (l: List[String]) =>
               "done"
            }
            """.stripMargin)
@@ -226,13 +226,52 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / HeaderParam("User-Agent")) ~> { (l: String) =>
+           get("file" / header("User-Agent")) ~> { (l: String) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "pass cookie" in {
+      compile(
+        s"""
+           import io.netty.handler.codec.http.cookie.Cookie
+           import com.github.fntz.omhs.macros.Methods._
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import ParamDSL._
+
+           get("file" / cookie("foo")) ~> { (l: Cookie) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "pass query" in {
+      compile(
+        s"""
+           import io.netty.handler.codec.http.cookie.Cookie
+           import com.github.fntz.omhs.macros.Methods._
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import ParamDSL._
+
+           case class Search(q: String)
+           implicit val qReader = new QueryReader[Search] {
+             override def read(queries: Map[String, List[String]]): Option[Search] = {
+               queries.get("q").flatMap(_.headOption).map(Search)
+             }
+           }
+
+           get("file" / query[Search]) ~> { (q: Search) =>
               "done"
            }
            """.stripMargin)
@@ -242,7 +281,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -253,7 +292,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.get("file" / BodyParam[Foo]) ~> { (l: Foo) =>
+           get("file" / body[Foo]) ~> { (l: Foo) =>
               "done"
            }
            """.stripMargin)
@@ -263,13 +302,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
 
-           p.get("file" / FileParam) ~> { (l: List[MixedFileUpload]) =>
+           get("file" / file) ~> { (l: List[MixedFileUpload]) =>
               "done"
            }
            """.stripMargin)
@@ -278,12 +317,28 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "success compilation" in {
       compile(
         s"""
-          import com.github.fntz.omhs.methods.Methods._
+          import com.github.fntz.omhs.macros.Methods._
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
+          import ParamDSL._
 
-          p.get(StringParam) ~> { (x: String) => "done" }
+          get(string) ~> { (x: String) => "done" }
+
+        """.stripMargin)
+    }
+
+    "success compilation #1" in {
+      compile(
+        s"""
+          import com.github.fntz.omhs.macros.Methods._
+          import com.github.fntz.omhs._
+          import AsyncResult._
+          import AsyncResult.Implicits._
+          import ParamDSL._
+          import java.util.UUID
+
+          get(string / "test" / long / uuid) ~> { (x: String, l: Long, u: UUID) => "done" }
 
         """.stripMargin)
     }

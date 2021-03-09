@@ -11,11 +11,11 @@ case class CurrentHttpRequest(
                              headers: HttpHeaders,
                              rawBody: String,
                              version: HttpVersion,
-                             remoteAddress: String
+                             remoteAddress: RemoteAddress
                       )
 
 object CurrentHttpRequest {
-  def apply(request: FullHttpRequest, remoteAddress: String): CurrentHttpRequest = {
+  def apply(request: FullHttpRequest, remoteAddress: RemoteAddress): CurrentHttpRequest = {
     val decoder = new QueryStringDecoder(request.uri)
     new CurrentHttpRequest(
       uri = request.uri(),

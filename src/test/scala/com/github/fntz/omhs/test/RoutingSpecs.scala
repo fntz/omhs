@@ -1,21 +1,22 @@
 package com.github.fntz.omhs.test
 
+import com.github.fntz.omhs.macros.Methods._
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.methods.Methods._
-import io.netty.buffer.{ByteBuf, Unpooled}
+import com.github.fntz.omhs.internal.ExecutableRule
+import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http.multipart.{DefaultHttpDataFactory, HttpPostRequestEncoder, MemoryFileUpload, MixedFileUpload}
+import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
+import io.netty.handler.codec.http.multipart.MixedFileUpload
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
 import org.specs2.specification.{AfterAll, Scope}
-
-import java.util.UUID
-import play.api.libs.json._
+import play.api.libs.json.Json
 
 import java.nio.file.Files
+import java.util.UUID
 
 class RoutingSpecs extends Specification with AfterAll {
 
@@ -38,27 +39,27 @@ class RoutingSpecs extends Specification with AfterAll {
   Files.write(file1.toPath, "test".getBytes(CharsetUtil.UTF_8))
 
   "routing" in {
-    val r1 = get("test" / StringParam) ~> { (x: String) => x }
+    val r1 = get("test" / string) ~> { (x: String) => x }
 
     "match string" in new RouteTest(r1, "/test/foo") {
       status ==== HttpResponseStatus.OK
       content ==== "foo"
     }
 
-    val r2 = get("test" / LongParam) ~> { (x: Long) => s"$x" }
+    val r2 = get("test" / long) ~> { (x: Long) => s"$x" }
     "match long" in new RouteTest(r2, "/test/123") {
       status ==== HttpResponseStatus.OK
       content ==== "123"
     }
 
-    val uuid = UUID.randomUUID()
-    val r3 = get("test" / UUIDParam) ~> {(x: UUID) => s"$x"}
-    "match uuid"  in new RouteTest(r3, s"/test/$uuid") {
+    val genUuid = UUID.randomUUID()
+    val r3 = get("test" / uuid) ~> {(x: UUID) => s"$x"}
+    "match uuid"  in new RouteTest(r3, s"/test/$genUuid") {
       status ==== HttpResponseStatus.OK
-      content ==== s"$uuid"
+      content ==== s"$genUuid"
     }
 
-    val r4 = get("test" / RegexParam("^foo".r)) ~> { (x: String) => s"$x" }
+    val r4 = get("test" / regex("^foo".r)) ~> { (x: String) => s"$x" }
     "match regex/200" in new RouteTest(r4, "/test/foobar") {
       status ==== HttpResponseStatus.OK
       content ==== "foo"
@@ -74,7 +75,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== s"123.foo.bar.$uuid"
     }
 
-    val r6 = get("test" / HeaderParam(headerName)) ~> { (x: String) => x }
+    val r6 = get("test" / header(headerName)) ~> { (x: String) => x }
     "match header" in new RouteTest(r6, "/test") {
       override def makeRequest(path: String): FullHttpRequest = {
         val r =  req(path)
@@ -86,7 +87,7 @@ class RoutingSpecs extends Specification with AfterAll {
     }
 
     def write(x: Foo): String = Json.toJson(x)(Json.writes[Foo]).toString
-    val r7 = post("test" / BodyParam[Foo]) ~> { (x: Foo) =>
+    val r7 = post("test" / body[Foo]) ~> { (x: Foo) =>
       write(x)
     }
     val foo = Foo(1000)
@@ -101,7 +102,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== write(foo)
     }
 
-    val r8 = post("test" / FileParam) ~> { (xs: List[MixedFileUpload]) =>
+    val r8 = post("test" / file) ~> { (xs: List[MixedFileUpload]) =>
       println("~"*100)
       println(xs)
       s"${xs.map(_.getName).mkString(", ")}"
@@ -110,7 +111,7 @@ class RoutingSpecs extends Specification with AfterAll {
       pending
     }
 
-    val r9 = put("test" / BodyParam[Foo]) ~> {() => ""}
+    val r9 = put("test" / body[Foo]) ~> {() => ""}
     "unparsed body" in new RouteTest(r9, "/test") {
       override def makeRequest(path: String): DefaultFullHttpRequest = {
         val r = req(path)
@@ -118,32 +119,71 @@ class RoutingSpecs extends Specification with AfterAll {
         r
       }
       status ==== HttpResponseStatus.BAD_REQUEST
-      content ==== "body is incorrect"
+      content must contain("body is incorrect")
     }
 
     "unparsed files" in {
       pending
     }
 
-    val r11 = get("test" / HeaderParam(headerValue)) ~> {() => "ok"}
+    val r11 = get("test" / header(headerValue)) ~> {() => "ok"}
     "header is missing" in new RouteTest(r11, "/test") {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain("")
     }
 
-    val r12 = get("test" / LongParam) ~> {() => "ok" }
+    val r12 = get("test" / long) ~> {() => "ok" }
     "path is not matched" in new RouteTest(r12, "/test/foo") {
       status ==== HttpResponseStatus.NOT_FOUND
       content must contain("/test/foo")
     }
 
-    val r13 = get("test" / LongParam) ~> {() =>
+    val r13 = get("test" / long) ~> {() =>
       throw new RuntimeException("boom")
       "ok"
     }
     "function throw exception: UnhandledException" in new RouteTest(r13, "test/123") {
       status ==== HttpResponseStatus.INTERNAL_SERVER_ERROR
       content must contain("boom")
+    }
+
+    val cookieName = "foo"
+    val r14 = get("test" / cookie(cookieName)) ~> { (c: Cookie) =>
+      c.value()
+    }
+    "pass cookie" in new RouteTest(r14, "test") {
+      def v = "bar"
+      override def makeRequest(path: String): FullHttpRequest = {
+        val r = req("test")
+        val c = new DefaultCookie(cookieName, v)
+        val add = ClientCookieEncoder.STRICT.encode(c)
+        r.headers().add(HttpHeaderNames.COOKIE, add)
+        r
+      }
+      status ==== HttpResponseStatus.OK
+      content ==== v
+    }
+
+    "cookie is missing" in new RouteTest(r14, "test") {
+      status ==== HttpResponseStatus.BAD_REQUEST
+      content must contain(s"cookie: foo is missing")
+    }
+
+    case class Search(query: String)
+    implicit val queryReader = new QueryReader[Search] {
+      override def read(queries: Map[String, List[String]]): Option[Search] = {
+        queries.get("query").flatMap(_.headOption).map(Search)
+      }
+    }
+    val r15 = get("test" / query[Search]) ~> { (s: Search) => s.query }
+    "pass query" in new RouteTest(r15, "test?query=123") {
+      status ==== HttpResponseStatus.OK
+      content ==== "123"
+    }
+
+    "fail when query is unparsable" in new RouteTest(r15, "test") {
+      status ==== HttpResponseStatus.BAD_REQUEST
+      content must contain("query is unparsable")
     }
   }
 
@@ -153,7 +193,7 @@ class RoutingSpecs extends Specification with AfterAll {
     )
   }
 
-  private class RouteTest(rule: RuleAndF, path: String) extends Scope {
+  private class RouteTest(rule: ExecutableRule, path: String) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
     val ro = (new Route).addRule(rule).toHandler
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))

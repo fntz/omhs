@@ -1,7 +1,12 @@
-import com.github.fntz.omhs.methods.Methods
+import com.github.fntz.omhs.macros.Methods
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
+import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
+import io.netty.channel.ChannelPipeline
+import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import play.api.libs.json.Json
+import com.github.fntz.omhs.playjson.JsonSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,15 +18,14 @@ object MyApp extends App {
   import AsyncResult._
   import AsyncResult.Implicits._
   import AsyncResult.Streaming._
+  import JsonSupport._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Person(id: Int, name: String)
 
-  implicit val personBodyReader = new BodyReader[Person] {
-    override def read(str: String): Person =
-      Json.parse(str).as[Person](Json.reads[Person])
-  }
+  implicit val personJson = Json.format[Person]
+  implicit val personBodyReader = JsonSupport.writer[Person]()
   implicit val bodyWriter = new BodyWriter[String] {
     override def write(w: String): CommonResponse = {
       CommonResponse(
@@ -30,47 +34,52 @@ object MyApp extends App {
     }
   }
 
-  implicit val bodyWriterPerson = new BodyWriter[Person] {
-    override def write(w: Person): CommonResponse = {
-      CommonResponse.json(
-        Json.toJson(w)(Json.writes[Person]).toString
-      )
+  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
+
+  import SwaggerImplicits._
+  val q = "asd"
+
+  case class Search(query: String)
+  implicit val queryStringReader = new QueryReader[Search] {
+    override def read(queries: Map[String, List[String]]): Option[Search] = {
+      queries.get("query").flatMap(_.headOption).map(Search)
     }
   }
 
-  val x = "test"
-  val xx = "/a/".r
-  val k = RegexParam(xx)
-/*
-  val r1 = post("api" / BodyParam[Person]) ~> { (x: Person, req: CurrentHttpRequest) =>
-    println(s"----> ${req.headers}")
-    Future {
-      x
-    }
-  } */
+//  val rs = get("test" / query[Search]) ~> { (q: Search) =>
+//    println("~"*100)
+//    println(s"done: ${q}")
+//    "ok"
+//  }
 
-//  val r = get(HeaderParam("User-Agent") / x / StringParam / LongParam) ~> { (x: String, z: String, y: Long) =>
-//    s"tst: $y ----> ${x} and $z"
-//  }
-//
-//  val rc = get("chunks" / LongParam) ~> { (x: Long) =>
-//    (0 to x.toInt).map(x => x.toString.getBytes()).toIterator
-//      .toAsync("text/plain")
-//  }
-//
-  val rf = post("file" / FileParam) ~> { (files: List[MixedFileUpload], req: CurrentHttpRequest) =>
-    println(s"====> ${files.map(_.getFilename)}")
-    println(s"===> ${req.remoteAddress}")
-    "done upload"
+  implicit val bodyReader = new BodyReader[Search] {
+    override def read(str: String): Search = Search("dsa")
   }
-//  val t = (new Route).addRule(r).addRule(rc).addRule(rf)
 
-//  val re = get(StringParam / LongParam) ~> { () =>
-//    "asd"
-//  }
-  val t = (new Route).addRule(rf)
+  val rf = get("file" / string) ~> { (l: String) =>
+    "done"
+  }
 
-  DefaultServer.run(9000, t.toHandler)
+//  val rss = rs
+//    .toSwagger.withTags("foo", "bar")
+//    .withResponse(200, Response("description"))
+//    .withDescription("test api")
+//    .withExternalDocs(ExternalDocumentation("http://example.com", Some("ext")))
+//    .withOperationId("opId")
+//    .withSummary("summary")
+//    .withDeprecated(false)
+
+
+  val t = (new Route).onEveryResponse((r: FullHttpResponse) => {
+    r.headers().set("text", "boom")
+    r
+  })
+    .addRule(rf)
+    .toSwagger.swagger("swagger")
+
+  OHMSServer.run(9000, t.toHandler)
+
+//  DefaultServer.run(9000, t.toHandler)
 
 //  val s = new HttpServer
 //  s.run(9000)
