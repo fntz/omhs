@@ -61,7 +61,7 @@ object MyApp extends App {
     override def read(str: String): Search = Search("dsa")
   }
 
-  val rf = get("file" / body[Search]) ~> { (l: Search) =>
+  val rf = get("file" / *) ~> { (l: List[String]) =>
     "done"
   }
 

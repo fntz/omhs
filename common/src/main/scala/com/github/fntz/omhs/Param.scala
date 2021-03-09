@@ -50,8 +50,11 @@ object ParamD {
 
   def body[T](implicit r: BodyReader[T]): BodyParam[T] =
     BodyParam[T]()(r)
+
+  def *(): TailParam.type = TailParam
 }
 
+// set access level to private-package
 sealed trait PathParam extends Param {
   def name: String
   def description: Option[String]
@@ -101,7 +104,7 @@ case class RegexParam(re: Regex, name: String, description: Option[String]) exte
   override def toString: String = s"$re.re"
 }
 
-case object * extends PathParam {
+case object TailParam extends PathParam {
   override def check(in: String): Boolean = true
   override def isRestParam: Boolean = true
 

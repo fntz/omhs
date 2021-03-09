@@ -12,7 +12,7 @@ case class Rule(method: HttpMethod) {
   def currentUrl: String = {
     val tmp = params.map {
       case HardCodedParam(v) => v
-      case * => "*"
+      case TailParam => "*"
       case p: PathParam => s"{${p.name}}"
     }.mkString("/")
     if (tmp.startsWith("/")) {

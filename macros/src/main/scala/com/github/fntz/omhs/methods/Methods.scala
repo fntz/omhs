@@ -137,7 +137,7 @@ object MethodsImpl {
     case object LongToken extends ParamToken
     case object UUIDToken extends ParamToken
     case object RegexToken extends ParamToken
-    case object RestToken extends ParamToken
+    case object TailToken extends ParamToken
     case class BodyToken(tpe: c.universe.Type, reader: c.universe.Tree)
       extends ParamToken {
       override def isBody: Boolean = true
@@ -158,7 +158,7 @@ object MethodsImpl {
         case LongToken => c.typeTag[Long].tpe
         case UUIDToken => c.typeTag[UUID].tpe
         case RegexToken => c.typeTag[String].tpe
-        case RestToken => c.typeTag[List[String]].tpe
+        case TailToken => c.typeTag[List[String]].tpe
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
         case HeaderToken => c.typeTag[String].tpe
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
@@ -175,7 +175,8 @@ object MethodsImpl {
       "regex" -> RegexToken,
       "header" -> HeaderToken,
       "cookie" -> CookieToken,
-      "file" -> FileToken
+      "file" -> FileToken,
+      "$times" -> TailToken
     )
 
     val complex: Vector[String] = Vector("body", "query")
@@ -189,8 +190,8 @@ object MethodsImpl {
         LongToken
       case q"com.github.fntz.omhs.RegexParam" =>
         RegexToken
-      case q"com.github.fntz.omhs.*" =>
-        RestToken
+      case q"com.github.fntz.omhs.TailParam" =>
+        TailToken
       case q"com.github.fntz.omhs.HeaderParam" =>
         HeaderToken
       case q"com.github.fntz.omhs.CookieParam" =>
@@ -302,7 +303,7 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.RegexDef($valName)", valName, RegexDef.sortProp)
         case UUIDToken =>
           (pq"_root_.com.github.fntz.omhs.UUIDDef($valName)", valName, UUIDDef.sortProp)
-        case RestToken =>
+        case TailToken =>
           (pq"_root_.com.github.fntz.omhs.TailDef($valName)", valName, TailDef.sortProp)
         case BodyToken(tpt, _) =>
           (pq"_root_.com.github.fntz.omhs.BodyDef($valName: ${tpt.typeSymbol})", valName, BodyDef.sortProp)
