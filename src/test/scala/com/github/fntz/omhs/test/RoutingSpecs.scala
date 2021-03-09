@@ -1,22 +1,21 @@
 package com.github.fntz.omhs.test
 
-import com.github.fntz.omhs._
 import com.github.fntz.omhs.macros.Methods._
-import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
+import com.github.fntz.omhs._
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
+import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
 import org.specs2.specification.{AfterAll, Scope}
-
-import java.util.UUID
 import play.api.libs.json._
 
 import java.nio.file.Files
+import java.util.UUID
 
 class RoutingSpecs extends Specification with AfterAll {
 
@@ -111,7 +110,7 @@ class RoutingSpecs extends Specification with AfterAll {
       pending
     }
 
-    val r9 = put("test" / BodyParam[Foo]) ~> {() => ""}
+    val r9 = put("test" / body[Foo]) ~> {() => ""}
     "unparsed body" in new RouteTest(r9, "/test") {
       override def makeRequest(path: String): DefaultFullHttpRequest = {
         val r = req(path)

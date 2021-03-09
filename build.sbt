@@ -37,23 +37,17 @@ val playJson = Seq(
 val common = project.settings(opts)
   .settings(
     name := "common",
-    libraryDependencies ++= specs2 ++ netty ++ logback ++ playJson
+    libraryDependencies ++= specs2 ++ netty ++ logback ++ playJson ++ Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+    )
   )
-
-val macros = project.settings(opts)
-  .settings(
-    name := "macro",
-    libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-    ) ++ specs2
-  ).dependsOn(common)
 
 lazy val mainProject = Project("test", file("."))
   .settings(
     opts,
     libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     )
   )
-  .dependsOn(common, macros)
+  .dependsOn(common)

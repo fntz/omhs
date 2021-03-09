@@ -1,4 +1,4 @@
-package com.github.fntz.omhs.test
+package com.github.fntz.omhs.macros
 
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
