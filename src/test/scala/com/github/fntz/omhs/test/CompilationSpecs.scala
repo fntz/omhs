@@ -9,7 +9,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -24,7 +24,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -44,7 +44,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -60,7 +60,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -81,7 +81,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -97,7 +97,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -113,7 +113,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -129,7 +129,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -145,7 +145,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -161,7 +161,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -177,7 +177,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -194,7 +194,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -210,7 +210,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -226,7 +226,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -242,7 +242,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.cookie.Cookie
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -258,7 +258,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.cookie.Cookie
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -281,7 +281,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -302,7 +302,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs.macros.Methods._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -317,7 +317,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "success compilation" in {
       compile(
         s"""
-          import com.github.fntz.omhs.methods.Methods._
+          import com.github.fntz.omhs.macros.Methods._
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
@@ -331,7 +331,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "success compilation #1" in {
       compile(
         s"""
-          import com.github.fntz.omhs.methods.Methods._
+          import com.github.fntz.omhs.macros.Methods._
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._

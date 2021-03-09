@@ -1,7 +1,7 @@
 package com.github.fntz.omhs.test
 
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.methods.Methods._
+import com.github.fntz.omhs.macros.Methods._
 import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener

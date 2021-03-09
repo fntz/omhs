@@ -1,11 +1,11 @@
-package com.github.fntz.omhs.methods
+package com.github.fntz.omhs.macros
 
-import scala.language.experimental.macros
 import com.github.fntz.omhs._
-import io.netty.handler.codec.http.multipart.MixedFileUpload
 import io.netty.handler.codec.http.cookie.Cookie
+import io.netty.handler.codec.http.multipart.MixedFileUpload
 
 import java.util.UUID
+import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
 object Methods {

@@ -1,4 +1,4 @@
-import com.github.fntz.omhs.methods.Methods
+import com.github.fntz.omhs.macros.Methods
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
