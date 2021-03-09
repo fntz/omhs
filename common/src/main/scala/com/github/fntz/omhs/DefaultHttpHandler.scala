@@ -29,7 +29,7 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
 
     msg match {
       case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request) =>
-        ctx.writeAndFlush(continue)
+        ctx.writeAndFlush(route.rewrite(continue))
 
       case request: FullHttpRequest =>
         val remoteAddress = ctx.remoteAddress(request.headers())
@@ -126,9 +126,10 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
 
     // somehow depends on sslContext check stackoverflow TODO
     userResponse.it.zipWithIndex.foreach { case (chunk, index) =>
-      ctx.write(new DefaultHttpContent(
+      val tmp = new DefaultHttpContent(
         Unpooled.copiedBuffer(chunk)
-      ))
+      )
+      ctx.write(tmp)
       if (index % 3 == 0) {
         ctx.flush()
       }
@@ -159,7 +160,7 @@ case class DefaultHttpHandler(route: Route, setup: Setup) extends ChannelInbound
     response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
     response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(setup.timeFormatter))
 
-    val f = ctx.writeAndFlush(response)
+    val f = ctx.writeAndFlush(route.rewrite(response))
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }

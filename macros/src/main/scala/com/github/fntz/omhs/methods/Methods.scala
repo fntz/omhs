@@ -127,7 +127,6 @@ object MethodsImpl {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
-    // TODO make sharable
     sealed trait ParamToken {
       def isBody = false
       def isFile = false

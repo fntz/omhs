@@ -1,10 +1,8 @@
 package com.github.fntz.omhs
 
-import scala.collection.mutable.{ArrayBuffer => AB}
+import io.netty.handler.codec.http.FullHttpResponse
 
-// todo add something like
-// new Route().adRule(r).onEveryResponseHeader("h-v", "value")
-// .onEveryResponseHeader((request) => ("h-v", request.get_somethng + "!")
+import scala.collection.mutable.{ArrayBuffer => AB}
 
 class Route {
   private val rules: AB[ExecutableRule] = new AB[ExecutableRule]()
@@ -26,8 +24,18 @@ class Route {
       content = result._2
     )
   }
+  private var defaultResponseHandler = (response: FullHttpResponse) => response
 
   def current: Vector[ExecutableRule] = rules.toVector
+
+  // update response somehow
+  def rewrite(response: FullHttpResponse): FullHttpResponse =
+    defaultResponseHandler.apply(response)
+
+  def onEveryResponse(f: FullHttpResponse => FullHttpResponse): Route = {
+    defaultResponseHandler = f
+    this
+  }
 
   def addRule(x: ExecutableRule): Route = {
     rules += x

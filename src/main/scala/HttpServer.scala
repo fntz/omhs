@@ -9,7 +9,7 @@ import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.handler.stream.ChunkedWriteHandler
 
 object DefaultServer {
-  // todo how to stop server?
+
   def run(port: Int, handler: DefaultHttpHandler): Unit = {
     val boss = new NioEventLoopGroup()
     val worker = new NioEventLoopGroup()
