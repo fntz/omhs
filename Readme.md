@@ -7,6 +7,7 @@ todo:
 * tests for files
 * resolve todo
 * swagger
+* chunks  
 * todo add cookie headers if present in response
 
 setup: 
@@ -38,7 +39,11 @@ get(string) ~> action { (x: String) =>
 
 ```
   
-
+```scala 
+// setup
+OHMSServer.run(9000, t.toHandler, (c: ChannelPipeline) =>
+    c.addLast("logger", new LoggingHandler(LogLevel.DEBUG)), OHMSServer.noSetup)
+```
 
 [] routing dsl
 [] streaming 

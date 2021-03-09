@@ -3,7 +3,9 @@ import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import play.api.libs.json.Json
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
+import io.netty.channel.ChannelPipeline
 import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.logging.{LogLevel, LoggingHandler}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -81,7 +83,9 @@ object MyApp extends App {
     .addRule(rss).addRule(rf)
     .toSwagger.swagger("swagger")
 
-  DefaultServer.run(9000, t.toHandler)
+  OHMSServer.run(9000, t.toHandler)
+
+//  DefaultServer.run(9000, t.toHandler)
 
 //  val s = new HttpServer
 //  s.run(9000)
