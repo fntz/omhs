@@ -1,6 +1,7 @@
 package com.github.fntz.omhs
 
 import java.util.UUID
+import scala.collection.mutable.{ArrayBuffer => AB}
 
 object ParamParser {
   def convert(p: PathParam, in: String): PathParamDef[_] = {
@@ -9,71 +10,74 @@ object ParamParser {
       case _: LongParam => LongDef(in.toLong)
       case _: StringParam => StringDef(in)
       case _: UUIDParam => UUIDDef(UUID.fromString(in))
-      case RegexParam(re, _, _) => RegexDef(re.findFirstMatchIn(in).get.toString) // TODO
+      // NOTE: normal, because we do it after `check`-call
+      case RegexParam(re, _, _) => RegexDef(re.findFirstMatchIn(in).get.toString)
       case _ => TailDef(List(in))                 // unreachable
     }
   }
-  // todo make functional
+
+  // todo check perf against tail-rec impl
   def parse(target: String, params: Vector[PathParam]): ParseResult = {
-    val tmp = target.replaceAll("""\?.*""", "")
+    val path = target.replaceAll("""\?.*""", "")
       .split("/").map(_.trim).filterNot(_.isEmpty)
-    if (tmp.isEmpty) {
+    if (path.isEmpty) {
       ParseResult.failed
     } else {
-      var i = 0
-      val tmpLength = tmp.length - 1
+      var index = 0
+      val pathLength = path.length - 1
       val paramsLength = params.length - 1
-      val buffer = scala.collection.mutable.ArrayBuffer.empty[PathParamDef[_]]
-      var flag = true
+      val buffer = AB[PathParamDef[_]]()
+      var success = true
       var doneByRest = false
-      val useTmp = tmpLength > paramsLength
-      var counter = if (useTmp) { tmpLength } else { paramsLength }
+      val isPathWalk = pathLength > paramsLength
+      var counter = if (isPathWalk) { pathLength } else { paramsLength }
 
-      while(counter >= 0 && flag && !doneByRest) {
-        if (useTmp) {
-          // long path but short params
-          if (i <= tmpLength) {
-            val part = tmp(i)
-            if (i <= paramsLength) {
-              val param = params(i)
-              if (param.isRestParam) {
-                doneByRest = true
-                buffer += TailDef(tmp.slice(i, tmpLength + 1).toList)
-              }
-              flag = param.check(part)
-              if (flag && !doneByRest) {
-                buffer += convert(param, part)
-              }
-
-            } else {
-              flag = false // no params
-              counter = 0
-            }
-          }
-        } else {
-          if (i <= paramsLength) {
-            val param = params(i)
+      // long path but short params
+      if (isPathWalk) {
+        while(counter >= 0 && success && !doneByRest && index <= pathLength) {
+          val part = path(index)
+          if (index <= paramsLength) {
+            val param = params(index)
             if (param.isRestParam) {
               doneByRest = true
-              buffer += TailDef(tmp.slice(i, tmpLength + 1).toList)
+              buffer += TailDef(path.slice(index, pathLength + 1).toList)
+            } else {
+              success = param.check(part)
+              if (success) {
+                buffer += convert(param, part)
+              }
             }
-            if (i <= tmpLength) {
-              val part = tmp(i)
-              flag = param.check(part)
-              if (flag && !doneByRest) {
+          } else {
+            success = false // no params
+            counter = 0
+          }
+          index = index + 1
+          counter = counter - 1
+        }
+      } else {
+        while(counter >= 0 && success && !doneByRest && index <= paramsLength) {
+          val param = params(index)
+          if (param.isRestParam) {
+            doneByRest = true
+            buffer += TailDef(path.slice(index, pathLength + 1).toList)
+          } else {
+            if (index <= pathLength) {
+              val part = path(index)
+              success = param.check(part)
+              if (success) {
                 buffer += convert(param, part)
               }
             } else {
-              flag = false // no path but params are present
+              success = false // no path but params are present
               counter = 0
             }
           }
+          index = index + 1
+          counter = counter - 1
         }
-
-        i = i + 1
-        counter = counter - 1
       }
-      if (flag) {
+
+      if (success) {
         ParseResult(success = true, buffer.toList)
       } else {
         ParseResult.failed
