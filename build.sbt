@@ -43,7 +43,14 @@ val common = project.settings(opts)
     )
   )
 
-val playJsonSupport = Project("play-json-support", file("play-json-support")).settings(opts)
+val swagger = project.in(file("swagger"))
+  .settings(opts)
+  .settings(
+    name := "omhs-swagger"
+  ).dependsOn(common)
+
+val playJsonSupport = Project("play-json-support", file("play-json-support"))
+  .settings(opts)
   .settings(
     name := "omhs-play-support",
     libraryDependencies ++= playJson
@@ -56,4 +63,4 @@ lazy val mainProject = Project("omhs", file("."))
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     )
   )
-  .dependsOn(common, playJsonSupport)
+  .dependsOn(common, playJsonSupport, swagger)

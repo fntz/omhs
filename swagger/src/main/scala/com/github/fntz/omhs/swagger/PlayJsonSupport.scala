@@ -1,8 +1,8 @@
 package com.github.fntz.omhs.swagger
 
-import com.github.fntz.omhs.swagger.DataType.DateType
 import play.api.libs.json._
 
+// todo separate project 
 object PlayJsonSupport {
 
   implicit class JsObjectExt(val js: JsObject) extends AnyVal {

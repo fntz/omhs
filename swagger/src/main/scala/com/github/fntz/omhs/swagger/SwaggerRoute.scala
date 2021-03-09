@@ -1,7 +1,7 @@
 package com.github.fntz.omhs.swagger
 
 
-import com.github.fntz.omhs.{AsyncResult, CommonResponse, ExecutableRule, ParamDef, Route, Rule}
+import com.github.fntz.omhs._
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
 
 import scala.collection.mutable.{ArrayBuffer => AB}
