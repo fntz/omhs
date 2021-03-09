@@ -37,7 +37,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
         ctx.writeAndFlush(continue)
 
       case request: FullHttpRequest =>
-        val remoteAddress = ctx.remoteAddress
+        val remoteAddress = ctx.remoteAddress(request.headers())
         logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
         val result = findRule(request)
 

@@ -237,7 +237,6 @@ object MethodsImpl {
         Seq.empty
     }
 
-    // or currentrequest todo
     val isEmptyFunction = actualFunctionParameters.isEmpty
 
     println(s"isEmptyFunction: $isEmptyFunction")
