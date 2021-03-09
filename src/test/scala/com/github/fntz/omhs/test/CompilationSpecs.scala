@@ -37,7 +37,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.post("file" / BodyParam[Foo] / BodyParam[Foo]) ~> { (a: Foo, b: Foo) =>
+           p.post("file" / body[Foo] / body[Foo]) ~> { (a: Foo, b: Foo) =>
               "done"
            }
            """.stripMargin, s"BodyParam must be one per rule, given: 2")
@@ -75,7 +75,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.post("file" / file / BodyParam[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
+           p.post("file" / file / body[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
               "done"
            }
            """.stripMargin, "You can not mix BodyParam with FileParam, choose one")
@@ -309,7 +309,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              override def read(str: String): Foo = Foo(1)
            }
 
-           p.get("file" / BodyParam[Foo]) ~> { (l: Foo) =>
+           p.get("file" / body[Foo]) ~> { (l: Foo) =>
               "done"
            }
            """.stripMargin)
