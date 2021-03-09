@@ -43,11 +43,17 @@ val common = project.settings(opts)
     )
   )
 
-lazy val mainProject = Project("test", file("."))
+val playJsonSupport = Project("play-json-support", file("play-json-support")).settings(opts)
+  .settings(
+    name := "omhs-play-support",
+    libraryDependencies ++= playJson
+  ).dependsOn(common)
+
+lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
     libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     )
   )
-  .dependsOn(common)
+  .dependsOn(common, playJsonSupport)

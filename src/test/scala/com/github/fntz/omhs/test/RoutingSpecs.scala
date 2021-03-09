@@ -12,7 +12,6 @@ import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
 import org.specs2.specification.{AfterAll, Scope}
-import play.api.libs.json._
 
 import java.nio.file.Files
 import java.util.UUID
