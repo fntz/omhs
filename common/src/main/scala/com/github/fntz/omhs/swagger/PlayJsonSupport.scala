@@ -121,9 +121,9 @@ object PlayJsonSupport {
     }
   }
   implicit lazy val pathItemJson = rmNullOrEmpty(Json.writes[PathItem])
-  implicit lazy val swaggerJson = rmNullOrEmpty(Json.writes[Swagger])
+  implicit lazy val swaggerJson = rmNullOrEmpty(Json.writes[OpenApi])
 
-  def toJson(swagger: Swagger): String = {
+  def toJson(swagger: OpenApi): String = {
     Json.toJson(swagger).toString()
   }
 

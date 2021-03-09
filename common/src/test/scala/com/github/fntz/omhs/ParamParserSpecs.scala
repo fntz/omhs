@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 
 import java.util.UUID
 
-class ParamSpecs extends Specification {
+class ParamParserSpecs extends Specification {
 
   import ParamDSL._
   import ParamD._
@@ -85,7 +85,7 @@ class ParamSpecs extends Specification {
   }
 
   private def parse(target: String, xs: Vector[Param]) = {
-    Param.parse(target, xs.collect { case x: PathParam => x })
+    ParamParser.parse(target, xs.collect { case x: PathParam => x })
   }
 
 }

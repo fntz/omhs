@@ -90,7 +90,7 @@ class DefaultHttpHandler(final val route: Route) extends ChannelInboundHandlerAd
     val target = decoder.rawPath()
     byMethod
       .getOrElse(request.method(), Vector.empty)
-      .map { x => (x, Param.parse(target, x.rule.params)) }
+      .map { x => (x, ParamParser.parse(target, x.rule.params)) }
       .find(_._2.isSuccess)
   }
 

@@ -50,7 +50,7 @@ case class SwaggerRoute(route: Route) {
    * @return route
    */
   def swagger(path: String,
-              topSwaggerObject: Swagger = Swagger.empty): SwaggerRoute = {
+              topSwaggerObject: OpenApi = OpenApi.empty): SwaggerRoute = {
     // pass implicit generator and build all resources
     val tmp = topSwaggerObject.copy(paths = toPathItems)
     val gen = PlayJsonSupport.toJson(tmp)
