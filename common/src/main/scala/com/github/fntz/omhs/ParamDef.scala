@@ -87,3 +87,9 @@ case class CookieDef(value: Cookie) extends ParamDef[Cookie] {
 object CookieDef {
   val sortProp = 10
 }
+case class QueryDef[T](value: T) extends ParamDef[T] {
+  override val sortProp: Int = QueryDef.sortProp
+}
+object QueryDef {
+  val sortProp = 11
+}

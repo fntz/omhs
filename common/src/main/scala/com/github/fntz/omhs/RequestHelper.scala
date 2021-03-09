@@ -3,7 +3,7 @@ package com.github.fntz.omhs
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames}
+import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, QueryStringDecoder}
 import io.netty.util.CharsetUtil
 
 import scala.collection.JavaConverters._
@@ -22,13 +22,28 @@ object RequestHelper {
 
     val cookieDefE = fetchCookies(request, rule)
 
-    // todo: ++
-    (bodyDefE, headersDefE, filesDef, cookieDefE) match {
-      case (Right(b), Right(h), Right(f), Right(c)) => Right(b ++ h ++ f ++ c)
-      case (_, _, _, Left(e)) => Left(e)
-      case (_, _, Left(e), _) => Left(e)
-      case (_, Left(e), _, _) => Left(e)
-      case (Left(e), _, _, _) => Left(e)
+    val queryDefE = fetchQuery(request, rule)
+
+    val current = List(bodyDefE, headersDefE, filesDef, cookieDefE, queryDefE)
+
+    current.collectFirst {
+      case Left(e) => Left(e)
+    }.getOrElse {
+      Right(current.collect { case Right(v) => v }.reduce(_ ++ _))
+    }
+  }
+
+  private def fetchQuery(request: FullHttpRequest, rule: Rule): E[QueryDef[_]] = {
+    if (rule.isFetchQuery) {
+      val decoder = new QueryStringDecoder(request.uri)
+      val queryParams = decoder.parameters()
+          .asScala.map(x => x._1 -> x._2.asScala.toList)
+          .toMap
+      rule.currentQueryReader.read(queryParams).map { result =>
+        Right(List(QueryDef(result)))
+      }.getOrElse(Left(QueryIsUnparsable(queryParams)))
+    } else {
+      Right(Nil)
     }
   }
 

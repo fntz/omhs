@@ -169,6 +169,23 @@ class RoutingSpecs extends Specification with AfterAll {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain(s"cookie: foo is missing")
     }
+
+    case class Search(query: String)
+    implicit val queryReader = new QueryReader[Search] {
+      override def read(queries: Map[String, List[String]]): Option[Search] = {
+        queries.get("query").flatMap(_.headOption).map(Search)
+      }
+    }
+    val r15 = get("test" / query[Search]) ~> { (s: Search) => s.query }
+    "pass query" in new RouteTest(r15, "test?query=123") {
+      status ==== HttpResponseStatus.OK
+      content ==== "123"
+    }
+
+    "fail when query is unparsable" in new RouteTest(r15, "test") {
+      status ==== HttpResponseStatus.BAD_REQUEST
+      content must contain("query is unparsable")
+    }
   }
 
   private def req(path: String) = {

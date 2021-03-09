@@ -269,6 +269,30 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin)
     }
 
+    "pass query" in {
+      compile(
+        s"""
+           import io.netty.handler.codec.http.cookie.Cookie
+           import com.github.fntz.omhs.methods.Methods._
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import ParamDSL._
+           import ParamD._
+
+           case class Search(q: String)
+           implicit val qReader = new QueryReader[Search] {
+             override def read(queries: Map[String, List[String]]): Option[Search] = {
+               queries.get("q").flatMap(_.headOption).map(Search)
+             }
+           }
+
+           p.get("file" / query[Search]) ~> { (q: Search) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
     "pass Body" in {
       compile(
         s"""

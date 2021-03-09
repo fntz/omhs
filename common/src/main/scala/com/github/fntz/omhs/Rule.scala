@@ -24,7 +24,11 @@ case class Rule(method: HttpMethod) {
 
   private var reader: BodyReader[_] = null // todo None instead
 
+  private var queryReader: QueryReader[_] = null // todo ^
+
   private var isBodyNeeded = false
+
+  private var isQueryNeeded = false
 
   private var isFileNeeded = false
 
@@ -36,11 +40,15 @@ case class Rule(method: HttpMethod) {
 
   def isParseBody: Boolean = isBodyNeeded
 
+  def isFetchQuery: Boolean = isQueryNeeded
+
   def isRunWithRequest: Boolean = isCurrentRequestNeeded
 
   def isFilePassed: Boolean = isFileNeeded
 
   def currentReader: BodyReader[_] = reader
+
+  def currentQueryReader: QueryReader[_] = queryReader
 
   def currentCookies: Vector[CookieParam] = cookies.toVector
 
@@ -58,6 +66,12 @@ case class Rule(method: HttpMethod) {
   def body[T]()(implicit reader: BodyReader[T]): Rule = {
     this.reader = reader
     this.isBodyNeeded = true
+    this
+  }
+
+  def query[T]()(implicit queryReader: QueryReader[T]): Rule = {
+    this.queryReader = queryReader
+    this.isQueryNeeded = true
     this
   }
 

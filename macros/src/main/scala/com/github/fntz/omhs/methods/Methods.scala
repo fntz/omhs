@@ -131,6 +131,7 @@ object MethodsImpl {
     sealed trait ParamToken {
       def isBody = false
       def isFile = false
+      def isQuery = false
     }
     case object StringToken extends ParamToken
     case object LongToken extends ParamToken
@@ -147,6 +148,9 @@ object MethodsImpl {
       override def isFile = true
     }
     case object CookieToken extends ParamToken
+    case class QueryToken(tpe: c.universe.Type, reader: c.universe.Tree) extends ParamToken {
+      override def isQuery: Boolean = true
+    }
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
       p match {
@@ -160,6 +164,7 @@ object MethodsImpl {
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
         case FileToken => c.typeTag[List[MixedFileUpload]].tpe
         case CookieToken => c.typeTag[Cookie].tpe
+        case QueryToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
       }
     }
 
@@ -187,7 +192,13 @@ object MethodsImpl {
         HeaderToken
       case q"com.github.fntz.omhs.CookieParam" =>
         CookieToken
-      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) =>
+
+      case  Apply(TypeApply(
+        Select(Select(Select(_, TermName("omhs")), TermName("ParamD")),
+        TermName("query")), List(tpt)), List(reader)) =>
+          QueryToken(tpt.tpe, reader)
+
+      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) if term != "query" =>
         paramDMap.get(term) match {
           case Some(value) => value
           case None =>
@@ -199,6 +210,7 @@ object MethodsImpl {
       case Apply(Apply(TypeApply(
         Select(Select(_, TermName("BodyParam")), TermName("apply")), List(tpt)), _), List(reader)) =>
         BodyToken(tpt.tpe, reader)
+
     }.to[scala.collection.mutable.ArrayBuffer]
 
     println(s"=============> ${tokens.size}")
@@ -293,6 +305,8 @@ object MethodsImpl {
           (pq"_root_.com.github.fntz.omhs.FileDef($valName)", valName, FileDef.sortProp)
         case CookieToken =>
           (pq"_root_.com.github.fntz.omhs.CookieDef($valName)", valName, CookieDef.sortProp)
+        case QueryToken(tpt, _) =>
+          (pq"_root_.com.github.fntz.omhs.QueryDef($valName: ${tpt.typeSymbol})", valName, QueryDef.sortProp)
       }
     }
 
@@ -324,6 +338,8 @@ object MethodsImpl {
               ${c.prefix.tree}.obj.xs.map {
                 case b: _root_.com.github.fntz.omhs.BodyParam[_] =>
                   rule.body()(b.reader)
+                case q: _root_.com.github.fntz.omhs.QueryParam[_] =>
+                  rule.query()(q.reader)
                 case h: _root_.com.github.fntz.omhs.HeaderParam =>
                   rule.header(h)
                 case h: _root_.com.github.fntz.omhs.CookieParam =>

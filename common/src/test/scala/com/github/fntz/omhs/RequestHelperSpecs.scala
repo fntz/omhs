@@ -11,8 +11,15 @@ class RequestHelperSpecs extends Specification {
   private val uri = "/test"
   private val version = HttpVersion.HTTP_1_1
   private val method = HttpMethod.POST
+  case class Search(q: String)
+  implicit val searchQueryParser = new QueryReader[Search] {
+    override def read(queries: Map[String, List[String]]): Option[Search] = {
+      queries.get("q").flatMap(_.headOption).map(Search)
+    }
+  }
   private val header = HeaderParam("User-Agent", None)
   private val cookie = CookieParam("ABC", None)
+  private val query = QueryParam[Search]
   private val hValue = "test-suite"
   private def default = new DefaultFullHttpRequest(
     version,
@@ -87,6 +94,30 @@ class RequestHelperSpecs extends Specification {
         request.headers().add(HttpHeaderNames.COOKIE, add)
 
         RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(CookieDef(c)))
+      }
+    }
+
+    "query" should {
+      "fail when query is empty" in new Test {
+        rule.query()(searchQueryParser)
+        rule.isFetchQuery must beTrue
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(QueryIsUnparsable(Map.empty))
+      }
+      "fail when query is unparsable" in new Test {
+        rule.query()(searchQueryParser)
+        rule.isFetchQuery must beTrue
+        request.setUri("test?q1=foo")
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Left(QueryIsUnparsable(Map("q1" -> List("foo"))))
+      }
+
+      "success parse query" in new Test {
+        rule.query()(searchQueryParser)
+        rule.isFetchQuery must beTrue
+        request.setUri("test?q=foo")
+
+        RequestHelper.fetchAdditionalDefs(request, rule) ==== Right(List(QueryDef(Search("foo"))))
       }
     }
 

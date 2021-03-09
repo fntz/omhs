@@ -44,22 +44,31 @@ object MyApp extends App {
   import SwaggerImplicits._
   val q = "asd"
 
-  val rs = get("test" / cookie("asd")) ~> { () =>
+  case class Search(query: String)
+  implicit val queryStringReader = new QueryReader[Search] {
+    override def read(queries: Map[String, List[String]]): Option[Search] = {
+      queries.get("query").flatMap(_.headOption).map(Search)
+    }
+  }
+
+  val rs = get("test" / query[Search]) ~> { (q: Search) =>
     println("~"*100)
-    println("done")
+    println(s"done: ${q}")
     "ok"
   }
-  val rss = rs.toSwagger.withTags("foo", "bar")
-    .withResponse(200, Response("description"))
-    .withDescription("test api")
-    .withExternalDocs(ExternalDocumentation("http://example.com", Some("ext")))
-    .withOperationId("opId")
-    .withSummary("summary")
-    .withDeprecated(false)
+
+  val rss = rs
+//    .toSwagger.withTags("foo", "bar")
+//    .withResponse(200, Response("description"))
+//    .withDescription("test api")
+//    .withExternalDocs(ExternalDocumentation("http://example.com", Some("ext")))
+//    .withOperationId("opId")
+//    .withSummary("summary")
+//    .withDeprecated(false)
 
 
   val t = (new Route).addRule(rss)
-    .swagger("swagger")
+//    .swagger("swagger")
 
   DefaultServer.run(9000, t.toHandler)
 

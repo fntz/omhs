@@ -39,6 +39,9 @@ object ParamD {
     cookie(headerName, None)
   def cookie(headerName: String, description: Option[String]): CookieParam =
     CookieParam(headerName, description)
+
+  def query[T](implicit qr: QueryReader[T]): QueryParam[T] =
+    QueryParam[T]()(qr)
 }
 
 sealed trait PathParam extends Param {
@@ -102,20 +105,20 @@ case object * extends PathParam {
 }
 
 case class HeaderParam(headerName: String, description: Option[String]) extends Param {
-  override def check(in: String): Boolean = true
+  override def check(in: String): Boolean = false
 
   override val isPathParam: Boolean = false
 }
 
 case class CookieParam(cookieName: String, description: Option[String]) extends Param {
-  override def check(in: String): Boolean = true
+  override def check(in: String): Boolean = false
 
   override val isPathParam: Boolean = false
 }
 
 
 case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
-  override def check(in: String): Boolean = true
+  override def check(in: String): Boolean = false
 
   override val isPathParam: Boolean = false
 
@@ -123,13 +126,20 @@ case class BodyParam[T]()(implicit val reader: BodyReader[T]) extends Param {
 }
 
 case object FileParam extends Param {
-  override def check(in: String): Boolean = true
+  override def check(in: String): Boolean = false
 
   override val isPathParam: Boolean = false
 
   override def toString: String = "file"
 }
 
+case class QueryParam[T]()(implicit val reader: QueryReader[T]) extends Param {
+  override def check(in: String): Boolean = false
+
+  override val isPathParam: Boolean = false
+
+  override def toString: String = "query"
+}
 
 object ParamDSL {
   implicit class ParamImplicits(val param: Param) extends AnyVal {
