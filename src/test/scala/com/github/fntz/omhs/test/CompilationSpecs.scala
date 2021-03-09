@@ -14,7 +14,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / string / string) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
               "done"
@@ -30,7 +29,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -51,7 +49,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.post("file" / file / file("test")) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
               "done"
@@ -68,7 +65,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -90,7 +86,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.post("file" / long / string) ~> { (s: String) =>
               "done"
@@ -107,7 +102,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.post("file" / long / string) ~> { (s: String, l: Long) =>
               "done"
@@ -124,7 +118,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / string) ~> { () =>
               "done"
@@ -141,7 +134,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / string) ~> { (a: String, req: CurrentHttpRequest) =>
               "done"
@@ -158,7 +150,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / long) ~> { (l: Long) =>
               "done"
@@ -175,7 +166,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / string) ~> { (l: String) =>
               "done"
@@ -193,7 +183,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult.Implicits._
            import ParamDSL._
            import java.util.UUID
-           import ParamD._
 
            p.get("file" / uuid) ~> { (l: UUID) =>
               "done"
@@ -210,7 +199,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / regex("".r)) ~> { (l: String) =>
               "done"
@@ -227,7 +215,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / *) ~> { (l: List[String]) =>
               "done"
@@ -244,7 +231,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / header("User-Agent")) ~> { (l: String) =>
               "done"
@@ -261,7 +247,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / cookie("foo")) ~> { (l: Cookie) =>
               "done"
@@ -278,7 +263,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            case class Search(q: String)
            implicit val qReader = new QueryReader[Search] {
@@ -302,7 +286,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
@@ -324,7 +307,6 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import AsyncResult._
            import AsyncResult.Implicits._
            import ParamDSL._
-           import ParamD._
 
            p.get("file" / file) ~> { (l: List[MixedFileUpload]) =>
               "done"
@@ -339,9 +321,24 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
-          import ParamD._
+          import ParamDSL._
 
           p.get(string) ~> { (x: String) => "done" }
+
+        """.stripMargin)
+    }
+
+    "success compilation #1" in {
+      compile(
+        s"""
+          import com.github.fntz.omhs.methods.Methods._
+          import com.github.fntz.omhs._
+          import AsyncResult._
+          import AsyncResult.Implicits._
+          import ParamDSL._
+          import java.util.UUID
+
+          p.get(string / "test" / long / uuid) ~> { (x: String, l: Long, u: UUID) => "done" }
 
         """.stripMargin)
     }

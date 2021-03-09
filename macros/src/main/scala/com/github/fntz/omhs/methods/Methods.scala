@@ -168,7 +168,7 @@ object MethodsImpl {
       }
     }
 
-    val paramDMap = Map(
+    val availableParams = Map(
       "string" -> StringToken,
       "long" -> LongToken,
       "uuid" -> UUIDToken,
@@ -180,6 +180,9 @@ object MethodsImpl {
     )
 
     val complex: Vector[String] = Vector("body", "query")
+
+    // because helper methods (query, body, long) in the same package as implicits
+    val banned: Vector[String] = Vector("StringToParamImplicits", "ParamImplicits", "VectorParamsImplicits")
 
     val tokens = c.prefix.tree.collect {
       case q"com.github.fntz.omhs.UUIDParam" =>
@@ -198,20 +201,21 @@ object MethodsImpl {
         CookieToken
 
       case Apply(TypeApply(
-        Select(Select(Select(_, TermName("omhs")), TermName("ParamD")),
+        Select(Select(Select(_, TermName("omhs")), TermName("ParamDSL")),
         TermName("query")), List(tpt)), List(reader)) =>
           QueryToken(tpt.tpe, reader)
 
       case Apply(TypeApply(
-        Select(Select(Select(_, TermName("omhs")), TermName("ParamD")),
+        Select(Select(Select(_, TermName("omhs")), TermName("ParamDSL")),
         TermName("body")), List(tpt)), List(reader)) =>
           BodyToken(tpt.tpe, reader)
 
-      case Select(Select(Select(_, TermName("omhs")), TermName("ParamD")), TermName(term)) if !complex.contains(term) =>
-        paramDMap.get(term) match {
+      case Select(Select(Select(_, TermName("omhs")),
+        TermName("ParamDSL")), TermName(term)) if !complex.contains(term) && !banned.contains(term) =>
+        availableParams.get(term) match {
           case Some(value) => value
           case None =>
-           c.abort(focus, s"Unexpected term: $term, available: ${paramDMap.keys.mkString(", ")}")
+           c.abort(focus, s"Unexpected term: $term, available: ${availableParams.keys.mkString(", ")}")
         }
 
       case q"com.github.fntz.omhs.FileParam" =>

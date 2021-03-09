@@ -12,7 +12,6 @@ object MyApp extends App {
   import Methods._
   import ParamDSL._
   import p._
-  import ParamD._
   import AsyncResult._
   import AsyncResult.Implicits._
   import AsyncResult.Streaming._

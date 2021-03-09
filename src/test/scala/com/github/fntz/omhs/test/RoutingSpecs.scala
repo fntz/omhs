@@ -3,11 +3,11 @@ package com.github.fntz.omhs.test
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.methods.Methods._
 import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
-import io.netty.buffer.{ByteBuf, Unpooled}
+import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http.multipart.{DefaultHttpDataFactory, HttpPostRequestEncoder, MemoryFileUpload, MixedFileUpload}
+import io.netty.handler.codec.http.multipart.MixedFileUpload
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
@@ -24,7 +24,6 @@ class RoutingSpecs extends Specification with AfterAll {
   import ParamDSL._
   import com.github.fntz.omhs.p._
   import AsyncResult.Implicits._
-  import ParamD._
 
   case class Foo(id: Int)
   implicit val fooReader: BodyReader[Foo] = (str: String) => {
