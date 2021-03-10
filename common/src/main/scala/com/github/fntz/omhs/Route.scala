@@ -123,9 +123,7 @@ class Route {
    * @return
    */
   def toHandler(setup: Setup): OMHSHttpHandler = {
-    println("@"*100)
     current.foreach { rule =>
-      println(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
       logger.debug(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
     }
     new OMHSHttpHandler(this, setup)
