@@ -24,10 +24,6 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
   private val unhanded = route.currentUnhandled
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
-    if (setup.sendServerHeader) {
-      empty.headers().set(serverHeader, nettyVersion)
-    }
-
     msg match {
       case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request) =>
         ctx.writeAndFlush(route.rewrite(continue))
@@ -120,6 +116,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withUserHeaders(userResponse.headers)
       .processKeepAlive(isKeepAlive, request)
+      .withServer(ServerVersion, setup.sendServerHeader)
 
     ctx.write(response) // empty first
 
@@ -153,9 +150,10 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
       .withContentType(userResponse.contentType)
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withLength(userResponse.content.length)
+      .withServer(ServerVersion, setup.sendServerHeader)
 
     val f = ctx.writeAndFlush(route.rewrite(response))
-    
+
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }
@@ -180,10 +178,9 @@ object OMHSHttpHandler {
   import CollectionsConverters._
 
   private val currentProject = "omhs"
-  private val nettyVersion = s"$currentProject on " + Version.identify().values.toScala.headOption
+  private val ServerVersion = s"$currentProject on " + Version.identify().values.toScala.headOption
     .map { v => s"netty-${v.artifactVersion()}"}
     .getOrElse("unknown")
-  private val serverHeader = "Server"
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
   private def empty = new DefaultFullHttpResponse(
     HttpVersion.HTTP_1_1,

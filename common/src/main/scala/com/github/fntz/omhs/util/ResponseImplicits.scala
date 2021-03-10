@@ -39,6 +39,14 @@ private [omhs] object ResponseImplicits {
       }
       response
     }
+
+    def withServer(value: String, isNeedToModify: Boolean): HttpResponse = {
+      if (isNeedToModify) {
+        response.headers.set(HttpHeaderNames.SERVER, value)
+      }
+      response
+    }
+
   }
 
 }
