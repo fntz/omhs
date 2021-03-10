@@ -6,6 +6,28 @@ todo:
 * tests for files
 * resolve todo
 * swagger
+* todo app
+* jmh bench
+* syntax: 
+
+```
+  path -> path | query | header | cookie | body | file
+  query -> header | cookie | body | file
+  header -> header | cookie | body | file
+  cookie -> header | cookie | body | file
+  body -> end
+  file -> end
+
+  path / path ? query 
+  path / path << header << cookie :/ body 
+    
+  phantom types   
+```
+
+todo: probably need to alternative support: `foo | bar | baz`
+
+check codegen: "-Domhs.logLevel=verbose|info|none"
+
 
 todo: one import 
 now: 
@@ -13,12 +35,6 @@ import RoutingImplicits._
 import ParamDsl._
 need: 
 import something._ 
-
-setup: 
-    chunk size 
-    file size 
-    date local/timezone
-
 
 idea: 
 ```

@@ -9,6 +9,8 @@ import java.util.UUID
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
+import org.slf4j.LoggerFactory
+
 object RoutingImplicits {
 
   // todo sbt.setup.logging options for checking output of code-gen
@@ -38,6 +40,13 @@ object RoutingImplicits {
 
 
 private object RoutingImpl {
+
+  private val logger = LoggerFactory.getLogger("OMHSCodeGenerator")
+  private val propName = "omhs.logLevel"
+  private object LogLevel extends Enumeration {
+    type Level = Value
+    val verbose, info, none = Value
+  }
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
                            (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
@@ -127,6 +136,23 @@ private object RoutingImpl {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
+    val level = Option(System.getProperty(propName)) match {
+      case Some("verbose") => LogLevel.verbose
+      case Some("info") => LogLevel.info
+      case Some("none") => LogLevel.none
+      case _ =>  LogLevel.none
+    }
+    def verbose(str: String): Unit = {
+      if (level == LogLevel.verbose) {
+        c.info(focus, str, force = false)
+      }
+    }
+    def info(str: String): Unit = {
+      if (level == LogLevel.info || level == LogLevel.verbose) {
+        c.info(focus, str, force = false)
+      }
+    }
+
     sealed trait ParamToken {
       def isBody = false
       def isFile = false
@@ -210,7 +236,7 @@ private object RoutingImpl {
         }
     }.toBuffer[ParamToken]
 
-    println(s"=============> ${tokens.size}")
+    info(s"Found ${tokens.size} arguments for rule")
 
     val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
@@ -226,15 +252,14 @@ private object RoutingImpl {
 
     val isEmptyFunction = actualFunctionParameters.isEmpty
 
-    println(s"isEmptyFunction: $isEmptyFunction")
-
-    println(s"actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}")
+    info(s"isEmptyFunction? $isEmptyFunction")
+    info(s"actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}")
 
     val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
     def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
     val isReqParamNeeded = actualFunctionParameters.exists(x => isReqParam(x._1))
 
-    println(s"need to pass requestParam? $isReqParamNeeded")
+    info(s"need to pass requestParam? $isReqParamNeeded")
 
     if (isReqParamNeeded) {
       if (!isReqParam(actualFunctionParameters.last._1)) {
@@ -374,6 +399,8 @@ private object RoutingImpl {
             $funName()
         }
         """
+
+    verbose(s"$instance")
 
     c.Expr[ExecutableRule](instance)
   }
