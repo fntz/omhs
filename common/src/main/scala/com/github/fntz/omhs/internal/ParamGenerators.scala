@@ -31,11 +31,11 @@ trait HeaderOrCookieLikeParam extends LikeRule {
   }
 
   def <<<[T](bodyParam: BodyParam[T]): FileOrBodyLikeParam = {
-    FileOrBodyLikeParam(rule.body(bodyParam.reader))
+    FileOrBodyLikeParam(rule.same.body(bodyParam.reader))
   }
 
   def <<<(fileParam: FileParam): FileOrBodyLikeParam = {
-    FileOrBodyLikeParam(rule.withFiles(fileParam))
+    FileOrBodyLikeParam(rule.same.withFiles(fileParam))
   }
 }
 
@@ -73,11 +73,11 @@ trait PathLikeParam extends QueryLikeParam with HeaderOrCookieLikeParam {
   }
 
   def /(p: TailParam.type): NoPathMoreParam = {
-    NoPathMoreParam(rule.path(p))
+    NoPathMoreParam(rule.same.path(p))
   }
 
   def /(p: PathParam): PathLikeParam = {
-    PathLikeParam(rule.path(p))
+    PathLikeParam(rule.same.path(p))
   }
 
 
@@ -86,5 +86,4 @@ object PathLikeParam {
   def apply(r: Rule): PathLikeParam = new PathLikeParam {
     override val rule: Rule = r
   }
-  val empty = new PathLikeParam {}
 }

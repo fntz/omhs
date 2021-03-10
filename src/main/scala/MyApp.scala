@@ -2,7 +2,7 @@ import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
 import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.codec.http.{FullHttpResponse, HttpMethod}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
@@ -46,15 +46,25 @@ object MyApp extends App {
   implicit val bodyReader = new BodyReader[Search] {
     override def read(str: String): Search = Search("dsa")
   }
-
-  val rule = get("chat") ~> {() =>
+  val base = "api" / "v1" / "sources"
+  val rule = get(base / string) ~> {() =>
     CommonResponse.json("""{"data": "Hi, How can i help you?"}""")
   }
-  val route = new Route().addRule(rule)
 
-  OMHSServer.run(9000, route.toHandler)
+  val r2 = get("/") ~> { () =>
+    "done2"
+  }
 
 
+  val r3 = get(base / uuid / "foo/bar")
+
+//  val z = rule :: r2 :: r3
+
+//  val route = new Route().addRule(rule) //.addRule(r2).addRule(r3)
+
+//  OMHSServer.run(9000, route.toHandler)
+
+  println(rule)
 
 
 

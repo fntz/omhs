@@ -9,6 +9,8 @@ todo:
 * jmh bench
 * syntax: 
 
+todo add redirect helper
+
 ```
   path -> path | query | header | cookie | body | file
   query -> header | cookie | body | file

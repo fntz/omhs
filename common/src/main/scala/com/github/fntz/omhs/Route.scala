@@ -2,6 +2,7 @@ package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.ExecutableRule
 import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.{ArrayBuffer => AB}
 
@@ -10,6 +11,7 @@ import scala.collection.mutable.{ArrayBuffer => AB}
  */
 class Route {
 
+  private val logger = LoggerFactory.getLogger(getClass)
   private val rules: AB[ExecutableRule] = new AB[ExecutableRule]()
 
   private var defaultResponseHandler = (response: HttpResponse) => response
@@ -120,8 +122,14 @@ class Route {
    * @param setup - common application setup
    * @return
    */
-  def toHandler(setup: Setup): OMHSHttpHandler =
+  def toHandler(setup: Setup): OMHSHttpHandler = {
+    println("@"*100)
+    current.foreach { rule =>
+      println(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
+      logger.debug(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
+    }
     new OMHSHttpHandler(this, setup)
+  }
 
   override def toString: String = {
     rules.map(_.toString).mkString("\n")

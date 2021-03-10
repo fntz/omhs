@@ -82,6 +82,12 @@ class ParamParserSpecs extends Specification {
       re.check("grey") must beTrue
       re.check("gray") must beTrue
     }
+
+    "/" in {
+      val route = HardCodedParam("/")
+      route.check("/asd") must beFalse
+      route.check("/") must beTrue
+    }
   }
 
   private def parse(target: String, pl: PathLikeParam) = {

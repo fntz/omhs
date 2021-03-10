@@ -143,6 +143,26 @@ class Rule {
     s"$tmpMethod $tmpPath $tmpHeaders $tmpReq $tmpIsBodyNeeded $tmpCookies $tmpWithFile"
   }
 
+  def same: Rule = {
+    val rule = Rule(method)
+    paths.foreach { x => rule.path(x)}
+    headers.foreach { x => rule.header(x) }
+    cookies.foreach { x => rule.cookie(x) }
+    if (isBodyNeeded) {
+      rule.body(currentBodyReader)
+    }
+    if (isQueryNeeded) {
+      rule.query(currentQueryReader)
+    }
+    if (isFileNeeded) {
+      rule.withFiles(fileParam)
+    }
+    if (isCurrentRequestNeeded) {
+      rule.withRequest()
+    }
+    rule
+  }
+
 }
 object Rule {
   // tmp
