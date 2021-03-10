@@ -6,7 +6,6 @@ todo:
 * tests for files
 * resolve todo
 * swagger
-* todo app
 * jmh bench
 * syntax: 
 
