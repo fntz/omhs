@@ -15,14 +15,13 @@ object OMHSServer {
   type C2C = ChannelPipeline => ChannelPipeline
   type S2S = ServerBootstrap => ServerBootstrap
 
-  def noSetup: S2S = (s: ServerBootstrap) => s
+  def noServerBootstrapChanges: S2S = (s: ServerBootstrap) => s
   def noPipelineChanges: C2C = (c: ChannelPipeline) => c
-
 
   def run(address: InetSocketAddress,
           handler: OMHSHttpHandler,
-          beforeHandlers: C2C,
-          modifier: S2S
+          pipeLineChanges: C2C,
+          serverBootstrapChanges: S2S
          ): ChannelFuture = {
     val setup = handler.setup
     val boss = new NioEventLoopGroup()
@@ -37,7 +36,7 @@ object OMHSServer {
             p.addLast("codec", new HttpServerCodec())
             p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
 
-            beforeHandlers(p)
+            pipeLineChanges(p)
 
             if (setup.enableCompression) {
               p.addLast("compressor", new HttpContentCompressor())
@@ -46,7 +45,7 @@ object OMHSServer {
             p.addLast("omhs", handler)
           }
         })
-      val f = modifier(b).bind(address).sync()
+      val f = serverBootstrapChanges(b).bind(address).sync()
       f.channel().closeFuture().sync()
     } finally {
       worker.shutdownGracefully()
@@ -57,27 +56,27 @@ object OMHSServer {
 
   def run(host: String, port: Int,
           handler: OMHSHttpHandler,
-          beforeHandlers: C2C,
-          modifier: S2S
+          pipeLineChanges: C2C,
+          serverBootstrapChanges: S2S
          ): ChannelFuture = {
     run(
       address = new InetSocketAddress(host, port),
       handler = handler,
-      beforeHandlers = beforeHandlers,
-      modifier = modifier
+      pipeLineChanges = pipeLineChanges,
+      serverBootstrapChanges = serverBootstrapChanges
     )
   }
 
   def run(port: Int,
           handler: OMHSHttpHandler,
-          beforeHandlers: C2C = (c: ChannelPipeline) => c,
-          modifier: S2S = (b: ServerBootstrap) => b
+          pipeLineChanges: C2C = noPipelineChanges,
+          serverBootstrapChanges: S2S = noServerBootstrapChanges
          ): ChannelFuture = {
     run(
       address = new InetSocketAddress("127.0.0.1", port),
       handler = handler,
-      beforeHandlers = beforeHandlers,
-      modifier = modifier
+      pipeLineChanges = pipeLineChanges,
+      serverBootstrapChanges = serverBootstrapChanges
     )
   }
 
