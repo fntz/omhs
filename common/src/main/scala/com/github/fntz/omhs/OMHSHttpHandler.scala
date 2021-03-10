@@ -198,7 +198,7 @@ object OMHSHttpHandler {
   private val nettyVersion = s"$currentProject on " + Version.identify().values.toScala.headOption
     .map { v => s"netty-${v.artifactVersion()}"}
     .getOrElse("unknown")
-  private val serverHeader = "X-Server-Version"
+  private val serverHeader = "Server"
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
   private def empty = new DefaultFullHttpResponse(
     HttpVersion.HTTP_1_1,
