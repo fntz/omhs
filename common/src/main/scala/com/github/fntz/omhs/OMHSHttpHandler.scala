@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamParser, ParseResult}
-import com.github.fntz.omhs.util.{UtilImplicits, CollectionsConverters}
+import com.github.fntz.omhs.util.{UtilImplicits, CollectionsConverters, ResponseImplicits}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
@@ -17,6 +17,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
 
   import OMHSHttpHandler._
   import UtilImplicits._
+  import ResponseImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
@@ -80,7 +81,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
   }
 
   private def fileCleaner(files: List[FileDef]): ChannelFutureListener = {
-    (future: ChannelFuture) => {
+    (_: ChannelFuture) => {
       files.flatMap(_.value).foreach(_.release())
     }
   }
@@ -112,15 +113,13 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
                    ): ChannelFuture = {
 
     val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
-    response.headers()
-      .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN)
-      .set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
 
-    userResponse.headers.foreach { case (h, v) =>
-      response.headers().set(h, v)
-    }
-
-    processKeepAlive(isKeepAlive, request, response)
+    response
+      .withContentType(HttpHeaderValues.TEXT_PLAIN.toString) // is it?
+      .chunked
+      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+      .withUserHeaders(userResponse.headers)
+      .processKeepAlive(isKeepAlive, request)
 
     ctx.write(response) // empty first
 
@@ -148,33 +147,19 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
                      userResponse: CommonResponse): ChannelFuture = {
 
     val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
-
-    processKeepAlive(isKeepAlive, request, response)
-
-    userResponse.headers.foreach { case (h, v) =>
-      response.headers().set(h, v)
-    }
-
-    response.setStatus(userResponse.status)
-    response.headers.set(HttpHeaderNames.CONTENT_TYPE, userResponse.contentType)
-    response.headers.set(HttpHeaderNames.CONTENT_LENGTH, userResponse.content.length)
-    response.headers.set(HttpHeaderNames.DATE, ZonedDateTime.now().format(setup.timeFormatter))
+      .processKeepAlive(isKeepAlive, request)
+      .withUserHeaders(userResponse.headers)
+      .setStatus(userResponse.status)
+      .withContentType(userResponse.contentType)
+      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+      .withLength(userResponse.content.length)
 
     val f = ctx.writeAndFlush(route.rewrite(response))
+    
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }
     f
-  }
-
-  private def processKeepAlive(isKeepAlive: Boolean, request: FullHttpRequest, response: HttpResponse): Unit = {
-    if (isKeepAlive) {
-      if (!request.protocolVersion.isKeepAliveDefault) {
-        response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
-      }
-    } else {
-      response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
-    }
   }
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {

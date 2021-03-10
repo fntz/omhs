@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.ExecutableRule
-import io.netty.handler.codec.http.FullHttpResponse
+import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}
 
 import scala.collection.mutable.{ArrayBuffer => AB}
 
@@ -12,7 +12,7 @@ class Route {
 
   private val rules: AB[ExecutableRule] = new AB[ExecutableRule]()
 
-  private var defaultResponseHandler = (response: FullHttpResponse) => response
+  private var defaultResponseHandler = (response: HttpResponse) => response
 
   private var unhandledDefault = (reason: UnhandledReason) => {
     val result = reason match {
@@ -42,7 +42,7 @@ class Route {
    * @param response - HttpResponse before send to client
    * @return modified response
    */
-  def rewrite(response: FullHttpResponse): FullHttpResponse =
+  def rewrite(response: HttpResponse): HttpResponse =
     defaultResponseHandler.apply(response)
 
   /**
@@ -57,7 +57,7 @@ class Route {
    * @param rewriter - function for updating response (add headers for example)
    * @return
    */
-  def onEveryResponse(rewriter: FullHttpResponse => FullHttpResponse): Route = {
+  def onEveryResponse(rewriter: HttpResponse => HttpResponse): Route = {
     defaultResponseHandler = rewriter
     this
   }
