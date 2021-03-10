@@ -8,89 +8,79 @@ import java.util.UUID
 
 sealed trait ParamDef[T] {
   def value: T
-  // do not used for call user-defined function
+  // property does not used for call user-defined function
   val skip: Boolean = false
   // I use it for sorting:
-  // user defined params as: header / long / string
-  // after decoding we have: longDef, strDef, headerDef
-  // but correct function is header + long + string
-  // we need to sort params according to this property
+  // user defined params as: string << header <<< body
+  // after decoding we have: srringDef, bodyDef, headerDef
+  // but correct function is string + header + body
+  // we need to update order of the params according to the property
   val sortProp: Int
+}
+object ParamDef {
+  val empty = 0
+  val long = 1
+  val string = 2
+  val uuid = 3
+  val regex = 4
+  val tail = 5
+  val body = 6
+  val header = 7
+  val request = 8
+  val cookie = 9
+  val file = 10
+  val query = 11
 }
 sealed trait PathParamDef[T] extends ParamDef[T]
 case class EmptyDef(value: String) extends PathParamDef[String] {
   override val skip: Boolean = true
-  override val sortProp: Int = EmptyDef.sortProp
+  override val sortProp: Int = ParamDef.empty
 }
-object EmptyDef {
-  val sortProp = 0
-}
+
 case class LongDef(value: Long) extends PathParamDef[Long] {
-  override val sortProp: Int = LongDef.sortProp
+  override val sortProp: Int = ParamDef.long
 }
-object LongDef {
-  val sortProp = 1
-}
+
 case class StringDef(value: String) extends PathParamDef[String] {
-  override val sortProp: Int = StringDef.sortProp
+  override val sortProp: Int = ParamDef.string
 }
-object StringDef {
-  val sortProp = 2
-}
+
 case class UUIDDef(value: UUID) extends PathParamDef[UUID] {
-  override val sortProp: Int = UUIDDef.sortProp
+  override val sortProp: Int = ParamDef.uuid
 }
-object UUIDDef {
-  val sortProp = 3
-}
+
 case class RegexDef(value: String) extends PathParamDef[String] {
-  override val sortProp: Int = RegexDef.sortProp
+  override val sortProp: Int = ParamDef.regex
 }
-object RegexDef {
-  val sortProp = 4
-}
+
 case class TailDef(values: List[String]) extends PathParamDef[List[String]] {
   override val value: List[String] = values
-  override val sortProp: Int = TailDef.sortProp
+  override val sortProp: Int = ParamDef.tail
 }
-object TailDef {
-  val sortProp = 5
-}
+
 case class BodyDef[T](value: T) extends ParamDef[T] {
-  override val sortProp: Int = BodyDef.sortProp
+  override val sortProp: Int = ParamDef.body
 }
-object BodyDef {
-  val sortProp = 6
-}
+
 case class HeaderDef(value: String) extends ParamDef[String] {
-  override val sortProp: Int = HeaderDef.sortProp
+  override val sortProp: Int = ParamDef.header
 }
-object HeaderDef {
-  val sortProp = 7
-}
+
 case class CurrentHttpRequestDef(value: CurrentHttpRequest) extends ParamDef[CurrentHttpRequest] {
-  override val sortProp: Int = CurrentHttpRequestDef.sortProp
+  override val sortProp: Int = ParamDef.request
 }
-object CurrentHttpRequestDef {
-  val sortProp = 8
-}
+
 case class FileDef(value: List[MixedFileUpload]) extends ParamDef[List[MixedFileUpload]] {
-  override val sortProp: Int = FileDef.sortProp
+  override val sortProp: Int = ParamDef.file
 
   override def toString: String = s"files: ${value.map(_.getFilename).mkString(", ")}"
 }
-object FileDef {
-  val sortProp = 9
-}
+
 case class CookieDef(value: Cookie) extends ParamDef[Cookie] {
-  override val sortProp: Int = CookieDef.sortProp
+  override val sortProp: Int = ParamDef.cookie
 }
-object CookieDef {
-  val sortProp = 10
-}
+
 case class QueryDef[T](value: T) extends ParamDef[T] {
-  override val sortProp: Int = QueryDef.sortProp
+  override val sortProp: Int = ParamDef.query
 }
-object QueryDef {
-  val sortProp = 11
-}
+

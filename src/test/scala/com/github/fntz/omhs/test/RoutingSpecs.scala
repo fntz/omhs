@@ -1,6 +1,5 @@
 package com.github.fntz.omhs.test
 
-import com.github.fntz.omhs.macros.RoutingImplicits._
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
 import io.netty.buffer.Unpooled
@@ -20,9 +19,7 @@ import java.util.UUID
 
 class RoutingSpecs extends Specification with AfterAll {
 
-  import OMHSHttpHandler._
-  import ParamDSL._
-  import com.github.fntz.omhs.p._
+  import RoutingDSL._
   import AsyncResult.Implicits._
 
   case class Foo(id: Int)
@@ -75,7 +72,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== s"123.foo.bar.$uuid"
     }
 
-    val r6 = get("test" / header(headerName)) ~> { (x: String) => x }
+    val r6 = get("test" << header(headerName)) ~> { (x: String) => x }
     "match header" in new RouteTest(r6, "/test") {
       override def makeRequest(path: String): FullHttpRequest = {
         val r =  req(path)
@@ -87,7 +84,7 @@ class RoutingSpecs extends Specification with AfterAll {
     }
 
     def write(x: Foo): String = Json.toJson(x)(Json.writes[Foo]).toString
-    val r7 = post("test" / body[Foo]) ~> { (x: Foo) =>
+    val r7 = post("test" <<< body[Foo]) ~> { (x: Foo) =>
       write(x)
     }
     val foo = Foo(1000)
@@ -102,7 +99,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== write(foo)
     }
 
-    val r8 = post("test" / file) ~> { (xs: List[MixedFileUpload]) =>
+    val r8 = post("test" <<< file) ~> { (xs: List[MixedFileUpload]) =>
       println("~"*100)
       println(xs)
       s"${xs.map(_.getName).mkString(", ")}"
@@ -111,7 +108,7 @@ class RoutingSpecs extends Specification with AfterAll {
       pending
     }
 
-    val r9 = put("test" / body[Foo]) ~> {() => ""}
+    val r9 = put("test" <<< body[Foo]) ~> {() => ""}
     "unparsed body" in new RouteTest(r9, "/test") {
       override def makeRequest(path: String): DefaultFullHttpRequest = {
         val r = req(path)
@@ -126,7 +123,7 @@ class RoutingSpecs extends Specification with AfterAll {
       pending
     }
 
-    val r11 = get("test" / header(headerValue)) ~> {() => "ok"}
+    val r11 = get("test" << header(headerValue)) ~> {() => "ok"}
     "header is missing" in new RouteTest(r11, "/test") {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain("")
@@ -148,7 +145,7 @@ class RoutingSpecs extends Specification with AfterAll {
     }
 
     val cookieName = "foo"
-    val r14 = get("test" / cookie(cookieName)) ~> { (c: Cookie) =>
+    val r14 = get("test" << cookie(cookieName)) ~> { (c: Cookie) =>
       c.value()
     }
     "pass cookie" in new RouteTest(r14, "test") {
@@ -171,11 +168,11 @@ class RoutingSpecs extends Specification with AfterAll {
 
     case class Search(query: String)
     implicit val queryReader = new QueryReader[Search] {
-      override def read(queries: Map[String, List[String]]): Option[Search] = {
+      override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
         queries.get("query").flatMap(_.headOption).map(Search)
       }
     }
-    val r15 = get("test" / query[Search]) ~> { (s: Search) => s.query }
+    val r15 = get("test" :? query[Search]) ~> { (s: Search) => s.query }
     "pass query" in new RouteTest(r15, "test?query=123") {
       status ==== HttpResponseStatus.OK
       content ==== "123"

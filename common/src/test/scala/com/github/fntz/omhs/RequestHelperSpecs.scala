@@ -138,7 +138,7 @@ class RequestHelperSpecs extends Specification {
 
   trait Test extends Scope {
     val request = default
-    val rule = new Rule(method).path(uri)
+    val rule = Rule(method).path(uri)
   }
 
 }

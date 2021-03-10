@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.HttpMethod
  */
 class ExecutableRule(val rule: Rule) {
 
-  lazy val method: HttpMethod = rule.method
+  lazy val method: HttpMethod = rule.currentMethod
 
   def ::[T <: ExecutableRule](other: T): Route = {
     val r = new Route

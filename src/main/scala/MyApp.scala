@@ -1,4 +1,3 @@
-import com.github.fntz.omhs.macros.RoutingImplicits
 import com.github.fntz.omhs._
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
@@ -10,16 +9,14 @@ import com.github.fntz.omhs.playjson.JsonSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
+
+
 object MyApp extends App {
-  import OMHSHttpHandler._
-  import RoutingImplicits._
-  import ParamDSL._
-  import p._
   import AsyncResult._
   import AsyncResult.Implicits._
   import AsyncResult.Streaming._
   import JsonSupport._
-
+  import RoutingDSL._
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Person(id: Int, name: String)
@@ -56,10 +53,10 @@ object MyApp extends App {
     override def read(str: String): Search = Search("dsa")
   }
 
-  val z = get("asd" / "asd") ~> { () =>
-    "asd"
-  }
-
+//  val z = get("asd" / "asd") ~> { () =>
+//    "asd"
+//  }
+//
   val rf = get("file" / string) ~> { (l: String) =>
     "done"
   }
@@ -79,11 +76,9 @@ object MyApp extends App {
     r
   })
     .addRule(rf)
-    .toSwagger.swagger("swagger")
-
+//    .toSwagger.swagger("swagger")
+//
   OMHSServer.run(9000, t.toHandler)
-
-//  DefaultServer.run(9000, t.toHandler)
 
 //  val s = new HttpServer
 //  s.run(9000)

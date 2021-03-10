@@ -1,4 +1,4 @@
-package com.github.fntz.omhs.macros
+package com.github.fntz.omhs.impl
 
 import org.specs2.mutable.Specification
 
@@ -9,85 +9,27 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / string / string) ~> { (a: String, req: CurrentHttpRequest, b: String) =>
               "done"
            }
            """.stripMargin, s"CurrentHttpRequest must be the last argument in the function")
     }
-    "doesnot compile when two body param in one rule" in {
-      doesntCompile(
-        s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
-           import com.github.fntz.omhs._
-           import AsyncResult._
-           import AsyncResult.Implicits._
-           import ParamDSL._
-
-           case class Foo(id: Int)
-           implicit val fooReader = new BodyReader[Foo] {
-             override def read(str: String): Foo = Foo(1)
-           }
-
-           post("file" / body[Foo] / body[Foo]) ~> { (a: Foo, b: Foo) =>
-              "done"
-           }
-           """.stripMargin, s"BodyParam must be one per rule, given: 2")
-    }
-    "doesnt compile when two file param in one rule" in {
-      doesntCompile(
-        s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
-           import com.github.fntz.omhs._
-           import AsyncResult._
-           import AsyncResult.Implicits._
-           import ParamDSL._
-
-           post("file" / file / file("test")) ~> { (a: List[MixedFileUpload], b: List[MixedFileUpload]) =>
-              "done"
-           }
-           """.stripMargin, s"FileParam must be one per rule, given: 2")
-    }
-
-    "doesnt compile when body+file in one rule" in {
-      doesntCompile(
-        s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
-           import com.github.fntz.omhs._
-           import AsyncResult._
-           import AsyncResult.Implicits._
-           import ParamDSL._
-
-           case class Foo(id: Int)
-           implicit val fooReader = new BodyReader[Foo] {
-             override def read(str: String): Foo = Foo(1)
-           }
-
-           post("file" / file / body[Foo]) ~> { (file: List[MixedFileUpload], foo: Foo) =>
-              "done"
-           }
-           """.stripMargin, "You can not mix BodyParam with FileParam, choose one")
-    }
 
     "doesnt compile when parameters count is not the same as function arguments length" in {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
-           post("file" / long / string) ~> { (s: String) =>
+           get("file" / long / string) ~> { (s: String) =>
               "done"
            }
            """.stripMargin, "Args lengths are not the same")
@@ -97,13 +39,12 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
-           post("file" / long / string) ~> { (s: String, l: Long) =>
+           get("file" / long / string) ~> { (s: String, l: Long) =>
               "done"
            }
            """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
@@ -113,11 +54,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / string) ~> { () =>
               "done"
@@ -129,11 +69,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / string) ~> { (a: String, req: CurrentHttpRequest) =>
               "done"
@@ -145,11 +84,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / long) ~> { (l: Long) =>
               "done"
@@ -161,11 +99,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / string) ~> { (l: String) =>
               "done"
@@ -177,11 +114,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
            import java.util.UUID
 
            get("file" / uuid) ~> { (l: UUID) =>
@@ -194,11 +130,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / regex("".r)) ~> { (l: String) =>
               "done"
@@ -210,11 +145,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            get("file" / *) ~> { (l: List[String]) =>
               "done"
@@ -226,13 +160,12 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
-           get("file" / header("User-Agent")) ~> { (l: String) =>
+           get("file" << header("User-Agent")) ~> { (l: String) =>
               "done"
            }
            """.stripMargin)
@@ -242,13 +175,12 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.cookie.Cookie
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
-           get("file" / cookie("foo")) ~> { (l: Cookie) =>
+           get("file" << cookie("foo")) ~> { (l: Cookie) =>
               "done"
            }
            """.stripMargin)
@@ -258,11 +190,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.cookie.Cookie
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            case class Search(q: String)
            implicit val qReader = new QueryReader[Search] {
@@ -271,7 +202,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
              }
            }
 
-           get("file" / query[Search]) ~> { (q: Search) =>
+           get("file" :? query[Search]) ~> { (q: Search) =>
               "done"
            }
            """.stripMargin)
@@ -281,18 +212,17 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
            case class Foo(id: Int)
            implicit val fooReader = new BodyReader[Foo] {
              override def read(str: String): Foo = Foo(1)
            }
 
-           get("file" / body[Foo]) ~> { (l: Foo) =>
+           get("file" <<< body[Foo]) ~> { (l: Foo) =>
               "done"
            }
            """.stripMargin)
@@ -302,13 +232,12 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
       compile(
         s"""
            import io.netty.handler.codec.http.multipart.MixedFileUpload
-           import com.github.fntz.omhs.macros.RoutingImplicits._
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
-           import ParamDSL._
+           import RoutingDSL._
 
-           get("file" / file) ~> { (l: List[MixedFileUpload]) =>
+           get("file" <<< file) ~> { (l: List[MixedFileUpload]) =>
               "done"
            }
            """.stripMargin)
@@ -317,11 +246,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "success compilation" in {
       compile(
         s"""
-          import com.github.fntz.omhs.macros.RoutingImplicits._
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
-          import ParamDSL._
+          import RoutingDSL._
 
           get(string) ~> { (x: String) => "done" }
 
@@ -331,11 +259,10 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "success compilation #1" in {
       compile(
         s"""
-          import com.github.fntz.omhs.macros.RoutingImplicits._
           import com.github.fntz.omhs._
           import AsyncResult._
           import AsyncResult.Implicits._
-          import ParamDSL._
+          import RoutingDSL._
           import java.util.UUID
 
           get(string / "test" / long / uuid) ~> { (x: String, l: Long, u: UUID) => "done" }

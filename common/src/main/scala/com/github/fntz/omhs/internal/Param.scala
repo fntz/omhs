@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.internal
 
-import com.github.fntz.omhs.{BodyReader, QueryReader}
+import com.github.fntz.omhs.{BodyReader, QueryReader, Rule}
 
 import scala.util.matching.Regex
 import java.util.UUID
@@ -18,7 +18,8 @@ sealed trait PathParam extends Param {
   def name: String
   def description: Option[String]
 }
-case class HardCodedParam(value: String) extends PathParam {
+sealed trait PathParamNoTail extends PathParam
+case class HardCodedParam(value: String) extends PathParamNoTail {
   override val isUserDefined: Boolean = true
   override def check(in: String): Boolean = in == value
   override def name: String = value
@@ -27,12 +28,12 @@ case class HardCodedParam(value: String) extends PathParam {
   override def toString: String = value
 }
 
-case class StringParam(name: String, description: Option[String]) extends PathParam {
+case class StringParam(name: String, description: Option[String]) extends PathParamNoTail {
   override def check(in: String): Boolean = true
   override def toString: String = ":string"
 }
 
-case class LongParam(name: String, description: Option[String]) extends PathParam {
+case class LongParam(name: String, description: Option[String]) extends PathParamNoTail {
   override def check(in: String): Boolean = {
     if (in.isEmpty || in.contains(".")) {
       false
@@ -43,7 +44,7 @@ case class LongParam(name: String, description: Option[String]) extends PathPara
 
   override def toString: String = ":long"
 }
-case class UUIDParam(name: String, description: Option[String]) extends PathParam {
+case class UUIDParam(name: String, description: Option[String]) extends PathParamNoTail {
   override def check(in: String): Boolean = {
     if (in.length == 36) {
       Try(UUID.fromString(in)).isSuccess
@@ -55,7 +56,7 @@ case class UUIDParam(name: String, description: Option[String]) extends PathPara
   override def toString: String = ":uuid"
 }
 
-case class RegexParam(re: Regex, name: String, description: Option[String]) extends PathParam {
+case class RegexParam(re: Regex, name: String, description: Option[String]) extends PathParamNoTail {
   override def check(in: String): Boolean = {
     re.findFirstIn(in).isDefined
   }

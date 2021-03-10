@@ -24,28 +24,12 @@ import scala.collection.mutable.{ArrayBuffer => AB}
  *  }}}
  * @param method - http method where current rule will do
  */
-case class Rule(method: HttpMethod) {
+class Rule {
 
+  private var method: HttpMethod = HttpMethod.GET
   private val paths: AB[PathParam] = new AB[PathParam]()
   private val headers: AB[HeaderParam] = new AB[HeaderParam]()
   private val cookies: AB[CookieParam] = new AB[CookieParam]()
-
-  /**
-   * build url (relative) from paths parameters
-   * @return current url information which was provided with path-params
-   */
-  def currentUrl: String = {
-    val tmp = currentParams.map {
-      case HardCodedParam(v) => v
-      case TailParam => "*"
-      case p: PathParam => s"{${p.name}}"
-    }.mkString("/")
-    if (tmp.startsWith("/")) {
-      tmp
-    } else {
-      s"/$tmp"
-    }
-  }
 
   private var reader: BodyReader[_] = _
 
@@ -80,6 +64,30 @@ case class Rule(method: HttpMethod) {
   def currentQueryReader: QueryReader[_] = queryReader
 
   def currentCookies: Vector[CookieParam] = cookies.toVector
+
+  def currentMethod: HttpMethod = method
+
+  /**
+   * build url (relative) from paths parameters
+   * @return current url information which was provided with path-params
+   */
+  def currentUrl: String = {
+    val tmp = currentParams.map {
+      case HardCodedParam(v) => v
+      case TailParam => "*"
+      case p: PathParam => s"{${p.name}}"
+    }.mkString("/")
+    if (tmp.startsWith("/")) {
+      tmp
+    } else {
+      s"/$tmp"
+    }
+  }
+
+  def withMethod(method: HttpMethod): Rule = {
+    this.method = method
+    this
+  }
 
   def withRequest(): Rule = {
     isCurrentRequestNeeded = true
@@ -130,8 +138,14 @@ case class Rule(method: HttpMethod) {
     val tmpIsBodyNeeded = s"\n isBodyNeeded: $isBodyNeeded"
     val tmpMethod = s"\n ---- $method"
     val tmpPath = s"\n path: ${paths.mkString("/")}"
-    s"$tmpMethod $tmpPath $tmpHeaders $tmpReq $tmpIsBodyNeeded"
+    val tmpCookies = s"\n cookies: ${cookies.mkString(", ")}"
+    val tmpWithFile = s"\n file? $isFileNeeded"
+    s"$tmpMethod $tmpPath $tmpHeaders $tmpReq $tmpIsBodyNeeded $tmpCookies $tmpWithFile"
   }
 
+}
+object Rule {
+  // tmp
+  def apply(method: HttpMethod): Rule = new Rule().withMethod(method)
 }
 

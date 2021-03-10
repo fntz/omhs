@@ -21,7 +21,6 @@ todo:
   path / path ? query 
   path / path << header << cookie :/ body 
     
-  phantom types   
 ```
 
 todo: probably need to alternative support: `foo | bar | baz`

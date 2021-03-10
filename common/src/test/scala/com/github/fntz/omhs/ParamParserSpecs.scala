@@ -7,7 +7,7 @@ import java.util.UUID
 
 class ParamParserSpecs extends Specification {
 
-  import ParamDSL._
+  import RoutingDSL._
 
   private val genUuid = UUID.randomUUID()
 
@@ -18,7 +18,7 @@ class ParamParserSpecs extends Specification {
         success = true, List(EmptyDef("test"), LongDef(123), EmptyDef("abc"))
       )
       parse("/test/asd/abc", a).isSuccess must beFalse
-      parse("test/", a.asInstanceOf[Vector[PathParam]]).isSuccess must beFalse
+      parse("test/", a).isSuccess must beFalse
 
       val b = long / "test"
       parse("/test/123", b).isSuccess must beFalse
@@ -84,8 +84,12 @@ class ParamParserSpecs extends Specification {
     }
   }
 
-  private def parse(target: String, xs: Vector[Param]) = {
-    ParamParser.parse(target, xs.collect { case x: PathParam => x })
+  private def parse(target: String, pl: PathLikeParam) = {
+    ParamParser.parse(target, pl.rule.currentParams)
+  }
+
+  private def parse(target: String, pl: NoPathMoreParam) = {
+    ParamParser.parse(target, pl.rule.currentParams)
   }
 
 }

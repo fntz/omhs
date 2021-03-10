@@ -19,7 +19,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
   import UtilImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
-  private val byMethod = route.current.groupBy(_.rule.method)
+  private val byMethod = route.current.groupBy(_.rule.currentMethod)
   private val unhanded = route.currentUnhandled
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
