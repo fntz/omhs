@@ -43,45 +43,17 @@ object MyApp extends App {
     }
   }
 
-//  val rs = get("test" / query[Search]) ~> { (q: Search) =>
-//    println("~"*100)
-//    println(s"done: ${q}")
-//    "ok"
-//  }
-
   implicit val bodyReader = new BodyReader[Search] {
     override def read(str: String): Search = Search("dsa")
   }
 
-//  val z = get("asd" / "asd") ~> { () =>
-//    "asd"
-//  }
-//
-  val rf = get("file" / string) ~> { (l: String) =>
-    "done"
+  val rule = get("chat") ~> {() =>
+    CommonResponse.json("""{"data": "Hi, How can i help you?"}""")
   }
+  val route = new Route().addRule(rule)
 
-//  val rss = rs
-//    .toSwagger.withTags("foo", "bar")
-//    .withResponse(200, Response("description"))
-//    .withDescription("test api")
-//    .withExternalDocs(ExternalDocumentation("http://example.com", Some("ext")))
-//    .withOperationId("opId")
-//    .withSummary("summary")
-//    .withDeprecated(false)
+  OMHSServer.run(9000, route.toHandler)
 
-
-  val t = (new Route).onEveryResponse((r: FullHttpResponse) => {
-    r.headers().set("text", "boom")
-    r
-  })
-    .addRule(rf)
-//    .toSwagger.swagger("swagger")
-//
-  OMHSServer.run(9000, t.toHandler)
-
-//  val s = new HttpServer
-//  s.run(9000)
 
 
 

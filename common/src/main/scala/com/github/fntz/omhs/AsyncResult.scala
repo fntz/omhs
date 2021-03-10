@@ -58,6 +58,10 @@ object AsyncResult {
       }
     }
 
+    implicit def commonResponse2ASyncResult(value: CommonResponse): AsyncResult = {
+      AsyncResult.completed(value)
+    }
+
     implicit def string2AsyncResult(value: String): AsyncResult = {
       AsyncResult.completed(CommonResponse.plain(value))
     }

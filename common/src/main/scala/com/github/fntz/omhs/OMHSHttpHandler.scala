@@ -200,7 +200,7 @@ object OMHSHttpHandler {
     .getOrElse("unknown")
   private val serverHeader = "X-Server-Version"
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
-  private val empty = new DefaultFullHttpResponse(
+  private def empty = new DefaultFullHttpResponse(
     HttpVersion.HTTP_1_1,
     HttpResponseStatus.OK,
     Unpooled.EMPTY_BUFFER
