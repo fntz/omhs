@@ -7,7 +7,7 @@ import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
-import io.netty.handler.codec.http.multipart.MixedFileUpload
+import io.netty.handler.codec.http.multipart.FileUpload
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
@@ -99,7 +99,7 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== write(foo)
     }
 
-    val r8 = post("test" <<< file) ~> { (xs: List[MixedFileUpload]) =>
+    val r8 = post("test" <<< file) ~> { (xs: List[FileUpload]) =>
       println("~"*100)
       println(xs)
       s"${xs.map(_.getName).mkString(", ")}"

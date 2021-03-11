@@ -3,7 +3,7 @@ package com.github.fntz.omhs.impl
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.cookie.Cookie
-import io.netty.handler.codec.http.multipart.MixedFileUpload
+import io.netty.handler.codec.http.multipart.FileUpload
 
 import java.util.UUID
 import scala.language.experimental.macros
@@ -440,7 +440,7 @@ private[omhs] object RoutingImpl {
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
         case HeaderToken => c.typeTag[String].tpe
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
-        case FileToken => c.typeTag[List[MixedFileUpload]].tpe
+        case FileToken => c.typeTag[List[FileUpload]].tpe
         case CookieToken => c.typeTag[Cookie].tpe
         case QueryToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
       }

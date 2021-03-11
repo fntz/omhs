@@ -2,7 +2,7 @@ package com.github.fntz.omhs.internal
 
 import com.github.fntz.omhs.CurrentHttpRequest
 import io.netty.handler.codec.http.cookie.Cookie
-import io.netty.handler.codec.http.multipart.MixedFileUpload
+import io.netty.handler.codec.http.multipart.{FileUpload, MixedFileUpload}
 
 import java.util.UUID
 
@@ -70,7 +70,7 @@ case class CurrentHttpRequestDef(value: CurrentHttpRequest) extends ParamDef[Cur
   override val sortProp: Int = ParamDef.request
 }
 
-case class FileDef(value: List[MixedFileUpload]) extends ParamDef[List[MixedFileUpload]] {
+case class FileDef(value: List[FileUpload]) extends ParamDef[List[FileUpload]] {
   override val sortProp: Int = ParamDef.file
 
   override def toString: String = s"files: ${value.map(_.getFilename).mkString(", ")}"

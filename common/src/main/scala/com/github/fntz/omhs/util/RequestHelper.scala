@@ -56,7 +56,7 @@ private[omhs] object RequestHelper {
       try {
         val files = decoder.getBodyHttpDatas.toScala.collect {
           case data: MixedFileUpload if data.getHttpDataType == HttpDataType.FileUpload =>
-            data
+            data.copy()
         }.toList
         Right(List(FileDef(files)))
       } catch {

@@ -1,12 +1,12 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamParser, ParseResult}
-import com.github.fntz.omhs.util.{UtilImplicits, CollectionsConverters, ResponseImplicits}
+import com.github.fntz.omhs.util.{CollectionsConverters, ResponseImplicits, UtilImplicits}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.Version
+import io.netty.util.{CharsetUtil, Version}
 import org.slf4j.LoggerFactory
 
 import java.time.ZonedDateTime
@@ -78,7 +78,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
 
   private def fileCleaner(files: List[FileDef]): ChannelFutureListener = {
     (_: ChannelFuture) => {
-      files.flatMap(_.value).foreach(_.release())
+      files.flatMap(_.value).filter(_.refCnt() != 0).map(_.release())
     }
   }
 

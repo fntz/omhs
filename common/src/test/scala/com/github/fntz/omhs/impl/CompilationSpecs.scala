@@ -8,7 +8,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "doesnt compile: CurrentRequest should be the last argument" in {
       doesntCompile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -23,7 +23,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "doesnt compile when parameters count is not the same as function arguments length" in {
       doesntCompile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -38,7 +38,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "doesnt compile when parameters in incorrect sequence" in {
       doesntCompile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -53,7 +53,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "ignore arguments at all" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -68,7 +68,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass CurrentRequestParam to function" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -83,7 +83,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass Long" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -98,7 +98,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass String" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -113,7 +113,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass UUID" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -129,7 +129,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass Regex" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -144,7 +144,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass Tail" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -159,7 +159,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass Header" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -211,7 +211,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass Body" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
@@ -231,13 +231,13 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
     "pass File" in {
       compile(
         s"""
-           import io.netty.handler.codec.http.multipart.MixedFileUpload
+           import io.netty.handler.codec.http.multipart.FileUpload
            import com.github.fntz.omhs._
            import AsyncResult._
            import AsyncResult.Implicits._
            import RoutingDSL._
 
-           get("file" <<< file) ~> { (l: List[MixedFileUpload]) =>
+           get("file" <<< file) ~> { (l: List[FileUpload]) =>
               "done"
            }
            """.stripMargin)

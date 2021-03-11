@@ -21,7 +21,9 @@ object ParamParser {
   def parse(target: String, params: Vector[PathParam]): ParseResult = {
     val path = target.replaceAll("""\?.*""", "")
       .split("/").map(_.trim).filterNot(_.isEmpty)
-    if (path.isEmpty) {
+    if (params.forall(x => x.isUserDefined && x.name == target)) {
+      ParseResult(success = true, EmptyDef(target) :: Nil)
+    } else if (path.isEmpty) {
       ParseResult.failed
     } else {
       var index = 0

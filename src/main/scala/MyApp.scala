@@ -56,15 +56,16 @@ object MyApp extends App {
   }
 
 
-  val r3 = get(base / uuid / "foo/bar")
+  val r3 = get("chat") ~> { () =>
+    CommonResponse.json("""{"data": "Hi, How can i help you?"}""")
+  }
 
 //  val z = rule :: r2 :: r3
 
-//  val route = new Route().addRule(rule) //.addRule(r2).addRule(r3)
+ val route = new Route().addRule(r3) //.addRule(r2).addRule(r3)
 
-//  OMHSServer.run(9000, route.toHandler)
+ OMHSServer.run(9000, route.toHandler)
 
-  println(rule)
 
 
 
