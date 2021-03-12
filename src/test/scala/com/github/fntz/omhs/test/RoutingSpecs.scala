@@ -215,7 +215,7 @@ class RoutingSpecs extends Specification with AfterAll {
     channel.writeInbound(request)
     val response: DefaultFullHttpResponse = channel.readOutbound()
     val status = response.status()
-    val content =  response.content().toString(CharsetUtil.UTF_8)
+    val content = response.content().toString(CharsetUtil.UTF_8)
   }
 
   override def afterAll(): Unit = {
