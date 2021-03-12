@@ -7,3 +7,7 @@ trait BodyReader[T] {
 trait BodyWriter[W] {
   def write(w: W): CommonResponse
 }
+
+trait QueryReader[T] {
+  def read(queries: Map[String, Iterable[String]]): Option[T]
+}
