@@ -389,6 +389,11 @@ private[omhs] object RoutingImpl {
     import c.universe._
     val focus = c.enclosingPosition.focus
 
+    if (!c.compilerSettings.contains("-Ydelambdafy:inline")) {
+      c.abort(focus, "Routing generation requires `-Ydelambdafy:inline` option. " +
+        "Change scalacOptions in your build.sbt")
+    }
+
     val level = Option(System.getProperty(propName)) match {
       case Some("verbose") => LogLevel.verbose
       case Some("info") => LogLevel.info

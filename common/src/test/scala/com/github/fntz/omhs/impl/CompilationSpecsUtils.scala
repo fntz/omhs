@@ -24,7 +24,7 @@ trait CompilationSpecsUtils { self: Specification =>
     eval(code)
   }
 
-  private def eval(code: String, compileOptions: String = "-cp target/classes"): Any = {
+  private def eval(code: String, compileOptions: String = "-cp target/classes -Ydelambdafy:inline"): Any = {
     val tb = mkToolbox(compileOptions)
     tb.eval(tb.parse(code))
   }
