@@ -41,6 +41,13 @@ val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2"
 )
 
+val circe = Seq(
+  "io.circe" %% "circe-core" % "0.13.0",
+  "io.circe" %% "circe-parser" % "0.13.0"
+)
+
+lazy val jsonlibs = playJson ++ circe
+
 // todo rename to dsl
 val common = project.settings(opts)
   .settings(
@@ -68,14 +75,22 @@ val playJsonSupport = Project("play-json-support", file("play-json-support"))
     crossScalaVersions := supportedVersions
   ).dependsOn(common)
 
+val circeSupport = Project("circe-support", file("circe-support"))
+  .settings(opts)
+  .settings(
+    name := "omhs-circe-support",
+    libraryDependencies ++= circe.map(_ % "provided"),
+    crossScalaVersions := supportedVersions
+  ).dependsOn(common)
+
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
-    libraryDependencies ++= libs ++ specs2 ++ playJson ++ Seq(
+    libraryDependencies ++= libs ++ specs2 ++ jsonlibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
     crossScalaVersions := Nil,
     publish / skip := true
   )
-  .dependsOn(common, playJsonSupport, swagger)
-  .aggregate(common, playJsonSupport, swagger)
+  .dependsOn(common, playJsonSupport, circeSupport, swagger)
+  .aggregate(common, playJsonSupport, circeSupport, swagger)
