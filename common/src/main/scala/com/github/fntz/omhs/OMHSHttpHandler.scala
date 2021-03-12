@@ -1,6 +1,6 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamParser, ParseResult}
+import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamsParser, ParseResult}
 import com.github.fntz.omhs.util.{CollectionsConverters, ResponseImplicits, UtilImplicits}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
@@ -93,7 +93,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
     val target = decoder.rawPath()
     byMethod
       .getOrElse(request.method(), Vector.empty)
-      .map { x => (x, ParamParser.parse(target, x.rule.currentParams)) }
+      .map { x => (x, ParamsParser.parse(target, x.rule.currentParams)) }
       .find(_._2.isSuccess)
   }
 

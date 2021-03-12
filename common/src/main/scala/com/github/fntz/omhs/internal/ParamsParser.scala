@@ -3,7 +3,7 @@ package com.github.fntz.omhs.internal
 import java.util.UUID
 import scala.collection.mutable.{ArrayBuffer => AB}
 
-object ParamParser {
+object ParamsParser {
   def convert(p: PathParam, in: String): PathParamDef[_] = {
     p match {
       case HardCodedParam(value) => EmptyDef(value)
@@ -12,6 +12,8 @@ object ParamParser {
       case _: UUIDParam => UUIDDef(UUID.fromString(in))
       // NOTE: normal, because we do it after `check`-call
       case RegexParam(re, _, _) => RegexDef(re.findFirstMatchIn(in).get.toString)
+      // NOTE: `xs` contains alternatives, but `in` is needed for us
+      case _: AlternativeParam => AlternativeDef(in)
       // NOTE: unreachable
       case _ => TailDef(List(in))
     }

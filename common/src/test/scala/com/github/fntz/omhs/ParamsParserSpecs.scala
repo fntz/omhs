@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 
 import java.util.UUID
 
-class ParamParserSpecs extends Specification {
+class ParamsParserSpecs extends Specification {
 
   import RoutingDSL._
 
@@ -60,6 +60,44 @@ class ParamParserSpecs extends Specification {
       parse(s"$genUuid/test?asd=123", f) ==== ParseResult(
         success = true, List(UUIDDef(genUuid), EmptyDef("test"))
       )
+
+      val g = "a" | "b" | "c"
+      parse("/test", g).isSuccess must beFalse
+      List("a", "b", "c").foreach { x =>
+        parse(s"/$x", g) ==== ParseResult(
+          success = true, List(AlternativeDef(x))
+        )
+      }
+
+      val h = string / ("a" | "b" | "c")
+      parse("/test", h).isSuccess must beFalse
+      List("a", "b", "c").foreach { x =>
+        parse(s"test/$x", h) ==== ParseResult(
+          success = true, List(StringDef("test"), AlternativeDef(x))
+        )
+      }
+
+      val i = long / ("a" | "b" | "c") / uuid
+      parse("/test", i).isSuccess must beFalse
+      parse("/test/a/test", i).isSuccess must beFalse
+      parse(s"$genUuid/a/123", i).isSuccess must beFalse
+      List("a", "b", "c").foreach { x =>
+        parse(s"/123/$x/$genUuid", i) ==== ParseResult(
+          success = true, List(LongDef(123), AlternativeDef(x), UUIDDef(genUuid))
+        )
+      }
+
+      val j = long / ("a" | "b" | "c") / *
+      List("a", "b", "c").foreach { x =>
+        parse(s"/123/$x/$genUuid/123/abc", j) ==== ParseResult(
+          success = true, List(
+            LongDef(123),
+            AlternativeDef(x),
+            TailDef(List(s"$genUuid", "123", "abc")))
+        )
+      }
+
+      success
     }
 
     "long" in {
@@ -88,14 +126,21 @@ class ParamParserSpecs extends Specification {
       route.check("/asd") must beFalse
       route.check("/") must beTrue
     }
+
+    "alternative" in {
+      val xs = List("a", "b", "c")
+      val r1 = AlternativeParam(xs)
+      xs.foreach { x => r1.check(x) must beTrue }
+      r1.check("/test") must beFalse
+    }
   }
 
   private def parse(target: String, pl: PathLikeParam) = {
-    ParamParser.parse(target, pl.rule.currentParams)
+    ParamsParser.parse(target, pl.rule.currentParams)
   }
 
   private def parse(target: String, pl: NoPathMoreParam) = {
-    ParamParser.parse(target, pl.rule.currentParams)
+    ParamsParser.parse(target, pl.rule.currentParams)
   }
 
 }

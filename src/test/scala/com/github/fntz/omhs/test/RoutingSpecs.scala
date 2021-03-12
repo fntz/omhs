@@ -178,6 +178,17 @@ class RoutingSpecs extends Specification with AfterAll {
       content ==== "123"
     }
 
+    val r16 = get("test" / ("a" | "b")) ~> { (s: String) => s }
+    "use alternative params" in new RouteTest(r16, "test/a") {
+      status ==== HttpResponseStatus.OK
+      content ==== "a"
+    }
+
+    val r17 = get("test" / ("a" | "b")) ~> { (s: String) => s }
+    "use alternative params" in new RouteTest(r16, "test/c") {
+      status ==== HttpResponseStatus.NOT_FOUND
+    }
+
     "fail when query is unparsable" in new RouteTest(r15, "test") {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain("query is unparsable")

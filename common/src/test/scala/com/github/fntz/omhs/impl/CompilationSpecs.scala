@@ -35,6 +35,20 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "Args lengths are not the same")
     }
 
+    "doesnt if alternative in not params" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get(string / ("a" | "b" | "c")) ~> { (s: String) =>
+              "done"
+           }
+           """.stripMargin, "Args lengths are not the same")
+    }
+
     "doesnt compile when parameters in incorrect sequence" in {
       doesntCompile(
         s"""
@@ -151,6 +165,20 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import RoutingDSL._
 
            get("file" / *) ~> { (l: List[String]) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "alternative check" in {
+      compile(
+        s"""
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("test" / ("a" | "b" | "c")) ~> { (alt: String) =>
               "done"
            }
            """.stripMargin)

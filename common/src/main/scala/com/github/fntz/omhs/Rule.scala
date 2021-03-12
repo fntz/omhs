@@ -75,6 +75,7 @@ class Rule {
     val tmp = currentParams.map {
       case HardCodedParam(v) => v
       case TailParam => "*"
+      case AlternativeParam(xs) => s"${xs.mkString("|")}"
       case p: PathParam => s"{${p.name}}"
     }.mkString("/")
     if (tmp.startsWith("/")) {
@@ -144,8 +145,14 @@ class Rule {
   }
 
   def same: Rule = {
+    same()
+  }
+
+  def same(clearParams: Boolean = false): Rule = {
     val rule = Rule(method)
-    paths.foreach { x => rule.path(x)}
+    if (!clearParams) {
+      paths.foreach { x => rule.path(x)}
+    }
     headers.foreach { x => rule.header(x) }
     cookies.foreach { x => rule.cookie(x) }
     if (isBodyNeeded) {

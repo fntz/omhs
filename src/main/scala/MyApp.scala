@@ -46,30 +46,15 @@ object MyApp extends App {
   implicit val bodyReader = new BodyReader[Search] {
     override def read(str: String): Search = Search("dsa")
   }
-  val base = "api" / "v1" / "sources"
-  val rule = get(base / string) ~> {() =>
-    CommonResponse.json("""{"data": "Hi, How can i help you?"}""")
+
+  val a = "a"
+  val b = "b"
+  val c = "c"
+  val r = get("test" / (a | b | c)) ~> { () =>
+    "done"
   }
 
-  val r2 = get("/") ~> { () =>
-    "done2"
-  }
-
-
-  val r3 = get("chat") ~> { () =>
-    CommonResponse.json("""{"data": "Hi, How can i help you?"}""")
-  }
-
-//  val z = rule :: r2 :: r3
-
- val route = new Route().addRule(r3) //.addRule(r2).addRule(r3)
-
- OMHSServer.run(9000, route.toHandler)
-
-
-
-
-
-
+  val ro = new Route().addRule(r)
+  OMHSServer.run(9000, ro.toHandler)
 
 }

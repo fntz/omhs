@@ -30,6 +30,7 @@ object ParamDef {
   val cookie = 9
   val file = 10
   val query = 11
+  val alternative = 12
 }
 sealed trait PathParamDef[T] extends ParamDef[T]
 case class EmptyDef(value: String) extends PathParamDef[String] {
@@ -56,6 +57,10 @@ case class RegexDef(value: String) extends PathParamDef[String] {
 case class TailDef(values: List[String]) extends PathParamDef[List[String]] {
   override val value: List[String] = values
   override val sortProp: Int = ParamDef.tail
+}
+
+case class AlternativeDef(value: String) extends PathParamDef[String] {
+  override val sortProp: Int = ParamDef.alternative
 }
 
 case class BodyDef[T](value: T) extends ParamDef[T] {

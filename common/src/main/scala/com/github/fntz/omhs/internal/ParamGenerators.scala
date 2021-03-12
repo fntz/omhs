@@ -5,6 +5,8 @@ import com.github.fntz.omhs.Rule
 // rule syntax
 sealed trait LikeRule {
   val rule = new Rule
+
+  override def toString: String = rule.toString
 }
 
 trait FileOrBodyLikeParam extends LikeRule
@@ -66,7 +68,26 @@ object NoPathMoreParam {
     override val rule: Rule = r
   }
 }
+
+// val r = "asd" | "qwe" / uuid
+// val r = uuid / "asd" | "qwe"
+
 trait PathLikeParam extends QueryLikeParam with HeaderOrCookieLikeParam {
+
+  def |(str: String): PathLikeParam = {
+    val copied = rule.same
+    copied.currentParams.lastOption match {
+      case Some(AlternativeParam(vs)) =>
+        val xs = copied.currentParams
+        val tmp = rule.same(clearParams = true)
+        copied.currentParams.slice(0, xs.length - 1).foreach { p =>
+          tmp.path(p)
+        }
+        PathLikeParam(tmp.path(AlternativeParam(vs :+ str)))
+      case _ =>
+        PathLikeParam(copied.path(AlternativeParam(str :: Nil)))
+    }
+  }
 
   def /(str: String): PathLikeParam = {
     /(HardCodedParam(str))
@@ -79,7 +100,6 @@ trait PathLikeParam extends QueryLikeParam with HeaderOrCookieLikeParam {
   def /(p: PathParam): PathLikeParam = {
     PathLikeParam(rule.same.path(p))
   }
-
 
 }
 object PathLikeParam {

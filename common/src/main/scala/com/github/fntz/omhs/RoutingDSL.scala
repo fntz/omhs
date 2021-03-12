@@ -36,20 +36,20 @@ object RoutingDSL {
 
   def string(name: String, description: Option[String]): StringParam = StringParam(name, description)
   def string(name: String): StringParam = string(name, None)
-  def string: StringParam = string("string-param", None)
+  def string: StringParam = string(":string", None)
 
   def long(name: String, description: Option[String]): LongParam = LongParam(name, description)
   def long(name: String): LongParam = long(name, None)
-  def long: LongParam = long("long-param", None)
+  def long: LongParam = long(":long", None)
 
   def uuid(name: String, description: Option[String]): UUIDParam = UUIDParam(name, description)
   def uuid(name: String): UUIDParam = uuid(name, None)
-  def uuid: UUIDParam = uuid("uuid-param", None)
+  def uuid: UUIDParam = uuid(":uuid", None)
 
   def regex(re: Regex, name: String, description: Option[String]): RegexParam =
     RegexParam(re, name, description)
   def regex(re: Regex, name: String): RegexParam = RegexParam(re, name, None)
-  def regex(re: Regex): RegexParam = RegexParam(re, "regex-param", None)
+  def regex(re: Regex): RegexParam = RegexParam(re, ":regex", None)
 
   def header(headerName: String): HeaderParam =
     header(headerName, None)
@@ -75,10 +75,17 @@ object RoutingDSL {
   def * : TailParam.type = TailParam
 
   implicit class StringExt(val s: String) extends AnyVal {
+    def /(x: PathLikeParam): PathLikeParam =  {
+      val tmp = new Rule().path(s)
+      x.rule.currentParams.foreach { p => tmp.path(p) }
+      PathLikeParam(tmp)
+    }
     def /(x: TailParam.type): NoPathMoreParam =
       NoPathMoreParam(new Rule().path(s).path(x))
     def /(x: PathParamNoTail): PathLikeParam =
       PathLikeParam(new Rule().path(s).path(x))
+    def |(x: String): PathLikeParam =
+      PathLikeParam(new Rule().path(AlternativeParam(s :: x :: Nil)))
     def /(x: String): PathLikeParam =
       PathLikeParam(new Rule().path(s).path(x))
     def :?[T](q: QueryParam[T]): QueryLikeParam =
@@ -100,6 +107,11 @@ object RoutingDSL {
       NoPathMoreParam(new Rule().path(l).path(x))
     def /(x: PathParam): PathLikeParam =
       PathLikeParam(new Rule().path(l).path(x))
+    def /(x: PathLikeParam): PathLikeParam = {
+      val tmp = new Rule().path(l)
+      x.rule.currentParams.foreach { p => tmp.path(p) }
+      PathLikeParam(tmp)
+    }
     def :?[T](q: QueryParam[T]): QueryLikeParam =
       QueryLikeParam(new Rule().path(l).query(q.reader))
     def <<[T](h: HeaderParam): HeaderOrCookieLikeParam =

@@ -75,6 +75,16 @@ case object TailParam extends PathParam {
   override def description: Option[String] = None
 }
 
+case class AlternativeParam(paths: List[String]) extends PathParamNoTail {
+  override def name: String = "|"
+
+  override def description: Option[String] = None
+
+  override def check(in: String): Boolean = paths.contains(in)
+
+  override def toString: String = s"${paths.mkString("|")}"
+}
+
 case class HeaderParam(headerName: String, description: Option[String]) extends Param {
   override def check(in: String): Boolean = false
 

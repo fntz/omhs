@@ -79,6 +79,9 @@ class Route {
     this
   }
 
+  /**
+   * alias for `addRule``
+   */
   def ::(other: ExecutableRule): Route = {
     addRule(other)
     this

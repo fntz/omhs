@@ -415,6 +415,7 @@ private[omhs] object RoutingImpl {
     case object LongToken extends ParamToken
     case object UUIDToken extends ParamToken
     case object RegexToken extends ParamToken
+    case object AlternativeToken extends ParamToken
     case object TailToken extends ParamToken
     case class BodyToken(tpe: c.universe.Type, reader: c.universe.Tree)
       extends ParamToken {
@@ -437,6 +438,7 @@ private[omhs] object RoutingImpl {
         case UUIDToken => c.typeTag[UUID].tpe
         case RegexToken => c.typeTag[String].tpe
         case TailToken => c.typeTag[List[String]].tpe
+        case AlternativeToken => c.typeTag[String].tpe
         case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
         case HeaderToken => c.typeTag[String].tpe
         case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
@@ -471,6 +473,12 @@ private[omhs] object RoutingImpl {
     val ignored = banned ++ complex
 
     val tokens = c.prefix.tree.collect {
+      case Select(
+        Apply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),
+        TermName("StringExt")),
+          List(_)), TermName("$bar")) =>
+        AlternativeToken
+
       case Apply(
         TypeApply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),
           TermName("body")), List(tpt)), List(reader)) =>
@@ -505,7 +513,6 @@ private[omhs] object RoutingImpl {
     }
 
     val isEmptyFunction = actualFunctionParameters.isEmpty
-
 
     val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
     def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
@@ -576,6 +583,8 @@ private[omhs] object RoutingImpl {
           (pq"_root_.com.github.fntz.omhs.internal.UUIDDef($valName)", valName, ParamDef.uuid)
         case TailToken =>
           (pq"_root_.com.github.fntz.omhs.internal.TailDef($valName)", valName, ParamDef.tail)
+        case AlternativeToken =>
+          (pq"_root_.com.github.fntz.omhs.internal.AlternativeDef($valName)", valName, ParamDef.alternative)
         case BodyToken(tpt, _) =>
           (pq"_root_.com.github.fntz.omhs.internal.BodyDef($valName: ${tpt.typeSymbol})", valName, ParamDef.body)
         case HeaderToken =>
@@ -623,7 +632,6 @@ private[omhs] object RoutingImpl {
 
               val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {
                 override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
-                  println(defs)
                   val defsMap = defs.groupBy(_.sortProp).map { x =>
                     x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
                   }
