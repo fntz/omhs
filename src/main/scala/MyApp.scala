@@ -47,14 +47,56 @@ object MyApp extends App {
     override def read(str: String): Search = Search("dsa")
   }
 
-  val a = "a"
-  val b = "b"
-  val c = "c"
-  val r = get("test" / (a | b | c)) ~> { () =>
-    "done"
+  import com.github.fntz.omhs.moar.Routable._
+
+  /*
+  // how to do:
+
+   if (x == "asd")
+     status 404
+   else
+     status 200
+
+    response is fullHttpResponse
+
+    contentType("json") => replace as
+      response.headers().set("content-type", "json")
+
+    get(string / "test") ~> run { (x: String) =>
+       contentType("json")
+       cookie("asd", "dsa")
+       status 200
+       // or status HttpResponseStatus.OK
+       "done"
+    } => ExecutableRule(r: get(string / "test")) {
+
+      def run2(defs: List[ParamDef]) = {
+        val response = new DefaultHttpResponse()
+        response.headers.set("content-type", "json")
+        response.headers.set("cookie", "asd=dsa")
+        response.setStatus(200)
+        "done" // <--------------- TODO how to transform? is it needs to transform?
+      }
+    }
+
+   */
+  val x = 100
+  val z = get(string) >> route {
+    println("asd")
+    if (x == 100) {
+      contentType("application/javascript")
+    } else {
+      contentType("application/javascript")
+    }
+    AsyncResult.completed(CommonResponse.empty)
   }
 
-  val ro = new Route().addRule(r)
-  OMHSServer.run(9000, ro.toHandler)
+  val route1 = new Route().addRule(z)
+
+  OMHSServer.run(9000, route1.toHandler)
+
+
+
+
 
 }

@@ -38,7 +38,11 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
             val files = fetchFilesToRelease(materialized)
             try {
               val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
-                .map(r.run)
+                .map { x =>
+                  println("^"*100)
+                  r.run2(x, empty)
+                  r.run(x)
+                }
                 .fold(fail, identity)
               ResourceResultContainer(files, asyncResult)
             } catch {
