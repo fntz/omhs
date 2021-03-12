@@ -45,7 +45,12 @@ object ParamsParser {
             val param = params(index)
             if (param.isRestParam) {
               doneByRest = true
-              buffer += TailDef(path.slice(index, pathLength + 1).toList)
+              val end = path.slice(index, pathLength + 1).toList
+              if (end.isEmpty) { // I do not need to use empty list
+                success = false
+                counter = 0
+              }
+              buffer += TailDef(end)
             } else {
               success = param.check(part)
               if (success) {
@@ -63,8 +68,13 @@ object ParamsParser {
         while(counter >= 0 && success && !doneByRest && index <= paramsLength) {
           val param = params(index)
           if (param.isRestParam) {
+            val end = path.slice(index, pathLength + 1).toList
+            if (end.isEmpty) {
+              success = false
+              counter = 0
+            }
             doneByRest = true
-            buffer += TailDef(path.slice(index, pathLength + 1).toList)
+            buffer += TailDef(end)
           } else {
             if (index <= pathLength) {
               val part = path(index)

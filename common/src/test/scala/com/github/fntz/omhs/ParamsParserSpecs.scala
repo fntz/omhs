@@ -37,6 +37,7 @@ class ParamsParserSpecs extends Specification {
 
       val d = "test" / uuid / "abc" / *
       parse(s"/test/$genUuid", d).isSuccess must beFalse
+      parse(s"/test/$genUuid/abc", d).isSuccess must beFalse
       parse(s"/foo/$genUuid/abc/123/bar", d).isSuccess must beFalse
       parse(s"/test/$genUuid/abc/123", d) ==== ParseResult(
         success = true, List(EmptyDef("test"), UUIDDef(genUuid),
