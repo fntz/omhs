@@ -389,11 +389,6 @@ private[omhs] object RoutingImpl {
 
     guardSbtOptions(c)
 
-    f.foreach { x =>
-      println("~"*100)
-      println(s"----> ${x} -> ${show(x)}")
-    }
-
     sealed trait ParamToken {
       def isBody = false
       def isFile = false

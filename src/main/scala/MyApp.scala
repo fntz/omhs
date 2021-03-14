@@ -111,12 +111,12 @@ object MyApp extends App {
 
   val k = get("test" / string) ~> route { (x1: String) =>
     if (x1 == "foo") {
-      status(HttpResponseStatus.OK)
+      status(200)
       contentType("application/js")
       "asd"
     }
     else {
-      status(HttpResponseStatus.NOT_FOUND)
+      status(404)
       contentType("text/plain")
       "not found"
     }

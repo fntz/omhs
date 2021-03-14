@@ -8,6 +8,10 @@ class MutableState(var status: HttpResponseStatus, var contentType: String) {
     this.status = responseStatus
   }
 
+  def setStatus(intStatus: Int): Unit = {
+    setStatus(HttpResponseStatus.valueOf(intStatus))
+  }
+
   def setContentType(contentType: String): Unit = {
     this.contentType = contentType
   }

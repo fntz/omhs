@@ -381,15 +381,18 @@ private[omhs] object MoarImpl {
     val transformer = new Transformer {
       override def transform(tree: c.universe.Tree): c.universe.Tree = {
         tree match {
-          case Apply(Select(Select(_, TermName("Routable")),
-          TermName("contentType")), List(a)) =>
+          case Apply(Select(
+            Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+              TermName("contentType")), List(a)) =>
             q"$stateDef.setContentType(..$a)"
 
-          case Apply(Select(Select(_, TermName("Routable")),
-          TermName("status")), List(a)) =>
+          case Apply(Select(
+            Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+              TermName("status")), List(a)) =>
             q"$stateDef.setStatus(..$a)"
 
-          case _ => super.transform(tree)
+          case _ =>
+            super.transform(tree)
         }
       }
     }

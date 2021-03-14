@@ -11,6 +11,8 @@ package object moar {
 
   def status(responseStatus: HttpResponseStatus): Unit = ???
 
+  def status(intStatus: Int): Unit = ???
+
   def route[R](body: () => R): () => AsyncResult = macro MoarImpl.routeImpl0[R]
 
   def route[T1, R](body: (T1) => R): (T1) => AsyncResult = macro MoarImpl.routeImpl1[T1, R]
