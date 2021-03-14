@@ -117,6 +117,26 @@ get("asd") ~> {() =>
 
 ```
 
+# Moar? Moar: sinatra like dsl
+
+```scala 
+import moar._ 
+
+val rule = get("test" / string) ~> route { (x: String) => 
+  if (x == "foo") {
+    status(200)
+    contentType("apllication/custom-type")
+    "done" 
+  } else {
+    status(400)
+    contentType("application/custom-another-type")
+    "not-found"
+  }
+}
+
+```
+
+
 ### todo: chunked
 
 
