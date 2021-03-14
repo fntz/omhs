@@ -11,6 +11,7 @@ import java.util.Locale
  * @param cookieDecoderStrategy - how to decode cookies @see ServerCookieDecoder
  * @param maxContentLength - max length in aggregated request @see OMHSServer
  * @param enableCompression - use HttpContentCompressor @see OMHSServer
+ * @param chunkSize
  */
 case class Setup(
                 timeFormatter: DateTimeFormatter,

@@ -168,7 +168,8 @@ val customSetup = Setup(
   sendServerHeader = false,
   cookieDecoderStrategy = CookieDecoderStrategy.Lax,
   maxContentLength = 512*1024,
-  enableCompression = false
+  enableCompression = false,
+  chunkSize = 1000
 )
 ```
 
