@@ -402,13 +402,13 @@ private[omhs] object MoarImpl {
     val responseDefinition =
       q"""
         (..$passedParameters) => {
-          val $stateDef = _root_.com.github.fntz.omhs.moar.MutableState.empty
+          val $stateDef = _root_.com.github.fntz.omhs.moar.MutableState.empty(getClass)
           $stateDef.transform($rewrittenTree.apply(..$paramNames))
         }
         """
 
     logger.verbose(s"$responseDefinition")
 
-    c.untypecheck(responseDefinition)
+    responseDefinition
   }
 }

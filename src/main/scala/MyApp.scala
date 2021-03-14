@@ -94,23 +94,9 @@ object MyApp extends App {
   // content is not needed
 
 
-  val rl = new Rule().withMethod(HttpMethod.GET).path("test").path(string)
-  val ex = new ExecutableRule(rl) {
-    override def run(defs: List[ParamDef[_]]): AsyncResult = {
-      val y = defs.head.asInstanceOf[StringDef].value
-      val c = MutableState.empty
-      if (y == "foo") {
-        c.setContentType("application/javascript")
-      } else {
-        c.setContentType("text/plain")
-      }
-
-      c.transform("sad")
-    }
-  }
-
   val k = get("test" / string) ~> route { (x1: String) =>
     if (x1 == "foo") {
+      status(201)
       status(200)
       contentType("application/js")
       "asd"
@@ -125,9 +111,6 @@ object MyApp extends App {
   val route1 = new Route().addRule(k)
 
   OMHSServer.run(9000, route1.toHandler)
-
-
-
 
 
 }
