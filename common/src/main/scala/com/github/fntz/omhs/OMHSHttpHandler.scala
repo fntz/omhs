@@ -132,7 +132,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
       }
     }
 
-    val f = ctx.write(LastHttpContent.EMPTY_LAST_CONTENT)
+    val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }

@@ -106,9 +106,12 @@ object MyApp extends App {
     }
   }
 
-  val route1 = new Route().addRule(k)
+//  val route1 = new Route().addRule(k)
+//
+//  OMHSServer.run(9000, route1.toHandler)
 
-  OMHSServer.run(9000, route1.toHandler)
+  HttpServer.run(9000)
+
 
 
 }
