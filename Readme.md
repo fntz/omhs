@@ -52,7 +52,7 @@ post("test" << header("User-Agent") << cookie("name") << header("Accept"))
 
 ### Query Readers
 
-for reading Quqery part (`?foo=bar`) need to implement `QueryReader`: 
+for reading Query part (`?foo=bar`) need to implement `QueryReader`: 
 
 ```scala
 case class SearchQuery(query: String) 
@@ -137,7 +137,7 @@ get("asd") ~> {() =>
 
 ```
 
-# Moar? Moar: sinatra like dsl
+# Moar? sinatra like dsl
 
 ```scala 
 import moar._ 
@@ -155,9 +155,6 @@ val rule = get("test" / string) ~> route { (x: String) =>
 }
 
 ```
-
-
-### todo: chunked
 
 
 ### Options:

@@ -97,14 +97,14 @@ object MyApp extends App {
 // }
 
   // content is not needed
-  val k = get("test") ~> { (s: ChunkedOutputStream, r: CurrentHttpRequest) =>
-    s.write("asd".getBytes())
-    s.write("123".getBytes())
-    s.write("3333".getBytes())
-    s
+  val k = get("test" / "foo") ~> { () =>
+    "done"
+  }
+  val k1 = get("test" / "foo" << header("test")) ~> {() =>
+    "done1"
   }
 
-  val route1 = new Route().addRule(k)
+  val route1 = new Route().addRule(k).addRule(k1)
 
   OMHSServer.run(9000, route1.toHandler)
 

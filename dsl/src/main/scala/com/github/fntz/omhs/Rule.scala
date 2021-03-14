@@ -142,6 +142,10 @@ class Rule {
     this
   }
 
+  def hasTail: Boolean = {
+    currentParams.contains(TailParam)
+  }
+
   override def toString: String = {
     val tmpHeaders = s"\n headers: ${headers.mkString(", ")}"
     val tmpReq = s"\n useRequest: $isNeedToPassCurrentRequest"
