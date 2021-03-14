@@ -1,3 +1,4 @@
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.buffer.{ByteBuf, ByteBufAllocator, Unpooled}
 import io.netty.channel.{ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter, ChannelProgressiveFuture, ChannelProgressiveFutureListener, DefaultFileRegion}
 import io.netty.handler.codec.http._
@@ -14,38 +15,60 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
       case request: FullHttpRequest =>
+        val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+        response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/octet-stream")
+        ctx.write(response)
 
-        // if method is post
-        val httpDecoder = new HttpPostRequestDecoder(request)
+//        val stream = new ChunkedOutputStream(ctx, 4)
+//        stream.write("asdd".getBytes)
+//        stream.write("123".getBytes)
+//        stream.write("done".getBytes)
+//        val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+//          .addListener(new GenericFutureListener[Future[_ >: Void]] {
+//            override def operationComplete(future: Future[_ >: Void]): Unit = {
+//              stream.close()
+//            }
+//          })
+//          .addListener(ChannelFutureListener.CLOSE)
 
-        try {
-          import scala.collection.JavaConverters._
-          println(s"===> ${request.decoderResult().isSuccess}")
-          httpDecoder.getBodyHttpDatas.asScala.foreach { x =>
-            if (x.getHttpDataType == HttpDataType.Attribute) {
-              println(s"data: ${x.getName} -> ${x}")
-            } else if (x.getHttpDataType == HttpDataType.FileUpload) {
-              val m = x.asInstanceOf[MixedFileUpload]
-              println(s"${m.getFilename} and ${m.getName}")
-              println("---> ")
-            }
-          }
-
-        } catch {
-          case ex: Throwable =>
-            println(s"--------> ${ex}")
+        if (!HttpUtil.isKeepAlive(request)) {
+          //f.addListener(ChannelFutureListener.CLOSE)
         }
-
-        println("$"*100)
-        ctx.writeAndFlush(
-          new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.OK,
-            Unpooled.copiedBuffer("test".getBytes()))
-        ).addListener(ChannelFutureListener.CLOSE)
-
 
       case _ =>
         super.channelRead(ctx, msg)
     }
+  }
+
+  private def zzz(ctx: ChannelHandlerContext, request: FullHttpRequest) = {
+
+    // if method is post
+    val httpDecoder = new HttpPostRequestDecoder(request)
+
+    try {
+      import scala.collection.JavaConverters._
+      println(s"===> ${request.decoderResult().isSuccess}")
+      httpDecoder.getBodyHttpDatas.asScala.foreach { x =>
+        if (x.getHttpDataType == HttpDataType.Attribute) {
+          println(s"data: ${x.getName} -> ${x}")
+        } else if (x.getHttpDataType == HttpDataType.FileUpload) {
+          val m = x.asInstanceOf[MixedFileUpload]
+          println(s"${m.getFilename} and ${m.getName}")
+          println("---> ")
+        }
+      }
+
+    } catch {
+      case ex: Throwable =>
+        println(s"--------> ${ex}")
+    }
+
+    println("$"*100)
+    ctx.writeAndFlush(
+      new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.OK,
+        Unpooled.copiedBuffer("test".getBytes()))
+    ).addListener(ChannelFutureListener.CLOSE)
   }
 
   private def uploading(ctx: ChannelHandlerContext, request: FullHttpRequest): Unit = {

@@ -2,6 +2,7 @@ package com.github.fntz.omhs.impl
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal._
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.Cookie
 import io.netty.handler.codec.http.multipart.FileUpload
 
@@ -413,6 +414,7 @@ private[omhs] object RoutingImpl {
     case class QueryToken(tpe: c.universe.Type, reader: c.universe.Tree) extends ParamToken {
       override def isQuery: Boolean = true
     }
+    case object StreamToken extends ParamToken
 
     def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
       p match {
@@ -428,6 +430,7 @@ private[omhs] object RoutingImpl {
         case FileToken => c.typeTag[List[FileUpload]].tpe
         case CookieToken => c.typeTag[Cookie].tpe
         case QueryToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
+        case StreamToken => c.typeTag[ChunkedOutputStream].tpe
       }
     }
 
@@ -508,21 +511,48 @@ private[omhs] object RoutingImpl {
     def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
     val isReqParamNeeded = actualFunctionParameters.exists(x => isReqParam(x._1))
 
+
+    val chunkedStreamType = typeOf[com.github.fntz.omhs.streams.ChunkedOutputStream]
+    def isStreamParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= chunkedStreamType
+    val isStreamNeeded = actualFunctionParameters.exists(x => isStreamParam(x._1))
+
     logger.info(
       s"""
          |isEmptyFunction? $isEmptyFunction
          |need to pass requestParam? $isReqParamNeeded
+         |need to pass stream? $isStreamNeeded
          |detected tokens: ${tokens.mkString(", ")}
          |actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}
-         |
          |""".stripMargin
     )
 
-    if (isReqParamNeeded) {
-      if (!isReqParam(actualFunctionParameters.last._1)) {
-        c.error(focus, s"$reqType must be the last argument in the function")
+    if (isReqParamNeeded && isStreamNeeded) {
+      val size = actualFunctionParameters.size
+      val isReqLastOrPenultimate = isReqParam(actualFunctionParameters.last._1) ||
+        (size > 1 && isReqParam(actualFunctionParameters(size - 2)._1))
+      val isStreamLastOrPenultimate = isStreamParam(actualFunctionParameters.last._1) ||
+        (size > 1 && isStreamParam(actualFunctionParameters(size - 2)._1))
+      if (!(isReqLastOrPenultimate && isStreamLastOrPenultimate)) {
+        c.abort(focus, s"$reqType or $chunkedStreamType must be the last arguments in the function")
       } else {
+        if (isReqParam(actualFunctionParameters.last._1)) {
+          tokens += StreamToken
+          tokens += CurrentRequestToken
+        } else {
+          tokens += CurrentRequestToken
+          tokens += StreamToken
+        }
+      }
+    } else {
+      if (isReqParamNeeded && !isReqParam(actualFunctionParameters.last._1)) {
+        c.error(focus, s"$reqType must be the last argument in the function")
+      } else if (isReqParamNeeded) {
         tokens += CurrentRequestToken
+      }
+      if (isStreamNeeded && !isStreamParam(actualFunctionParameters.last._1)) {
+        c.error(focus, s"$chunkedStreamType must be the last argument in the function")
+      } else if (isStreamNeeded) {
+        tokens += StreamToken
       }
     }
 
@@ -587,6 +617,8 @@ private[omhs] object RoutingImpl {
           (pq"_root_.com.github.fntz.omhs.internal.CookieDef($valName)", valName, ParamDef.cookie)
         case QueryToken(tpt, _) =>
           (pq"_root_.com.github.fntz.omhs.internal.QueryDef($valName: ${tpt.typeSymbol})", valName, ParamDef.query)
+        case StreamToken =>
+          (pq"_root_.com.github.fntz.omhs.internal.StreamDef($valName)", valName, ParamDef.stream)
       }
     }
 
@@ -618,6 +650,9 @@ private[omhs] object RoutingImpl {
 
               if ($isReqParamNeeded) {
                 rule.withRequest()
+              }
+              if ($isStreamNeeded) {
+                rule.withStream()
               }
 
               val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {

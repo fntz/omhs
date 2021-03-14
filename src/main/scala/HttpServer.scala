@@ -6,7 +6,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.{HttpObjectAggregator, HttpServerCodec}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 
-class HttpServer {
+object HttpServer {
 
   def run(port: Int): Unit = {
     val group = new NioEventLoopGroup()

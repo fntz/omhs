@@ -1,5 +1,7 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.streams.ChunkedOutputStream
+
 import scala.concurrent.{ExecutionContext, Future}
 
 /*
@@ -42,10 +44,8 @@ object AsyncResult {
   }
 
   object Streaming {
-    implicit class IteratorToAsync[T](it: Iterator[Array[Byte]]) {
-      def toAsync(contentType: String): AsyncResult = {
-        AsyncResult.chunked(StreamResponse(contentType, it))
-      }
+    implicit def chunkedStream2StreamingResponse(stream: ChunkedOutputStream): AsyncResult = {
+      AsyncResult.chunked(StreamResponse(stream))
     }
   }
 

@@ -17,7 +17,8 @@ case class Setup(
                 sendServerHeader: Boolean,
                 cookieDecoderStrategy: CookieDecoderStrategy,
                 maxContentLength: Int,
-                enableCompression: Boolean
+                enableCompression: Boolean,
+                chunkSize: Int
                 )
 object Setup {
   val default: Setup = Setup(
@@ -26,6 +27,7 @@ object Setup {
     sendServerHeader = true,
     cookieDecoderStrategy = CookieDecoderStrategies.Strict,
     maxContentLength = 512*1024,
-    enableCompression = true
+    enableCompression = true,
+    chunkSize = 1000
   )
 }

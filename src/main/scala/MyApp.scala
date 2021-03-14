@@ -8,6 +8,7 @@ import io.netty.handler.codec.http.{FullHttpResponse, HttpMethod, HttpResponseSt
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -90,25 +91,23 @@ object MyApp extends App {
 //    }
 //    AsyncResult.completed(CommonResponse.empty)
 //  }
+// val z = get("string") ~> { (stream: AppStream) =>
+//   stream.write("asd")
+//
+// }
 
   // content is not needed
-  val k = get("test" / string) ~> route { (x: String) =>
-    if (x == "foo") {
-      status(201)
-      status(200)
-      contentType("application/js")
-      "asd"
-    }
-    else {
-      status(404)
-      contentType("text/plain")
-      "not found"
-    }
+  val k = get("test") ~> { (s: ChunkedOutputStream, r: CurrentHttpRequest) =>
+    s.write("asd".getBytes())
+    s.write("123".getBytes())
+    s.write("3333".getBytes())
+    AsyncResult.chunked(StreamResponse(s))
   }
 
   val route1 = new Route().addRule(k)
 
   OMHSServer.run(9000, route1.toHandler)
 
+//  HttpServer.run(9000)
 
 }

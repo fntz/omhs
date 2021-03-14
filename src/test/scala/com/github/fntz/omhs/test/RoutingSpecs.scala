@@ -2,6 +2,7 @@ package com.github.fntz.omhs.test
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
@@ -21,6 +22,7 @@ class RoutingSpecs extends Specification with AfterAll {
 
   import RoutingDSL._
   import AsyncResult.Implicits._
+  import AsyncResult.Streaming._
 
   case class Foo(id: Int)
   implicit val fooReader: BodyReader[Foo] = (str: String) => {
@@ -193,6 +195,18 @@ class RoutingSpecs extends Specification with AfterAll {
       status ==== HttpResponseStatus.BAD_REQUEST
       content must contain("query is unparsable")
     }
+
+    val r18 = get("test") ~> { (stream: ChunkedOutputStream) =>
+      stream.write("123".getBytes())
+      stream << "456".getBytes()
+      stream << "789".getBytes()
+    }
+    "chunked stream support" in new RouteTest(r18, "/test", isStream = true) {
+      messagesSize = 3 // 3 writes
+      contentType ==== HttpHeaderValues.APPLICATION_OCTET_STREAM.toString
+      status ==== HttpResponseStatus.OK
+      content ==== "123456789"
+    }
   }
 
   "moar/syntax" should {
@@ -227,7 +241,7 @@ class RoutingSpecs extends Specification with AfterAll {
     )
   }
 
-  private class RouteTest(rule: ExecutableRule, path: String) extends Scope {
+  private class RouteTest(rule: ExecutableRule, path: String, isStream: Boolean = false) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
     val ro = (new Route).addRule(rule).toHandler
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
@@ -239,10 +253,25 @@ class RoutingSpecs extends Specification with AfterAll {
     channels += channel
     val request = makeRequest(path)
     channel.writeInbound(request)
-    val response: DefaultFullHttpResponse = channel.readOutbound()
-    val status = response.status()
-    val contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
-    val content = response.content().toString(CharsetUtil.UTF_8)
+    var status = HttpResponseStatus.NOT_IMPLEMENTED
+    var contentType = "test/test"
+    var content = ""
+    var messagesSize = channel.outboundMessages().size
+    if (isStream) {
+      import scala.collection.JavaConverters._
+      channel.outboundMessages().asScala.collect {
+        case httpContent: DefaultHttpContent =>
+          content = content + httpContent.content().toString(CharsetUtil.UTF_8)
+        case response: DefaultHttpResponse =>
+          status = response.status()
+          contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
+      }
+    } else {
+      val response: DefaultFullHttpResponse = channel.readOutbound()
+      status = response.status()
+      contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
+      content = response.content().toString(CharsetUtil.UTF_8)
+    }
   }
 
   override def afterAll(): Unit = {

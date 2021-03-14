@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.{HttpHeaderValues, HttpResponseStatus}
 import io.netty.util.CharsetUtil
 
@@ -26,18 +27,7 @@ case class CommonResponse(
   }
 }
 
-case class StreamResponse(contentType: String,
-                          it: Iterator[Array[Byte]],
-                          headers: Map[String, String] = Map.empty
-                         ) extends Response {
-  def withHeaders(add: Map[String, String]): StreamResponse = {
-    copy(headers = headers ++ add)
-  }
-
-  def withHeader(header: String, value: String): StreamResponse = {
-    copy(headers = headers ++ Map(header -> value))
-  }
-}
+case class StreamResponse(stream: ChunkedOutputStream) extends Response
 
 object CommonResponse {
   val empty = new CommonResponse(

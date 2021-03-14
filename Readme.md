@@ -8,7 +8,7 @@ Netty-based dsl
 
 # install:
 
-```sbt
+```scala
  "com.github.fntz" %% "dsl" % "0.0.1-SNAPSHOT"
 ```
 
@@ -102,6 +102,26 @@ get(string / "test") ~> { (s: String, request: CurrentHttpRequest) =>
   "done"
 }
 ```
+
+### Streaming
+
+```scala 
+import com.github.fntz.omhs.streams.ChunkedOutputStream
+import AsyncResult.Streaming._ // <- from stream to AsyncResult
+get("steaming") ~> { (stream: ChunkedOutputStream) => 
+    stream.write("123".getBytes())
+    stream.write("456".getBytes())
+    stream.write("789".getBytes())
+    // or with << 
+    stream << "000"
+    stream  
+}
+```
+
+Note: ChunkedOutputStream must be last or penultimate argument:
+
+`(stream: ChunkedOutputStream, req: CurrentHttpRequest) =>` or `(req: CurrentHttpRequest, stream: ChunkedOutputStream) =>` is valid.
+
 
 ### From Scala Future to AsyncResponse
 

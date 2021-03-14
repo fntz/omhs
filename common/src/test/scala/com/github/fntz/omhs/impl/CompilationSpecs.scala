@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 class CompilationSpecs extends Specification with CompilationSpecsUtils {
 
   "dsl compilation" should {
-    "doesnt compile: CurrentRequest should be the last argument" in {
+    "doesn't compile: CurrentRequest should be the last argument" in {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.FileUpload
@@ -20,7 +20,39 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, s"CurrentHttpRequest must be the last argument in the function")
     }
 
-    "doesnt compile when parameters count is not the same as function arguments length" in {
+    "doesn't compile: Stream should be the last argument" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs.streams.ChunkedOutputStream
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / string / string) ~> { (a: String, stream: ChunkedOutputStream, b: String) =>
+              "done"
+           }
+           """.stripMargin, s"ChunkedOutputStream must be the last argument in the function")
+    }
+
+    "doesn't compile: Stream or CurrentHttpRequest should be the last argument" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs.streams.ChunkedOutputStream
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / string / string) ~> { (a: String, stream: ChunkedOutputStream,
+            b: String, req: CurrentHttpRequest) =>
+              "done"
+           }
+           """.stripMargin,
+        s"com.github.fntz.omhs.CurrentHttpRequest or com.github.fntz.omhs.streams.ChunkedOutputStream must be the last arguments in the function")
+    }
+
+    "doesn't compile when parameters count is not the same as function arguments length" in {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.FileUpload
@@ -35,7 +67,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "Args lengths are not the same")
     }
 
-    "doesnt if alternative in not params" in {
+    "doesn't if alternative in not params" in {
       doesntCompile(
         s"""
            import com.github.fntz.omhs._
@@ -49,7 +81,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "Args lengths are not the same")
     }
 
-    "doesnt compile when parameters in incorrect sequence" in {
+    "doesn't compile when parameters in incorrect sequence" in {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.FileUpload
@@ -121,6 +153,51 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            import RoutingDSL._
 
            get("file" / string) ~> { (a: String, req: CurrentHttpRequest) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "pass Stream to function" in {
+      compile(
+        s"""
+           import com.github.fntz.omhs.streams.ChunkedOutputStream
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / string) ~> { (a: String, stream: ChunkedOutputStream) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "Stream or CurrentHttpRequest should be the last arguments#1" in {
+      compile(
+        s"""
+           import com.github.fntz.omhs.streams.ChunkedOutputStream
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / string) ~> { (a: String, stream: ChunkedOutputStream, req: CurrentHttpRequest) =>
+              "done"
+           }
+           """.stripMargin)
+    }
+
+    "Stream or CurrentHttpRequest should be the last arguments#2" in {
+      compile(
+        s"""
+           import com.github.fntz.omhs.streams.ChunkedOutputStream
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / string) ~> { (a: String, req: CurrentHttpRequest, stream: ChunkedOutputStream) =>
               "done"
            }
            """.stripMargin)
