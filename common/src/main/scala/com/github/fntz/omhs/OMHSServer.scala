@@ -41,7 +41,6 @@ object OMHSServer {
             if (setup.enableCompression) {
               p.addLast("compressor", new HttpContentCompressor())
             }
-            p.addLast("chunked", new ChunkedWriteHandler) // todo check chunks without this
             p.addLast("omhs", handler)
           }
         })

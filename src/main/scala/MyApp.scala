@@ -101,7 +101,7 @@ object MyApp extends App {
     s.write("asd".getBytes())
     s.write("123".getBytes())
     s.write("3333".getBytes())
-    AsyncResult.chunked(StreamResponse(s))
+    s
   }
 
   val route1 = new Route().addRule(k)

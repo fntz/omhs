@@ -19,7 +19,7 @@ object ParamsParser {
     }
   }
 
-  // todo check perf against tail-rec impl
+  // note: check perf against tail-rec impl
   def parse(target: String, params: Vector[PathParam]): ParseResult = {
     val path = target.replaceAll("""\?.*""", "")
       .split("/").map(_.trim).filterNot(_.isEmpty)

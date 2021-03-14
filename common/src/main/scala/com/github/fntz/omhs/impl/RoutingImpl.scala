@@ -662,10 +662,10 @@ private[omhs] object RoutingImpl {
                   }
                   val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
 
-                  defs match {
+                  sorted match {
                     case $caseClause =>
                       $callFunction
-                    case _ =>
+                    case xs =>
                       println("======TODO==============")
                       _root_.com.github.fntz.omhs.AsyncResult.completed(
                         _root_.com.github.fntz.omhs.CommonResponse.empty

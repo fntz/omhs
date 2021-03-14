@@ -22,7 +22,7 @@ val opts = Seq(
     "-language:reflectiveCalls",
     "-unchecked",
     "-Xverify",
-    "-Ydelambdafy:inline" // todo https://github.com/scala/bug/issues/10554
+    "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
   ),
   scalacOptions in Test ++= Seq("-Yrangepos")
 )

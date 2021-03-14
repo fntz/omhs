@@ -35,7 +35,7 @@ private [omhs] object ResponseImplicits {
           response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE)
         }
       } else {
-        response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE) // todo
+        response.headers.set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE)
       }
       response
     }
