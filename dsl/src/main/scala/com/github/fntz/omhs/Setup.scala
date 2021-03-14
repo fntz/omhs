@@ -11,7 +11,8 @@ import java.util.Locale
  * @param cookieDecoderStrategy - how to decode cookies @see ServerCookieDecoder
  * @param maxContentLength - max length in aggregated request @see OMHSServer
  * @param enableCompression - use HttpContentCompressor @see OMHSServer
- * @param chunkSize
+ * @param chunkSize - bytes in every chunk
+ * @param sendXSSProtection - @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
  */
 case class Setup(
                 timeFormatter: DateTimeFormatter,
@@ -19,8 +20,17 @@ case class Setup(
                 cookieDecoderStrategy: CookieDecoderStrategy,
                 maxContentLength: Int,
                 enableCompression: Boolean,
-                chunkSize: Int
-                )
+                chunkSize: Int,
+                sendXSSProtection: Boolean
+                ) {
+  def withSendXSSProtection(flag: Boolean): Setup = {
+    copy(sendXSSProtection = flag)
+  }
+
+  def withSendServerHeader(flag: Boolean): Setup = {
+    copy(sendServerHeader = flag)
+  }
+}
 object Setup {
   val default: Setup = Setup(
     timeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
@@ -29,6 +39,7 @@ object Setup {
     cookieDecoderStrategy = CookieDecoderStrategies.Strict,
     maxContentLength = 512*1024,
     enableCompression = true,
-    chunkSize = 1000
+    chunkSize = 1000,
+    sendXSSProtection = true
   )
 }

@@ -99,17 +99,8 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / "foo") ~> route { (req: CurrentHttpRequest) =>
-    println(s"---> ${req.cookies.size}")
-    req.cookies.foreach { c =>
-      println(s"===> ${c}")
-    }
-    setCookie("a", "b")
-    val d = new DefaultCookie("asd", "qwe")
-    d.setDomain("example.com")
-    setCookie(d)
-    println(s"----> ${d.toString}")
-    "done"
+  val k = get("test" / "foo") ~> route { (stream: ChunkedOutputStream) =>
+    stream << "asd".getBytes()
   }
   // X-XSS-Protection: 1; mode=block
 

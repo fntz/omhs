@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeader
 
 private [omhs] object ResponseImplicits {
   import CollectionsConverters._
+  import AdditionalHeaders._
 
   implicit class HttpHeadersImplicits(val response: HttpResponse) extends AnyVal {
     def withContentType(contentType: String): HttpResponse = {
@@ -44,6 +45,13 @@ private [omhs] object ResponseImplicits {
     def withServer(value: String, isNeedToModify: Boolean): HttpResponse = {
       if (isNeedToModify) {
         response.headers.set(HttpHeaderNames.SERVER, value)
+      }
+      response
+    }
+
+    def withXSSProtection(isNeedToSend: Boolean): HttpResponse = {
+      if (isNeedToSend) {
+        response.headers().set(xssProtection, xssProtectionValue)
       }
       response
     }

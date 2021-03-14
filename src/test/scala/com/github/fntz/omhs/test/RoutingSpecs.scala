@@ -3,6 +3,7 @@ package com.github.fntz.omhs.test
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.streams.ChunkedOutputStream
+import com.github.fntz.omhs.util.AdditionalHeaders
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
@@ -252,15 +253,47 @@ class RoutingSpecs extends Specification with AfterAll {
     }
   }
 
+  "setup" should {
+    import AdditionalHeaders._
+    val r = get("test") ~> {() => "done"}
+
+    "xss-protection" should {
+      "enable" in new RouteTest(r, "/test") {
+        response.headers().get(xssProtection) ==== xssProtectionValue
+      }
+
+      "disable" in new RouteTest(r, "/test", isStream = false,
+        Setup.default.withSendXSSProtection(false)
+      ) {
+        Option(response.headers().get(xssProtection)) must beNone
+      }
+    }
+
+    "server header" should {
+      "enable" in new RouteTest(r, "/test") {
+        response.headers().get(HttpHeaderNames.SERVER) must contain("netty")
+      }
+
+      "disable" in new RouteTest(r, "/test", isStream = false,
+        Setup.default.withSendServerHeader(false)
+      ) {
+        Option(response.headers().get(HttpHeaderNames.SERVER)) must beNone
+      }
+    }
+  }
+
   private def req(path: String) = {
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1, HttpMethod.GET, path
     )
   }
 
-  private class RouteTest(rule: ExecutableRule, path: String, isStream: Boolean = false) extends Scope {
+  private class RouteTest(rule: ExecutableRule, path: String,
+                          isStream: Boolean = false,
+                          setup: Setup = Setup.default
+                         ) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
-    val ro = (new Route).addRule(rule).toHandler
+    val ro = (new Route).addRule(rule).toHandler(setup)
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
     channel.pipeline()
       .addFirst(new LoggingHandler(LogLevel.DEBUG))
