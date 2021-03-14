@@ -195,6 +195,32 @@ class RoutingSpecs extends Specification with AfterAll {
     }
   }
 
+  "moar/syntax" should {
+    import moar._
+    val r18 = get("test" / string) ~> route { (x: String) =>
+      if (x == "foo") {
+        status(200)
+        contentType("application/javascript")
+        "ok"
+      } else {
+        status(404)
+        contentType("x-type/none")
+        "not_found"
+      }
+    }
+    "run with route#1" in new RouteTest(r18, "/test/foo") {
+      status ==== HttpResponseStatus.OK
+      contentType ==== "application/javascript"
+      content ==== "ok"
+    }
+
+    "run with route#2" in new RouteTest(r18, "/test/foo1") {
+      status ==== HttpResponseStatus.NOT_FOUND
+      contentType ==== "x-type/none"
+      content ==== "not_found"
+    }
+  }
+
   private def req(path: String) = {
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1, HttpMethod.GET, path
@@ -215,6 +241,7 @@ class RoutingSpecs extends Specification with AfterAll {
     channel.writeInbound(request)
     val response: DefaultFullHttpResponse = channel.readOutbound()
     val status = response.status()
+    val contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
     val content = response.content().toString(CharsetUtil.UTF_8)
   }
 
