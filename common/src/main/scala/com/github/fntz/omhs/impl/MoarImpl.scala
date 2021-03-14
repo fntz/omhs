@@ -409,6 +409,6 @@ private[omhs] object MoarImpl {
 
     logger.verbose(s"$responseDefinition")
 
-    responseDefinition
+    c.untypecheck(responseDefinition)
   }
 }

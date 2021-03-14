@@ -16,7 +16,7 @@ class MutableState(var status: HttpResponseStatus,
   private val filledStates = new AB[FilledStates.Value](FilledStates.values.size)
 
   def setStatus(responseStatus: HttpResponseStatus): Unit = {
-    check(FilledStates.status, this.status, responseStatus)
+    check(FilledStates.status, s"${this.status}", s"$responseStatus")
     this.status = responseStatus
   }
 
@@ -29,7 +29,7 @@ class MutableState(var status: HttpResponseStatus,
     this.contentType = contentType
   }
 
-  private def check(value: FilledStates.Value, oldV: AnyRef, newV: AnyRef): Unit = {
+  private def check(value: FilledStates.Value, oldV: String, newV: String): Unit = {
     if (filledStates.contains(value)) {
       logger.warn(s"Double changing in $value: $oldV->$newV")
     } else {
