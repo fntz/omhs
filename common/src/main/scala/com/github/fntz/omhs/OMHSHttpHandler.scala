@@ -9,6 +9,7 @@ import io.netty.handler.codec.http._
 import io.netty.util.{CharsetUtil, Version}
 import org.slf4j.LoggerFactory
 
+import java.net.InetSocketAddress
 import java.time.ZonedDateTime
 import scala.language.existentials
 
