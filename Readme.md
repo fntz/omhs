@@ -112,6 +112,8 @@ get("steaming") ~> { (stream: ChunkedOutputStream) =>
     stream.write("123".getBytes())
     stream.write("456".getBytes())
     stream.write("789".getBytes())
+    // or with << 
+    stream << "000"
     stream  
 }
 ```

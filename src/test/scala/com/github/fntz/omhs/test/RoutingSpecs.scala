@@ -198,9 +198,8 @@ class RoutingSpecs extends Specification with AfterAll {
 
     val r18 = get("test") ~> { (stream: ChunkedOutputStream) =>
       stream.write("123".getBytes())
-      stream.write("456".getBytes())
-      stream.write("789".getBytes())
-      stream
+      stream << "456".getBytes()
+      stream << "789".getBytes()
     }
     "chunked stream support" in new RouteTest(r18, "/test", isStream = true) {
       messagesSize = 3 // 3 writes

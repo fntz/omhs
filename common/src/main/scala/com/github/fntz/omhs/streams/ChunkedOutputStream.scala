@@ -16,6 +16,11 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext, priva
     buffer.writeByte(b)
   }
 
+  def <<(b: Array[Byte]): ChunkedOutputStream = {
+    write(b)
+    this
+  }
+
   override def write(b: Array[Byte], off: Int, len: Int): Unit = {
     var dataLengthLeftToWrite = len
     var dataToWriteOffset = off
