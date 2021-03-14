@@ -1,8 +1,10 @@
 import com.github.fntz.omhs._
+import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef, StringDef}
+import com.github.fntz.omhs.moar.MutableState
 import io.netty.handler.codec.http.multipart.MixedFileUpload
 import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
 import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.http.{FullHttpResponse, HttpMethod}
+import io.netty.handler.codec.http.{FullHttpResponse, HttpMethod, HttpResponseStatus}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
@@ -33,7 +35,6 @@ object MyApp extends App {
 
   implicit val bodyWriterPerson = JsonSupport.reader[Person]()
 
-  import SwaggerImplicits._
   val q = "asd"
 
   case class Search(query: String)
@@ -47,7 +48,7 @@ object MyApp extends App {
     override def read(str: String): Search = Search("dsa")
   }
 
-  import com.github.fntz.omhs.moar.Routable._
+  import com.github.fntz.omhs.moar._
 
   /*
   // how to do:
@@ -81,17 +82,47 @@ object MyApp extends App {
 
    */
   val x = 100
-  val z = get(string) >> route {
-    println("asd")
-    if (x == 100) {
-      contentType("application/javascript")
-    } else {
-      contentType("application/javascript")
+//  val z = get(string) >> route {
+//    if (x == 100) {
+//      contentType("application/javascript")
+//    } else {
+//      contentType("application/javascript")
+//    }
+//    AsyncResult.completed(CommonResponse.empty)
+//  }
+
+  // content is not needed
+
+
+  val rl = new Rule().withMethod(HttpMethod.GET).path("test").path(string)
+  val ex = new ExecutableRule(rl) {
+    override def run(defs: List[ParamDef[_]]): AsyncResult = {
+      val y = defs.head.asInstanceOf[StringDef].value
+      val c = MutableState.empty
+      if (y == "foo") {
+        c.setContentType("application/javascript")
+      } else {
+        c.setContentType("text/plain")
+      }
+
+      c.transform("sad")
     }
-    AsyncResult.completed(CommonResponse.empty)
   }
 
-  val route1 = new Route().addRule(z)
+  val k = get("test" / string) ~> route { (x1: String) =>
+    if (x1 == "foo") {
+      status(HttpResponseStatus.OK)
+      contentType("application/js")
+      "asd"
+    }
+    else {
+      status(HttpResponseStatus.NOT_FOUND)
+      contentType("text/plain")
+      "not found"
+    }
+  }
+
+  val route1 = new Route().addRule(k)
 
   OMHSServer.run(9000, route1.toHandler)
 

@@ -12,8 +12,6 @@ class ExecutableRule(val rule: Rule) {
 
   lazy val method: HttpMethod = rule.currentMethod
 
-  val isCallRun: Boolean = true
-
   def ::[T <: ExecutableRule](other: T): Route = {
     val r = new Route
     r.addRule(this)
@@ -22,10 +20,6 @@ class ExecutableRule(val rule: Rule) {
 
   def run(defs: List[ParamDef[_]]): AsyncResult = {
     AsyncResult.completed(CommonResponse.empty)
-  }
-
-  def run2(defs: List[ParamDef[_]], response: DefaultFullHttpResponse): DefaultFullHttpResponse = {
-    response
   }
 
   override def toString: String = {
