@@ -10,6 +10,8 @@ class AsyncResult {
   @volatile private var value: Response = null.asInstanceOf[Response]
   @volatile private var completeWith: Response => Unit = null
 
+  def current: Response = value
+
   def onComplete(f: Response => Unit): Unit = {
     completeWith = f
     if (value != null) {

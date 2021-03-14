@@ -10,12 +10,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
 private[omhs] object RoutingImpl {
-
-  private val propName = "omhs.logLevel"
-  private object LogLevel extends Enumeration {
-    type Level = Value
-    val verbose, info, none = Value
-  }
+  import Shared._
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
                            (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
@@ -387,29 +382,12 @@ private[omhs] object RoutingImpl {
 
   private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
     import c.universe._
+
+    val logger = new Logger(c)
+
     val focus = c.enclosingPosition.focus
 
-    if (!c.compilerSettings.contains("-Ydelambdafy:inline")) {
-      c.abort(focus, "Routing generation requires `-Ydelambdafy:inline` option. " +
-        "Change scalacOptions in your build.sbt")
-    }
-
-    val level = Option(System.getProperty(propName)) match {
-      case Some("verbose") => LogLevel.verbose
-      case Some("info") => LogLevel.info
-      case _ =>  LogLevel.none
-    }
-
-    def verbose(str: String): Unit = {
-      if (level == LogLevel.verbose) {
-        c.info(focus, str, force = false)
-      }
-    }
-    def info(str: String): Unit = {
-      if (level == LogLevel.info || level == LogLevel.verbose) {
-        c.info(focus, str, force = false)
-      }
-    }
+    guardSbtOptions(c)
 
     sealed trait ParamToken {
       def isBody = false
@@ -503,7 +481,7 @@ private[omhs] object RoutingImpl {
         }
     }.toBuffer[ParamToken]
 
-    info(s"Found ${tokens.size} arguments for rule")
+    logger.info(s"Found ${tokens.size} arguments for rule")
 
     val actualFunctionParameters = f match {
       case q"(..$params) => $_" =>
@@ -523,7 +501,7 @@ private[omhs] object RoutingImpl {
     def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
     val isReqParamNeeded = actualFunctionParameters.exists(x => isReqParam(x._1))
 
-    info(
+    logger.info(
       s"""
          |isEmptyFunction? $isEmptyFunction
          |need to pass requestParam? $isReqParamNeeded
@@ -648,7 +626,7 @@ private[omhs] object RoutingImpl {
                     case _ =>
                       println("======TODO==============")
                       _root_.com.github.fntz.omhs.AsyncResult.completed(
-                        com.github.fntz.omhs.CommonResponse.empty
+                        _root_.com.github.fntz.omhs.CommonResponse.empty
                       )
                   }
                 }
@@ -659,7 +637,7 @@ private[omhs] object RoutingImpl {
         }
         """
 
-    verbose(s"$instance")
+    logger.verbose(s"$instance")
 
     c.Expr[ExecutableRule](instance)
   }
