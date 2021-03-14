@@ -45,6 +45,8 @@ class Rule {
 
   private var isCurrentRequestNeeded: Boolean = false
 
+  private var isStreamNeeded: Boolean = false
+
   def isNeedToParseBody: Boolean = isBodyNeeded
 
   def isNeedToDecodeQuery: Boolean = isQueryNeeded
@@ -52,6 +54,8 @@ class Rule {
   def isNeedToPassCurrentRequest: Boolean = isCurrentRequestNeeded
 
   def isNeedToFetchFiles: Boolean = isFileNeeded
+
+  def isNeedToStream: Boolean = isStreamNeeded
 
   def currentParams: Vector[PathParam] = paths.toVector
 
@@ -130,6 +134,11 @@ class Rule {
 
   def header(header: HeaderParam): Rule = {
     headers += header
+    this
+  }
+
+  def withStream(): Rule = {
+    isStreamNeeded = true
     this
   }
 

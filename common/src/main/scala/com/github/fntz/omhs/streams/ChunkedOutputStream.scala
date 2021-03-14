@@ -1,16 +1,15 @@
 package com.github.fntz.omhs.streams
 
-import io.netty.buffer.{ByteBuf, Unpooled}
+import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.DefaultHttpContent
 
 import java.io.OutputStream
 
 // based is: https://gist.github.com/codingtony/6564901
-class ChunkedOutputStream(context: ChannelHandlerContext, chunkSize: Int) extends OutputStream {
-  require(chunkSize > 0)
+case class ChunkedOutputStream(private val context: ChannelHandlerContext, private val chunkSize: Int) extends OutputStream {
 
-  private final val buffer: ByteBuf = Unpooled.buffer(0, chunkSize)
+  private val buffer = Unpooled.buffer(0, chunkSize)
 
   override def write(b: Int): Unit = {
     flush()

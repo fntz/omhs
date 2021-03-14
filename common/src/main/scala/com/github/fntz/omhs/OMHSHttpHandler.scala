@@ -1,12 +1,14 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamsParser, ParseResult}
+import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamsParser, ParseResult, StreamDef}
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util.{CollectionsConverters, ResponseImplicits, UtilImplicits}
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.{CharsetUtil, Version}
+import io.netty.util.concurrent.{Future, GenericFutureListener}
+import io.netty.util.Version
 import org.slf4j.LoggerFactory
 
 import java.net.InetSocketAddress
@@ -35,7 +37,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
 
         val result = findRule(request) match {
           case Some((r, ParseResult(_, defs))) =>
-            val materialized = r.rule.materialize(request, remoteAddress, setup)
+            val materialized = r.rule.materialize(ctx, request, remoteAddress, setup)
             val files = fetchFilesToRelease(materialized)
             try {
               val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
@@ -67,7 +69,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
               ctx = ctx,
               request = request,
               isKeepAlive = HttpUtil.isKeepAlive(request),
-              userResponse = streamResponse
+              stream = streamResponse.stream
             ).addListener(fileCleaner(result.files))
         }
 
@@ -106,33 +108,28 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
                      ctx: ChannelHandlerContext,
                      request: FullHttpRequest,
                      isKeepAlive: Boolean,
-                     userResponse: StreamResponse
+                     stream: ChunkedOutputStream
                    ): ChannelFuture = {
 
     val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
 
     response
-      .withContentType(HttpHeaderValues.TEXT_PLAIN.toString) // is it?
+      .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
       .chunked
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .withUserHeaders(userResponse.headers)
       .processKeepAlive(isKeepAlive, request)
       .withServer(ServerVersion, setup.sendServerHeader)
 
     ctx.write(response) // empty first
 
-    // somehow depends on sslContext check stackoverflow TODO
-    userResponse.it.zipWithIndex.foreach { case (chunk, index) =>
-      val tmp = new DefaultHttpContent(
-        Unpooled.copiedBuffer(chunk)
-      )
-      ctx.write(tmp)
-      if (index % 3 == 0) {
-        ctx.flush()
-      }
-    }
+    stream.flush()
 
     val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+      .addListener(new GenericFutureListener[Future[_ >: Void]] {
+        override def operationComplete(future: Future[_ >: Void]): Unit = {
+          stream.close()
+        }
+      })
     if (!isKeepAlive) {
       f.addListener(ChannelFutureListener.CLOSE)
     }

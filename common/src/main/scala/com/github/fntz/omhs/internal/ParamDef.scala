@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.internal
 
 import com.github.fntz.omhs.CurrentHttpRequest
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.Cookie
 import io.netty.handler.codec.http.multipart.{FileUpload, MixedFileUpload}
 
@@ -31,6 +32,7 @@ object ParamDef {
   val file = 10
   val query = 11
   val alternative = 12
+  val stream = 13
 }
 sealed trait PathParamDef[T] extends ParamDef[T]
 case class EmptyDef(value: String) extends PathParamDef[String] {
@@ -87,5 +89,9 @@ case class CookieDef(value: Cookie) extends ParamDef[Cookie] {
 
 case class QueryDef[T](value: T) extends ParamDef[T] {
   override val sortProp: Int = ParamDef.query
+}
+
+case class StreamDef(value: ChunkedOutputStream) extends ParamDef[ChunkedOutputStream] {
+  override val sortProp: Int = ParamDef.stream
 }
 

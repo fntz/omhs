@@ -1,7 +1,8 @@
 package com.github.fntz.omhs.util
 
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.internal.{CurrentHttpRequestDef, ParamDef}
+import com.github.fntz.omhs.internal.{CurrentHttpRequestDef, ParamDef, StreamDef}
+import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieDecoder}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders}
@@ -35,12 +36,18 @@ private[omhs] object UtilImplicits {
       }
     }
 
-    def materialize(request: FullHttpRequest,
+    def materialize(ctx: ChannelHandlerContext,
+                    request: FullHttpRequest,
                     remoteAddress: RemoteAddress,
                     setup: Setup
                    ): Either[UnhandledReason, List[ParamDef[_]]] = {
       RequestHelper.fetchAdditionalDefs(request, rule, setup).map { additionalDefs =>
-        additionalDefs ++ rule.toDefs(request, remoteAddress, setup)
+        val streamDef = if (rule.isNeedToStream) {
+          List(StreamDef(ChunkedOutputStream(ctx, setup.chunkSize)))
+        } else {
+          Nil
+        }
+        additionalDefs ++ rule.toDefs(request, remoteAddress, setup) ++ streamDef
       }
     }
   }
