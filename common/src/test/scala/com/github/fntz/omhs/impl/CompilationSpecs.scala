@@ -64,6 +64,38 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
     }
 
+    "doesn't compile status without route" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs._
+           import com.github.fntz.omhs.moar._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / long) ~> { (l: Long) =>
+              status(200)
+              "done"
+           }
+           """.stripMargin, "`status` must be wrapped in an `route` block")
+    }
+
+    "doesn't compile contentType without route" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs._
+           import com.github.fntz.omhs.moar._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / long) ~> { (l: Long) =>
+              contentType("text/plain")
+              "done"
+           }
+           """.stripMargin, "`contentType` must be wrapped in an `route` block")
+    }
+
     "ignore arguments at all" in {
       compile(
         s"""

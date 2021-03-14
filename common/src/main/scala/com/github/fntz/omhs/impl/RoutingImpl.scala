@@ -455,6 +455,13 @@ private[omhs] object RoutingImpl {
 
     val ignored = banned ++ complex
 
+    val forbiddenWithoutRoute = Vector("contentType", "status")
+    f.collect {
+      case Select(Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+        TermName(term)) if forbiddenWithoutRoute.contains(term) =>
+        c.abort(focus, s"`$term` must be wrapped in an `route` block")
+    }
+
     val tokens = c.prefix.tree.collect {
       case Select(
         Apply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),

@@ -94,14 +94,14 @@ object MyApp extends App {
   // content is not needed
   val k = get("test" / string) ~> route { (x: String) =>
     if (x == "foo") {
-//      status(201)
-//      status(200)
-//      contentType("application/js")
+      status(201)
+      status(200)
+      contentType("application/js")
       "asd"
     }
     else {
-//      status(404)
-//      contentType("text/plain")
+      status(404)
+      contentType("text/plain")
       "not found"
     }
   }
