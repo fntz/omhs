@@ -81,7 +81,7 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "Args lengths are not the same")
     }
 
-    "doesn't compile when parameters in incorrect sequence" in {
+    "doesn't compile when parameters in incorrect sequence#1" in {
       doesntCompile(
         s"""
            import io.netty.handler.codec.http.multipart.FileUpload
@@ -94,6 +94,21 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
               "done"
            }
            """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
+    }
+
+    "doesn't compile when parameters in incorrect sequence#2" in {
+      doesntCompile(
+        s"""
+           import io.netty.handler.codec.http.multipart.FileUpload
+           import com.github.fntz.omhs._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / long <<< file) ~> { (file: FileUpload, l: Long) =>
+              "done"
+           }
+           """.stripMargin, "Incorrect type for `file`, required: Long, given: io.netty.handler.codec.http.multipart.FileUpload")
     }
 
     "doesn't compile status without route" in {

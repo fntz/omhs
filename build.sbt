@@ -48,10 +48,9 @@ val circe = Seq(
 
 lazy val jsonlibs = playJson ++ circe
 
-// todo rename to dsl
-val common = project.settings(opts)
+val dsl = project.settings(opts)
   .settings(
-    name := "dsl",
+    name := "omhs-dsl",
     libraryDependencies ++= netty.map(_ % "provided, test") ++ logback ++ specs2 ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
@@ -65,7 +64,7 @@ val swagger = project.in(file("swagger"))
     name := "omhs-swagger",
     libraryDependencies ++= playJson ++ netty, // todo rm
     crossScalaVersions := supportedVersions
-  ).dependsOn(common)
+  ).dependsOn(dsl)
 
 val playJsonSupport = Project("play-json-support", file("play-json-support"))
   .settings(opts)
@@ -73,7 +72,7 @@ val playJsonSupport = Project("play-json-support", file("play-json-support"))
     name := "omhs-play-support",
     libraryDependencies ++= playJson.map(_ % "provided"),
     crossScalaVersions := supportedVersions
-  ).dependsOn(common)
+  ).dependsOn(dsl)
 
 val circeSupport = Project("circe-support", file("circe-support"))
   .settings(opts)
@@ -81,7 +80,7 @@ val circeSupport = Project("circe-support", file("circe-support"))
     name := "omhs-circe-support",
     libraryDependencies ++= circe.map(_ % "provided"),
     crossScalaVersions := supportedVersions
-  ).dependsOn(common)
+  ).dependsOn(dsl)
 
 lazy val mainProject = Project("omhs", file("."))
   .settings(
@@ -92,5 +91,5 @@ lazy val mainProject = Project("omhs", file("."))
     crossScalaVersions := Nil,
     publish / skip := true
   )
-  .dependsOn(common, playJsonSupport, circeSupport, swagger)
-  .aggregate(common, playJsonSupport, circeSupport, swagger)
+  .dependsOn(dsl, playJsonSupport, circeSupport, swagger)
+  .aggregate(dsl, playJsonSupport, circeSupport, swagger)
