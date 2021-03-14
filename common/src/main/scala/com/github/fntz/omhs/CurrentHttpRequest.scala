@@ -1,6 +1,8 @@
 package com.github.fntz.omhs
 
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaders, HttpMethod, HttpVersion, QueryStringDecoder}
+import com.github.fntz.omhs.util.UtilImplicits
+import io.netty.handler.codec.http.cookie.Cookie
+import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders, HttpMethod, HttpVersion, QueryStringDecoder}
 import io.netty.util.CharsetUtil
 
 /**
@@ -13,6 +15,7 @@ import io.netty.util.CharsetUtil
  * @param rawBody - body as a string
  * @param version - http protocol version
  * @param remoteAddress - remote address
+ * @param cookies - decoded cookies
  */
 case class CurrentHttpRequest(
                              uri: String,
@@ -22,12 +25,50 @@ case class CurrentHttpRequest(
                              headers: HttpHeaders,
                              rawBody: String,
                              version: HttpVersion,
-                             remoteAddress: RemoteAddress
-                      )
+                             remoteAddress: RemoteAddress,
+                             cookies: Iterable[Cookie]
+                      ) {
+  import CurrentHttpRequest._
+
+  def isAccept(maybe: String): Boolean = {
+    accept.forall(_.toLowerCase == maybe.toLowerCase)
+  }
+
+  def accept: Option[String] = {
+    Option(headers.get(HttpHeaderNames.ACCEPT))
+  }
+  // scheme
+  // port
+
+  def isForwarded: Boolean = {
+    remoteAddress match {
+      case _: ForwardProxies => true
+      case _ => false
+    }
+  }
+
+  def isXHR: Boolean = {
+    Option(headers.get(HttpHeaderNames.X_REQUESTED_WITH))
+      .forall(_.toLowerCase == AjaxHeaderValue)
+  }
+
+  def userAgent: Option[String] = {
+    Option(headers.get(HttpHeaderNames.USER_AGENT))
+  }
+}
 
 object CurrentHttpRequest {
-  def apply(request: FullHttpRequest, remoteAddress: RemoteAddress): CurrentHttpRequest = {
+
+  import UtilImplicits._
+
+  private val AjaxHeaderValue = "xmlhttprequest"
+
+  def apply(request: FullHttpRequest,
+            remoteAddress: RemoteAddress,
+            setup: Setup
+           ): CurrentHttpRequest = {
     val decoder = new QueryStringDecoder(request.uri)
+    val cookies = setup.decode(request)
     new CurrentHttpRequest(
       uri = request.uri(),
       path = decoder.rawPath(),
@@ -36,7 +77,8 @@ object CurrentHttpRequest {
       headers = request.headers(),
       rawBody = request.content.toString(CharsetUtil.UTF_8),
       version = request.protocolVersion(),
-      remoteAddress = remoteAddress
+      remoteAddress = remoteAddress,
+      cookies = cookies
     )
   }
 }

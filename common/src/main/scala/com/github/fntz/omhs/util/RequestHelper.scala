@@ -13,6 +13,7 @@ import scala.language.existentials
 private[omhs] object RequestHelper {
 
   import CollectionsConverters._
+  import UtilImplicits._
 
   type E[R] = Either[UnhandledReason, List[R]]
 
@@ -94,15 +95,7 @@ private[omhs] object RequestHelper {
                            setup: Setup
                           ): E[CookieDef] = {
     if (rule.currentCookies.nonEmpty) {
-      val cookies = Option(request.headers.get(HttpHeaderNames.COOKIE)).map { x =>
-        val decoder = setup.cookieDecoderStrategy match {
-          case CookieDecoderStrategies.Strict =>
-            ServerCookieDecoder.STRICT
-          case CookieDecoderStrategies.Lax =>
-            ServerCookieDecoder.LAX
-        }
-        decoder.decode(x).toScala
-      }.getOrElse(Set.empty)
+      val cookies = setup.decode(request)
       val result = rule.currentCookies.map { need =>
         need.cookieName -> cookies.find(need.cookieName == _.name())
       }
