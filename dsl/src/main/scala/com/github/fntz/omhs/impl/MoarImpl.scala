@@ -391,6 +391,16 @@ private[omhs] object MoarImpl {
               TermName("status")), List(a)) =>
             q"$stateDef.setStatus(..$a)"
 
+          case Apply(Select(
+            Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+              TermName("setCookie")), a) =>
+            q"$stateDef.setCookie(..$a)"
+
+          case Apply(Select(
+          Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+          TermName("setHeader")), a) =>
+            q"$stateDef.setHeader(..$a)"
+
           case _ =>
             super.transform(tree)
         }

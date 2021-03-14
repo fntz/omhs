@@ -127,6 +127,40 @@ class CompilationSpecs extends Specification with CompilationSpecsUtils {
            """.stripMargin, "`status` must be wrapped in an `route` block")
     }
 
+    "doesn't compile setHeader without route" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs._
+           import com.github.fntz.omhs.moar._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+
+           get("file" / long) ~> { (l: Long) =>
+              setHeader("a", "b")
+              "done"
+           }
+           """.stripMargin, "`setHeader` must be wrapped in an `route` block")
+    }
+
+    "doesn't compile setCookie without route" in {
+      doesntCompile(
+        s"""
+           import com.github.fntz.omhs._
+           import com.github.fntz.omhs.moar._
+           import AsyncResult._
+           import AsyncResult.Implicits._
+           import RoutingDSL._
+           import io.netty.handler.codec.http.cookie.ServerCookieEncoder
+
+           implicit val enc = ServerCookieEncoder.STRICT
+           get("file" / long) ~> { (l: Long) =>
+              setCookie("a", "b")
+              "done"
+           }
+           """.stripMargin, "`setCookie` must be wrapped in an `route` block")
+    }
+
     "doesn't compile contentType without route" in {
       doesntCompile(
         s"""

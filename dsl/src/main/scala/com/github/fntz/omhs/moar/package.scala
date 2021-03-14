@@ -2,6 +2,7 @@ package com.github.fntz.omhs
 
 import com.github.fntz.omhs.impl.MoarImpl
 import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieEncoder}
 
 import scala.language.experimental.macros
 
@@ -12,6 +13,12 @@ package object moar {
   def status(responseStatus: HttpResponseStatus): Unit = ???
 
   def status(intStatus: Int): Unit = ???
+
+  def setCookie(name: String, value: String)(implicit enc: ServerCookieEncoder): Unit = ???
+
+  def setCookie(cookie: Cookie)(implicit enc: ServerCookieEncoder): Unit = ???
+
+  def setHeader(name: String, value: String): Unit = ???
 
   def route[R](body: () => R): () => AsyncResult = macro MoarImpl.routeImpl0[R]
 
