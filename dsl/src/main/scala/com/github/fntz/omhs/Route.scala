@@ -1,6 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.internal.ExecutableRule
+import com.github.fntz.omhs.util.OverlapDetector
 import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}
 import org.slf4j.LoggerFactory
 
@@ -129,6 +130,7 @@ class Route {
     current.foreach { rule =>
       logger.debug(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
     }
+    OverlapDetector.detect(current.map(_.rule))
     new OMHSHttpHandler(this, setup)
   }
 
