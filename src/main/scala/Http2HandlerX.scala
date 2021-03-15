@@ -34,6 +34,7 @@ class Http2HandlerX extends ChannelDuplexHandler {
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
+    println("@"*100)
     super.exceptionCaught(ctx, cause)
     cause.printStackTrace
     ctx.close()

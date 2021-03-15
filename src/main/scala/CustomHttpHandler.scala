@@ -15,7 +15,10 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
       case request: FullHttpRequest =>
-
+        ctx.writeAndFlush(
+          new DefaultFullHttpResponse(request.protocolVersion(), HttpResponseStatus.OK,
+            Unpooled.copiedBuffer("test".getBytes()))
+        ).addListener(ChannelFutureListener.CLOSE)
 
         if (!HttpUtil.isKeepAlive(request)) {
           //f.addListener(ChannelFutureListener.CLOSE)

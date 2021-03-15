@@ -7,6 +7,8 @@ import io.netty.handler.codec.http2.{Http2CodecUtil, Http2ServerUpgradeCodec}
 import io.netty.util.AsciiString
 import io.netty.util.ReferenceCountUtil
 
+
+
 class Http2Initializer(val ssl: Option[SslContext], maxContentLength: Int = 16*1024) extends ChannelInitializer[SocketChannel] {
   override def initChannel(ch: SocketChannel): Unit = {
     ssl match {

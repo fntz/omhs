@@ -3,6 +3,7 @@ import io.netty.channel.ChannelInitializer
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import io.netty.handler.codec.http.{HttpObjectAggregator, HttpServerCodec}
 import io.netty.handler.codec.http2.Http2SecurityUtil
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.handler.ssl.ApplicationProtocolConfig.{SelectedListenerFailureBehavior, SelectorFailureBehavior}
@@ -33,17 +34,23 @@ object HttpServer {
     b.group(group)
       .channel(classOf[NioServerSocketChannel])
       .handler(new LoggingHandler(LogLevel.INFO))
-      .childHandler(new Http2Initializer(ssl))
-//      .childHandler(new ChannelInitializer[SocketChannel] {
-//        override def initChannel(ch: SocketChannel): Unit = {
-//          val p = ch.pipeline()
-//          p.addLast("http2-initializer", new Http2Initializer(ssl))
-////          ch.pipeline().addLast("codec", new HttpServerCodec())
-////          ch.pipeline().addLast("aggregator",
-////            new HttpObjectAggregator(512*1024))
-////          p.addLast(new CustomHttpHandler)
-//        }
-//      })
+      .childHandler(new ChannelInitializer[SocketChannel] {
+        override def initChannel(ch: SocketChannel): Unit = {
+          ssl match {
+            case Some(x) =>
+              ch.pipeline()
+                .addLast(x.newHandler(ch.alloc()), new Http2OrHttpHandler)
+            case None =>
+              ch.pipeline()
+              .addLast(
+                new HttpServerCodec(),
+                new HttpObjectAggregator(512*1024),
+                new CustomHttpHandler
+              )
+          }
+
+        }
+      })
 
     val f = b.bind(port).sync()
     f.channel().closeFuture().sync()
