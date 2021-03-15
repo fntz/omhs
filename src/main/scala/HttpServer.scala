@@ -36,19 +36,19 @@ object HttpServer {
       .handler(new LoggingHandler(LogLevel.INFO))
       .childHandler(new ChannelInitializer[SocketChannel] {
         override def initChannel(ch: SocketChannel): Unit = {
-          ssl match {
-            case Some(x) =>
-
-              ch.pipeline()
-                .addLast(x.newHandler(ch.alloc()), new Http2OrHttpHandler)
-            case None =>
-              ch.pipeline()
-              .addLast(
-                new HttpServerCodec(),
-                new HttpObjectAggregator(512*1024),
-                new CustomHttpHandler
-              )
-          }
+          ch.pipeline().addLast(new HttpSInitializer(ssl))
+//          ssl match {
+//            case Some(x) =>
+//              ch.pipeline()
+//                .addLast(x.newHandler(ch.alloc()), new Http2OrHttpHandler)
+//            case None =>
+//              ch.pipeline()
+//              .addLast(
+//                new HttpServerCodec(),
+//                new HttpObjectAggregator(512*1024),
+//                new CustomHttpHandler
+//              )
+//          }
 
         }
       })

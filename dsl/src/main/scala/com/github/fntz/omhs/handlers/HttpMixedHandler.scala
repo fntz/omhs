@@ -1,38 +1,29 @@
 package com.github.fntz.omhs.handlers
 
+import com.github.fntz.omhs.Setup
 import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http2.Http2FrameCodecBuilder
-import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler
-import org.slf4j.LoggerFactory
+import io.netty.handler.ssl.{ApplicationProtocolNames => APN, ApplicationProtocolNegotiationHandler => APNH}
+import io.netty.handler.stream.ChunkedWriteHandler
 
-object HttpMixedHandler {
+class HttpMixedHandler(setup: Setup, handler: OMHSHttpHandler)
+  extends APNH(APN.HTTP_1_1) {
 
-  private val logger = LoggerFactory.getLogger(getClass)
+  override def configurePipeline(ctx: ChannelHandlerContext, protocol: String): Unit = {
+    protocol match {
+      case APN.HTTP_2 =>
+        ctx.pipeline.addLast(
+          Http2FrameCodecBuilder.forServer().build(),
+          new OMHSHttp2Handler(setup)
+        )
+      case APN.HTTP_1_1 =>
+        ctx.pipeline.addLast(new HttpServerCodec,
+          new ChunkedWriteHandler,
+          handler)
 
-  def build(modes: Vector[WorkMode]): ApplicationProtocolNegotiationHandler = {
-    val protocols = modes.map(_.protocol).distinct
-    logger.info(s"Configure protocols: ${protocols.mkString(", ")}")
-    val fallback = modes.sortBy(_.weight).headOption.getOrElse(WorkModes.Http11)
-      .protocol
-    logger.info(s"Fallback protocol: $fallback")
-    new ApplicationProtocolNegotiationHandler(fallback) {
-      override def configurePipeline(ctx: ChannelHandlerContext, protocol: String): Unit = {
-         modes.find(_.protocol == protocol) match {
-           case Some(value) if value.isH2 =>
-             ctx.pipeline().addLast(
-               Http2FrameCodecBuilder.forServer().build()
-               //new Http2HandlerX()
-             )
-
-           case Some(_) =>
-             // http1
-             // todo
-
-           case None =>
-             logger.warn(s"Unknown protocol: $protocol, available: ${protocols.mkString(", ")}")
-             throw new IllegalStateException(s"Unknown protocol: $protocol")
-         }
-      }
+      case _ =>
+        throw new IllegalStateException(s"Unknown protocol: $protocol")
     }
   }
 

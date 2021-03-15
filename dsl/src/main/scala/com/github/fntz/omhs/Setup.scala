@@ -1,5 +1,7 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.handlers.{WorkMode, WorkModes}
+
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -15,13 +17,14 @@ import java.util.Locale
  * @param sendXSSProtection - @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
  */
 case class Setup(
-                timeFormatter: DateTimeFormatter,
-                sendServerHeader: Boolean,
-                cookieDecoderStrategy: CookieDecoderStrategy,
-                maxContentLength: Int,
-                enableCompression: Boolean,
-                chunkSize: Int,
-                sendXSSProtection: Boolean
+                  timeFormatter: DateTimeFormatter,
+                  sendServerHeader: Boolean,
+                  cookieDecoderStrategy: CookieDecoderStrategy,
+                  maxContentLength: Int,
+                  enableCompression: Boolean,
+                  chunkSize: Int,
+                  sendXSSProtection: Boolean,
+                  mode: WorkMode
                 ) {
   def withSendXSSProtection(flag: Boolean): Setup = {
     copy(sendXSSProtection = flag)
@@ -40,6 +43,7 @@ object Setup {
     maxContentLength = 512*1024,
     enableCompression = true,
     chunkSize = 1000,
-    sendXSSProtection = true
+    sendXSSProtection = true,
+    mode = WorkModes.Http11
   )
 }

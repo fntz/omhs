@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.time.ZonedDateTime
 import scala.language.existentials
 
+// tood rename to http1.1 handler ~
 @Sharable
 case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
