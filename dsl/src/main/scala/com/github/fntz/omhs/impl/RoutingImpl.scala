@@ -458,7 +458,7 @@ private[omhs] object RoutingImpl {
 
     val ignored = banned ++ complex
 
-    val forbiddenWithoutRoute = Vector("contentType", "status")
+    val forbiddenWithoutRoute = Vector("contentType", "status", "setCookie", "setHeader")
     f.collect {
       case Select(Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
         TermName(term)) if forbiddenWithoutRoute.contains(term) =>

@@ -1,5 +1,7 @@
 package com.github.fntz.omhs.util
 
+import java.util
+import scala.collection.mutable
 import scala.collection.mutable.{Buffer => B, Map => mMap}
 
 private [omhs] object CollectionsConverters {
@@ -25,6 +27,14 @@ private [omhs] object CollectionsConverters {
         jCollection.forEach(x => empty += x)
         empty
       }
+    }
+  }
+
+  implicit class SIterableExt[T](val sIterable: Iterable[T]) extends AnyVal {
+    def toJava: java.lang.Iterable[T] = {
+      val col = new util.ArrayList[T]()
+      sIterable.foreach(col.add)
+      col
     }
   }
 

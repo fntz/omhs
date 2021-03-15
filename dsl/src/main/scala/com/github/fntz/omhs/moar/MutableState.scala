@@ -1,13 +1,16 @@
 package com.github.fntz.omhs.moar
 
 import com.github.fntz.omhs.{AsyncResult, CommonResponse}
-import io.netty.handler.codec.http.HttpResponseStatus
-import scala.collection.mutable.{ArrayBuffer => AB}
-
+import io.netty.handler.codec.http.cookie.{Cookie, DefaultCookie, ServerCookieEncoder}
+import io.netty.handler.codec.http.{HttpHeaderNames, HttpResponseStatus}
 import org.slf4j.LoggerFactory
+
+import scala.collection.mutable.{ArrayBuffer => AB}
 
 class MutableState(var status: HttpResponseStatus,
                    var contentType: String,
+                   var cookies: AB[String],
+                   var headers: AB[(String, String)],
                    private var clazz: Class[_]
                   ) {
   import MutableState._
@@ -29,12 +32,20 @@ class MutableState(var status: HttpResponseStatus,
     this.contentType = contentType
   }
 
-  private def check(value: FilledStates.Value, oldV: String, newV: String): Unit = {
-    if (filledStates.contains(value)) {
-      logger.warn(s"Double changing in $value: $oldV->$newV")
-    } else {
-      filledStates += value
+  def setCookie(name: String, value: String)(implicit enc: ServerCookieEncoder): Unit = {
+    val cookie = new DefaultCookie(name, value)
+    setCookie(cookie)(enc)
+  }
+
+  def setCookie(cookie: Cookie)(implicit enc: ServerCookieEncoder): Unit = {
+    this.cookies += enc.encode(cookie)
+  }
+
+  def setHeader(name: String, value: String): Unit = {
+    if (this.headers.map(_._1).contains(name)) {
+      logger.warn(s"Header $name already present")
     }
+    this.headers += (name -> value)
   }
 
   def transform(ar: AsyncResult): AsyncResult = {
@@ -47,15 +58,27 @@ class MutableState(var status: HttpResponseStatus,
   }
 
   def mergeTo(x: CommonResponse): CommonResponse = {
-    new CommonResponse(
+    val cs = cookies.map { c =>
+      (HttpHeaderNames.SET_COOKIE.toString, c)
+    }
+    CommonResponse(
       status = status,
       contentType = contentType,
-      content = x.content
+      content = x.content,
+      headers = cs ++ headers
     )
   }
 
   override def toString: String = {
     s"$status $contentType"
+  }
+
+  private def check(value: FilledStates.Value, oldV: String, newV: String): Unit = {
+    if (filledStates.contains(value)) {
+      logger.warn(s"Double changing in $value: $oldV->$newV")
+    } else {
+      filledStates += value
+    }
   }
 }
 object MutableState {
@@ -65,6 +88,8 @@ object MutableState {
   }
   def empty(clazz: Class[_]) = new MutableState(HttpResponseStatus.OK,
     "text/plain",
+    AB[String](),
+    AB[(String, String)](),
     clazz
   )
 }

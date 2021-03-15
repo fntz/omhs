@@ -119,6 +119,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .processKeepAlive(isKeepAlive, request)
       .withServer(ServerVersion, setup.sendServerHeader)
+      .withXSSProtection(setup.sendXSSProtection)
 
     ctx.write(response) // empty first
 
@@ -138,8 +139,8 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
 
   private def write(ctx: ChannelHandlerContext,
                     request: FullHttpRequest,
-                     isKeepAlive: Boolean,
-                     userResponse: CommonResponse): ChannelFuture = {
+                    isKeepAlive: Boolean,
+                    userResponse: CommonResponse): ChannelFuture = {
 
     val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
       .processKeepAlive(isKeepAlive, request)
@@ -149,6 +150,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withLength(userResponse.content.length)
       .withServer(ServerVersion, setup.sendServerHeader)
+      .withXSSProtection(setup.sendXSSProtection)
 
     val f = ctx.writeAndFlush(route.rewrite(response))
 

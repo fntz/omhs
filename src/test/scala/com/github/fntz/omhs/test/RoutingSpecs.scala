@@ -3,11 +3,12 @@ package com.github.fntz.omhs.test
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.streams.ChunkedOutputStream
+import com.github.fntz.omhs.util.AdditionalHeaders
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie}
+import io.netty.handler.codec.http.cookie.{ClientCookieEncoder, Cookie, DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
 import io.netty.handler.codec.http.multipart.FileUpload
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
@@ -213,25 +214,71 @@ class RoutingSpecs extends Specification with AfterAll {
     import moar._
     val r18 = get("test" / string) ~> route { (x: String) =>
       if (x == "foo") {
+        implicit val enc = ServerCookieEncoder.STRICT
+        val d = new DefaultCookie("test", "bar")
+        d.setDomain("example.com")
+        setCookie(d)
+        setCookie("a", "b")
         status(200)
+        setHeader("x-test", "foo")
+        setHeader("x-ooo", "qwe")
         contentType("application/javascript")
         "ok"
       } else {
         status(404)
         contentType("x-type/none")
+        setHeader("foo", "bar")
         "not_found"
       }
     }
     "run with route#1" in new RouteTest(r18, "/test/foo") {
       status ==== HttpResponseStatus.OK
       contentType ==== "application/javascript"
+      val cs = response.headers().get(HttpHeaderNames.SET_COOKIE)
+      val cookies = ServerCookieDecoder.STRICT.decode(cs)
+      cookies.size ==== 2
+      response.headers().get("x-test") ==== "foo"
+      response.headers().get("x-ooo") ==== "qwe"
+      Option(response.headers().get("foo")) must beNone
       content ==== "ok"
     }
 
     "run with route#2" in new RouteTest(r18, "/test/foo1") {
       status ==== HttpResponseStatus.NOT_FOUND
+      response.headers().get("foo") ==== "bar"
+      Option(response.headers().get("x-test")) must beNone
+      Option(response.headers().get("x-ooo")) must beNone
       contentType ==== "x-type/none"
       content ==== "not_found"
+    }
+  }
+
+  "setup" should {
+    import AdditionalHeaders._
+    val r = get("test") ~> {() => "done"}
+
+    "xss-protection" should {
+      "enable" in new RouteTest(r, "/test") {
+        response.headers().get(xssProtection) ==== xssProtectionValue
+      }
+
+      "disable" in new RouteTest(r, "/test", isStream = false,
+        Setup.default.withSendXSSProtection(false)
+      ) {
+        Option(response.headers().get(xssProtection)) must beNone
+      }
+    }
+
+    "server header" should {
+      "enable" in new RouteTest(r, "/test") {
+        response.headers().get(HttpHeaderNames.SERVER) must contain("netty")
+      }
+
+      "disable" in new RouteTest(r, "/test", isStream = false,
+        Setup.default.withSendServerHeader(false)
+      ) {
+        Option(response.headers().get(HttpHeaderNames.SERVER)) must beNone
+      }
     }
   }
 
@@ -241,9 +288,12 @@ class RoutingSpecs extends Specification with AfterAll {
     )
   }
 
-  private class RouteTest(rule: ExecutableRule, path: String, isStream: Boolean = false) extends Scope {
+  private class RouteTest(rule: ExecutableRule, path: String,
+                          isStream: Boolean = false,
+                          setup: Setup = Setup.default
+                         ) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
-    val ro = (new Route).addRule(rule).toHandler
+    val ro = (new Route).addRule(rule).toHandler(setup)
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
     channel.pipeline()
       .addFirst(new LoggingHandler(LogLevel.DEBUG))
@@ -257,20 +307,22 @@ class RoutingSpecs extends Specification with AfterAll {
     var contentType = "test/test"
     var content = ""
     var messagesSize = channel.outboundMessages().size
+    var response: DefaultHttpResponse = null
     if (isStream) {
       import scala.collection.JavaConverters._
       channel.outboundMessages().asScala.collect {
         case httpContent: DefaultHttpContent =>
           content = content + httpContent.content().toString(CharsetUtil.UTF_8)
-        case response: DefaultHttpResponse =>
-          status = response.status()
-          contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
+        case resp: DefaultHttpResponse =>
+          status = resp.status()
+          contentType = resp.headers().get(HttpHeaderNames.CONTENT_TYPE)
+          response = resp
       }
     } else {
-      val response: DefaultFullHttpResponse = channel.readOutbound()
+      response = channel.readOutbound()
       status = response.status()
       contentType = response.headers().get(HttpHeaderNames.CONTENT_TYPE)
-      content = response.content().toString(CharsetUtil.UTF_8)
+      content = response.asInstanceOf[DefaultFullHttpResponse].content().toString(CharsetUtil.UTF_8)
     }
   }
 

@@ -144,11 +144,19 @@ import moar._
 
 val rule = get("test" / string) ~> route { (x: String) => 
   if (x == "foo") {
+    implicit val enc = ServerCookieEncoder.STRICT // need for setting cookie
     status(200)
+    setHeader("foo", "bar")
+    setCookie("asd", "qwe")
+    val c = new DefaultCookie("a", "b")
+    c.setDomain("example.com")
+    setCookie(c)
+    setHeader("x-header", "v-value")
     contentType("apllication/custom-type")
     "done" 
   } else {
     status(400)
+    setHeader("y-header", "y-value")
     contentType("application/custom-another-type")
     "not-found"
   }

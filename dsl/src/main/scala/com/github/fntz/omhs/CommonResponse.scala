@@ -16,7 +16,7 @@ case class CommonResponse(
                            status: HttpResponseStatus,
                            contentType: String,
                            content: Array[Byte],
-                           headers: Map[String, String] = Map.empty
+                           headers: Iterable[(String, String)] = Map.empty
                          ) extends Response {
   def withHeaders(add: Map[String, String]): CommonResponse = {
     copy(headers = headers ++ add)

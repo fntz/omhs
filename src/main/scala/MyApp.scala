@@ -9,6 +9,7 @@ import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
 import com.github.fntz.omhs.streams.ChunkedOutputStream
+import io.netty.handler.codec.http.cookie.{DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -96,15 +97,16 @@ object MyApp extends App {
 //
 // }
 
+  implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / "foo") ~> { () =>
-    "done"
+  val k = get("test" / "foo") ~> route { (stream: ChunkedOutputStream) =>
+    stream << "asd".getBytes()
   }
-  val k1 = get("test" / "foo" << header("test")) ~> {() =>
-    "done1"
-  }
+  // X-XSS-Protection: 1; mode=block
 
-  val route1 = new Route().addRule(k).addRule(k1)
+  val route1 = new Route().addRule(k)
+
+  val z = ServerCookieEncoder.STRICT.encode()
 
   OMHSServer.run(9000, route1.toHandler)
 
