@@ -1,17 +1,17 @@
-package com.github.fntz.omhs
+package com.github.fntz.omhs.handlers
 
-import com.github.fntz.omhs.internal.{ExecutableRule, FileDef, ParamDef, ParamsParser, ParseResult, StreamDef}
+import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util.{CollectionsConverters, ResponseImplicits, UtilImplicits}
+import com.github.fntz.omhs._
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.util.concurrent.{Future, GenericFutureListener}
 import io.netty.util.Version
+import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
-import java.net.InetSocketAddress
 import java.time.ZonedDateTime
 import scala.language.existentials
 
@@ -19,8 +19,8 @@ import scala.language.existentials
 case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
   import OMHSHttpHandler._
-  import UtilImplicits._
   import ResponseImplicits._
+  import UtilImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
@@ -47,12 +47,12 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
             } catch {
               case t: Throwable =>
                 logger.warn("Failed to call function", t)
-                ResourceResultContainer(files, fail(UnhandledException(t)))
+                handlers.ResourceResultContainer(files, fail(UnhandledException(t)))
             }
 
           case _ =>
             logger.warn(s"No matched route for ${request.uri()}")
-            ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
+            handlers.ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
         }
 
         result.asyncResult.onComplete {

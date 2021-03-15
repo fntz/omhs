@@ -1,5 +1,6 @@
 package com.github.fntz.omhs
 
+import com.github.fntz.omhs.handlers.OMHSHttpHandler
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.util.OverlapDetector
 import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}

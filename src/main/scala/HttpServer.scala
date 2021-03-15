@@ -38,6 +38,7 @@ object HttpServer {
         override def initChannel(ch: SocketChannel): Unit = {
           ssl match {
             case Some(x) =>
+
               ch.pipeline()
                 .addLast(x.newHandler(ch.alloc()), new Http2OrHttpHandler)
             case None =>
