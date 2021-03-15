@@ -104,11 +104,13 @@ object MyApp extends App {
   }
   // X-XSS-Protection: 1; mode=block
 
-  val route1 = new Route().addRule(k)
+//  val route1 = new Route().addRule(k)
 
-  val z = ServerCookieEncoder.STRICT.encode()
+  HttpServer.run(9000)
 
-  OMHSServer.run(9000, route1.toHandler)
+//  val z = ServerCookieEncoder.STRICT.encode()
+//
+//  OMHSServer.run(9000, route1.toHandler)
 
 //  HttpServer.run(9000)
 

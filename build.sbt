@@ -5,6 +5,8 @@ val supportedVersions = Seq(scala12, scala13)
 
 version := "0.0.1-SNAPSHOT"
 
+val nettyVersion = "4.1.60.Final"
+
 ThisBuild / organization := "com.github.fntz"
 ThisBuild / version      := version.value
 ThisBuild / scalaVersion := scala12
@@ -27,7 +29,10 @@ val opts = Seq(
   scalacOptions in Test ++= Seq("-Yrangepos")
 )
 
-val netty = Seq("io.netty" % "netty-codec-http" % "4.1.59.Final")
+val netty = Seq(
+  "io.netty" % "netty-codec-http" % nettyVersion,
+  "io.netty" % "netty-codec-http2" % nettyVersion
+)
 
 val logback = Seq("ch.qos.logback"  %  "logback-classic"    % "1.2.3")
 

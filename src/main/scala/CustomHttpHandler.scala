@@ -15,22 +15,7 @@ class CustomHttpHandler extends ChannelInboundHandlerAdapter {
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
       case request: FullHttpRequest =>
-        val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-        response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/octet-stream")
-        ctx.write(response)
 
-//        val stream = new ChunkedOutputStream(ctx, 4)
-//        stream.write("asdd".getBytes)
-//        stream.write("123".getBytes)
-//        stream.write("done".getBytes)
-//        val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
-//          .addListener(new GenericFutureListener[Future[_ >: Void]] {
-//            override def operationComplete(future: Future[_ >: Void]): Unit = {
-//              stream.close()
-//            }
-//          })
-//          .addListener(ChannelFutureListener.CLOSE)
 
         if (!HttpUtil.isKeepAlive(request)) {
           //f.addListener(ChannelFutureListener.CLOSE)
