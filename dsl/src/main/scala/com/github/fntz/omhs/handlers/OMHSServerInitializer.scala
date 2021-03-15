@@ -8,7 +8,7 @@ import io.netty.handler.codec.http2.{Http2CodecUtil, Http2FrameCodecBuilder, Htt
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.AsciiString
-
+import org.slf4j.LoggerFactory
 
 class OMHSServerInitializer(sslContext: Option[SslContext],
                             setup: Setup,
@@ -16,7 +16,10 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
                             pipeLineChanges: ChannelPipeline => ChannelPipeline
                            ) extends ChannelInitializer[SocketChannel] {
 
+  private val logger = LoggerFactory.getLogger(getClass)
+
   override def initChannel(ch: SocketChannel): Unit = {
+    logger.debug(s"http2: ${setup.mode.isH2}, ssl: ${sslContext.isDefined}")
     if (setup.mode.isH2) {
       sslContext match {
         case Some(ssl) => configureSsl(ch, ssl)
