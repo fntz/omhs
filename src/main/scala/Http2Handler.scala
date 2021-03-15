@@ -2,6 +2,9 @@ import io.netty.buffer.Unpooled.{copiedBuffer, unreleasableBuffer}
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2._
+import io.netty.buffer.{ByteBuf, ByteBufUtil}
+import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.http2.{DefaultHttp2Headers, Http2Headers}
 
 class Http2Handler(
                   decoder: Http2ConnectionDecoder,
@@ -13,6 +16,7 @@ class Http2Handler(
   import Http2Handler._
 
   override def userEventTriggered(ctx: ChannelHandlerContext, evt: Any): Unit = {
+    println("$"*100)
     evt match {
       case upgrade: HttpServerUpgradeHandler.UpgradeEvent =>
         onHeadersRead(ctx, 1, http1Headers2Http2Headers(upgrade.upgradeRequest()), 0, true)
@@ -21,11 +25,8 @@ class Http2Handler(
     super.userEventTriggered(ctx, evt)
   }
 
-  import io.netty.buffer.{ByteBuf, ByteBufUtil}
-  import io.netty.channel.ChannelHandlerContext
-  import io.netty.handler.codec.http2.{DefaultHttp2Headers, Http2Headers}
-
   private def sendResponse(ctx: ChannelHandlerContext, streamId: Int, payload: ByteBuf): Unit = { // Send a frame for the response status
+    println("^"*100)
     val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText)
     encoder.writeHeaders(ctx, streamId, headers, 0, false, ctx.newPromise)
     encoder.writeData(ctx, streamId, payload, 0, true, ctx.newPromise)
@@ -54,6 +55,7 @@ class Http2Handler(
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) = {
+    println("~"*100)
     super.exceptionCaught(ctx, cause)
     cause.printStackTrace()
     ctx.close()

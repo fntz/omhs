@@ -33,16 +33,17 @@ object HttpServer {
     b.group(group)
       .channel(classOf[NioServerSocketChannel])
       .handler(new LoggingHandler(LogLevel.INFO))
-      .childHandler(new ChannelInitializer[SocketChannel] {
-        override def initChannel(ch: SocketChannel): Unit = {
-          val p = ch.pipeline()
-          p.addLast("http2-initializer", new Http2Initializer(ssl))
-//          ch.pipeline().addLast("codec", new HttpServerCodec())
-//          ch.pipeline().addLast("aggregator",
-//            new HttpObjectAggregator(512*1024))
-          p.addLast(new CustomHttpHandler)
-        }
-      })
+      .childHandler(new Http2Initializer(ssl))
+//      .childHandler(new ChannelInitializer[SocketChannel] {
+//        override def initChannel(ch: SocketChannel): Unit = {
+//          val p = ch.pipeline()
+//          p.addLast("http2-initializer", new Http2Initializer(ssl))
+////          ch.pipeline().addLast("codec", new HttpServerCodec())
+////          ch.pipeline().addLast("aggregator",
+////            new HttpObjectAggregator(512*1024))
+////          p.addLast(new CustomHttpHandler)
+//        }
+//      })
 
     val f = b.bind(port).sync()
     f.channel().closeFuture().sync()

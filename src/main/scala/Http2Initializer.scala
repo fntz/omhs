@@ -1,10 +1,11 @@
-import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodecFactory
+import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http.{HttpMessage, HttpObjectAggregator, HttpServerCodec, HttpServerUpgradeHandler}
-import io.netty.handler.codec.http2.{CleartextHttp2ServerUpgradeHandler, Http2CodecUtil, Http2ServerUpgradeCodec}
+import io.netty.handler.codec.http2.CleartextHttp2ServerUpgradeHandler
 import io.netty.handler.ssl.SslContext
-import io.netty.util.{AsciiString, ReferenceCountUtil}
+import io.netty.handler.codec.http2.{Http2CodecUtil, Http2ServerUpgradeCodec}
+import io.netty.util.AsciiString
+import io.netty.util.ReferenceCountUtil
 
 class Http2Initializer(val ssl: Option[SslContext], maxContentLength: Int = 16*1024) extends ChannelInitializer[SocketChannel] {
   override def initChannel(ch: SocketChannel): Unit = {
@@ -19,11 +20,6 @@ class Http2Initializer(val ssl: Option[SslContext], maxContentLength: Int = 16*1
   private def configureSsl(ch: SocketChannel, ctx: SslContext): Unit = {
     ch.pipeline().addLast(ctx.newHandler(ch.alloc()), new Http2OrHttpHandler)
   }
-
-  import io.netty.handler.codec.http.HttpServerUpgradeHandler.UpgradeCodecFactory
-  import io.netty.handler.codec.http2.Http2CodecUtil
-  import io.netty.handler.codec.http2.Http2ServerUpgradeCodec
-  import io.netty.util.AsciiString
 
   private def configureClearText(ch: SocketChannel) = {
     val p = ch.pipeline()
