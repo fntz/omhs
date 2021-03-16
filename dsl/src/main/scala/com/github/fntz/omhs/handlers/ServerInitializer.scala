@@ -11,10 +11,10 @@ import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.AsciiString
 import org.slf4j.LoggerFactory
 
-class OMHSServerInitializer(sslContext: Option[SslContext],
-                            setup: Setup,
-                            handler: HttpHandler,
-                            pipeLineChanges: ChannelPipeline => ChannelPipeline
+class ServerInitializer(sslContext: Option[SslContext],
+                        setup: Setup,
+                        handler: HttpHandler,
+                        pipeLineChanges: ChannelPipeline => ChannelPipeline
                            ) extends ChannelInitializer[SocketChannel] {
 
   private val logger = LoggerFactory.getLogger(getClass)
@@ -23,7 +23,8 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
     logger.debug(s"http2: ${setup.mode.isH2}, ssl: ${sslContext.isDefined}")
     if (setup.mode.isH2) {
       sslContext match {
-        case Some(ssl) => configureSsl(ch, ssl)
+        case Some(ssl) =>
+          configureSsl(ch, ssl)
         case _ =>
           configureClearText(ch)
       }
@@ -49,6 +50,7 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
     ch.pipeline().addLast(
       ssl.newHandler(ch.alloc()),
       new HttpMixedHandler(setup, handler))
+      pipeLineChanges(ch.pipeline())
   }
 
   private def configureClearText(ch: SocketChannel): Unit = {

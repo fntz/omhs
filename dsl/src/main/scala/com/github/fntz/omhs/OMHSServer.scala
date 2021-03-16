@@ -1,6 +1,6 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.handlers.{HttpHandler, OMHSServerInitializer}
+import com.github.fntz.omhs.handlers.{HttpHandler, ServerInitializer}
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
@@ -18,7 +18,7 @@ object OMHSServer {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  type C2C = ChannelPipeline => ChannelPipeline
+  type C2C = ChannelPipeline => ChannelPipeline // todo remove
   type S2S = ServerBootstrap => ServerBootstrap
 
   def noServerBootstrapChanges: S2S = (s: ServerBootstrap) => s
@@ -53,7 +53,7 @@ object OMHSServer {
         .channel(classOf[NioServerSocketChannel])
         .childHandler(new ChannelInitializer[SocketChannel] {
           override def initChannel(ch: SocketChannel): Unit = {
-            new OMHSServerInitializer(sslContext, setup, handler, pipeLineChanges)
+            new ServerInitializer(sslContext, setup, handler, pipeLineChanges)
           }
         })
       val f = serverBootstrapChanges(b).bind(address).sync()
