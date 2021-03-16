@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs.Setup
+import com.github.fntz.omhs.handlers.http2.Http2MessageDecoder
 import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, ChannelPipeline, SimpleChannelInboundHandler}
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.{HttpContentCompressor, HttpMessage, HttpObjectAggregator, HttpServerCodec, HttpServerUpgradeHandler}
@@ -24,7 +25,7 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
       sslContext match {
         case Some(ssl) => configureSsl(ch, ssl)
         case _ =>
-          configurePlain(ch)
+          configureClearText(ch)
       }
     } else {
       // plain
@@ -50,7 +51,7 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
       new HttpMixedHandler(setup, handler))
   }
 
-  private def configurePlain(ch: SocketChannel): Unit = {
+  private def configureClearText(ch: SocketChannel): Unit = {
     val p = ch.pipeline()
     val codec = new HttpServerCodec()
     p.addLast(codec)
@@ -59,6 +60,7 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
+            new Http2MessageDecoder(),
             new Http2Handler(setup)
           )
         } else {

@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs.Setup
+import com.github.fntz.omhs.handlers.http2.Http2MessageDecoder
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.codec.http2.Http2FrameCodecBuilder
@@ -15,6 +16,7 @@ class HttpMixedHandler(setup: Setup, handler: HttpHandler)
       case APN.HTTP_2 =>
         ctx.pipeline.addLast(
           Http2FrameCodecBuilder.forServer().build(),
+          new Http2MessageDecoder(),
           new Http2Handler(setup)
         )
       case APN.HTTP_1_1 =>

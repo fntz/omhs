@@ -6,6 +6,9 @@ import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2HeadersF
 
 import java.util
 
+/**
+ * save header/data frames from Http2 and pass into pipeline
+ */
 class Http2MessageDecoder extends MessageToMessageDecoder[Http2Frame] {
 
   private val current = new MutableHttp2Message()

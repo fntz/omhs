@@ -8,13 +8,13 @@ class MutableHttp2Message {
   private var headers = AB[DefaultHttp2HeadersFrame]()
   private var datas = AB[DefaultHttp2DataFrame]()
 
-  def isEmpty = headers.isEmpty && datas.isEmpty
+  def isEmpty: Boolean = headers.isEmpty && datas.isEmpty
 
-  def pushData(x: DefaultHttp2DataFrame) = {
+  def pushData(x: DefaultHttp2DataFrame): Unit = {
     datas += x
   }
 
-  def pushHeader(x: DefaultHttp2HeadersFrame) = {
+  def pushHeader(x: DefaultHttp2HeadersFrame): Unit = {
     headers += x
   }
 
