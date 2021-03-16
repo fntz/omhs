@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.swagger
 
-import com.github.fntz.omhs.handlers.OMHSHttpHandler
+import com.github.fntz.omhs.handlers.HttpHandler
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.{Route, Setup}
 
@@ -32,8 +32,8 @@ object SwaggerImplicits {
   }
 
   implicit class SwaggerRouteExt(val s: SwaggerRoute) extends AnyVal {
-    def toHandler: OMHSHttpHandler = toHandler(Setup.default)
-    def toHandler(setup: Setup): OMHSHttpHandler = new OMHSHttpHandler(s.route, setup)
+    def toHandler: HttpHandler = toHandler(Setup.default)
+    def toHandler(setup: Setup): HttpHandler = new HttpHandler(s.route, setup)
   }
 
 

@@ -12,6 +12,7 @@ class HttpVSelector
     if (ApplicationProtocolNames.HTTP_2 == protocol) {
       ctx.pipeline.addLast(
         Http2FrameCodecBuilder.forServer().build(),
+        new CustomHttp2MessageDecoder(),
         new Http2ServerHandler
       )
       return

@@ -1,6 +1,6 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.handlers.{OMHSHttpHandler, OMHSServerInitializer}
+import com.github.fntz.omhs.handlers.{HttpHandler, OMHSServerInitializer}
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
@@ -39,7 +39,7 @@ object OMHSServer {
   }
 
   def run(address: InetSocketAddress,
-          handler: OMHSHttpHandler,
+          handler: HttpHandler,
           sslContext: Option[SslContext],
           pipeLineChanges: C2C,
           serverBootstrapChanges: S2S
@@ -65,7 +65,7 @@ object OMHSServer {
   }
 
   def run(host: String, port: Int,
-          handler: OMHSHttpHandler,
+          handler: HttpHandler,
           sslContext: Option[SslContext],
           pipeLineChanges: C2C,
           serverBootstrapChanges: S2S
@@ -80,7 +80,7 @@ object OMHSServer {
   }
 
   def run(port: Int,
-          handler: OMHSHttpHandler,
+          handler: HttpHandler,
           sslContext: Option[SslContext],
           pipeLineChanges: C2C = noPipelineChanges,
           serverBootstrapChanges: S2S = noServerBootstrapChanges

@@ -22,7 +22,6 @@ class HttpSInitializer(ssl: Option[SslContext]) extends ChannelInitializer[Socke
     p.addLast(codec)
     p.addLast(new HttpServerUpgradeHandler(codec, new HttpServerUpgradeHandler.UpgradeCodecFactory {
       override def newUpgradeCodec(protocol: CharSequence): HttpServerUpgradeHandler.UpgradeCodec = {
-        println("@"*100)
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
@@ -47,6 +46,7 @@ class HttpSInitializer(ssl: Option[SslContext]) extends ChannelInitializer[Socke
   def configureSsl(sslContext: SslContext, ch: SocketChannel) = {
     ch.pipeline().addLast(
       sslContext.newHandler(ch.alloc()),
+      new CustomHttp2MessageDecoder(),
       new HttpVSelector())
   }
 }

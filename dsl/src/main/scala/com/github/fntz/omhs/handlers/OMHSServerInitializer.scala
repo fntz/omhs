@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 
 class OMHSServerInitializer(sslContext: Option[SslContext],
                             setup: Setup,
-                            handler: OMHSHttpHandler,
+                            handler: HttpHandler,
                             pipeLineChanges: ChannelPipeline => ChannelPipeline
                            ) extends ChannelInitializer[SocketChannel] {
 
@@ -59,7 +59,7 @@ class OMHSServerInitializer(sslContext: Option[SslContext],
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
-            new OMHSHttp2Handler(setup)
+            new Http2Handler(setup)
           )
         } else {
           null

@@ -1,6 +1,6 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.handlers.OMHSHttpHandler
+import com.github.fntz.omhs.handlers.HttpHandler
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.util.OverlapDetector
 import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}
@@ -120,19 +120,19 @@ class Route {
    * Convert to netty Handler
    * @return OMHSHttpHandler
    */
-  def toHandler: OMHSHttpHandler = toHandler(Setup.default)
+  def toHandler: HttpHandler = toHandler(Setup.default)
 
   /**
    * Convert to netty Handler
    * @param setup - common application setup
    * @return
    */
-  def toHandler(setup: Setup): OMHSHttpHandler = {
+  def toHandler(setup: Setup): HttpHandler = {
     current.foreach { rule =>
       logger.debug(s"Define ${rule.method} -> ${rule.rule.currentUrl}")
     }
     OverlapDetector.detect(current.map(_.rule))
-    new OMHSHttpHandler(this, setup)
+    new HttpHandler(this, setup)
   }
 
   override def toString: String = {

@@ -17,9 +17,9 @@ import scala.language.existentials
 
 // tood rename to http1.1 handler ~
 @Sharable
-case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
+case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
-  import OMHSHttpHandler._
+  import HttpHandler._
   import ResponseImplicits._
   import UtilImplicits._
 
@@ -174,7 +174,7 @@ case class OMHSHttpHandler(route: Route, setup: Setup) extends ChannelInboundHan
   }
 }
 
-object OMHSHttpHandler {
+object HttpHandler {
 
   import CollectionsConverters._
 
