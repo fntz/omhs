@@ -2,9 +2,9 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs.Setup
 import com.github.fntz.omhs.handlers.http2.Http2MessageDecoder
-import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, ChannelPipeline, SimpleChannelInboundHandler}
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.{HttpContentCompressor, HttpMessage, HttpObjectAggregator, HttpServerCodec, HttpServerUpgradeHandler}
+import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
+import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2.{Http2CodecUtil, Http2FrameCodecBuilder, Http2ServerUpgradeCodec}
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.stream.ChunkedWriteHandler
@@ -13,8 +13,7 @@ import org.slf4j.LoggerFactory
 
 class ServerInitializer(sslContext: Option[SslContext],
                         setup: Setup,
-                        handler: HttpHandler,
-                        pipeLineChanges: ChannelPipeline => ChannelPipeline
+                        handler: HttpHandler
                       ) extends ChannelInitializer[SocketChannel] {
 
   private val logger = LoggerFactory.getLogger(getClass)
@@ -37,8 +36,6 @@ class ServerInitializer(sslContext: Option[SslContext],
       p.addLast("codec", new HttpServerCodec())
       p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
 
-      pipeLineChanges(p)
-
       if (setup.enableCompression) {
         p.addLast("compressor", new HttpContentCompressor())
       }
@@ -49,8 +46,8 @@ class ServerInitializer(sslContext: Option[SslContext],
   private def configureSsl(ch: SocketChannel, ssl: SslContext): Unit = {
     ch.pipeline().addLast(
       ssl.newHandler(ch.alloc()),
-      new HttpMixedHandler(handler))
-      pipeLineChanges(ch.pipeline())
+      new HttpMixedHandler(handler)
+    )
   }
 
   private def configureClearText(ch: SocketChannel): Unit = {

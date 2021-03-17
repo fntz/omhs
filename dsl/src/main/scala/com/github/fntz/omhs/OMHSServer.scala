@@ -16,13 +16,9 @@ import java.net.InetSocketAddress
 
 object OMHSServer {
 
-  private val logger = LoggerFactory.getLogger(getClass)
-
-  type C2C = ChannelPipeline => ChannelPipeline // todo remove
   type S2S = ServerBootstrap => ServerBootstrap
 
   def noServerBootstrapChanges: S2S = (s: ServerBootstrap) => s
-  def noPipelineChanges: C2C = (c: ChannelPipeline) => c
 
   def getSslContext(provider: SslProvider): SslContext  = {
     val cert = new SelfSignedCertificate()
@@ -41,7 +37,6 @@ object OMHSServer {
   def run(address: InetSocketAddress,
           handler: HttpHandler,
           sslContext: Option[SslContext],
-          pipeLineChanges: C2C,
           serverBootstrapChanges: S2S
          ): ChannelFuture = {
     val setup = handler.setup
@@ -53,7 +48,7 @@ object OMHSServer {
         .channel(classOf[NioServerSocketChannel])
         .childHandler(new ChannelInitializer[SocketChannel] {
           override def initChannel(ch: SocketChannel): Unit = {
-            ch.pipeline().addLast(new ServerInitializer(sslContext, setup, handler, pipeLineChanges))
+            ch.pipeline().addLast(new ServerInitializer(sslContext, setup, handler))
           }
         })
       val f = serverBootstrapChanges(b).bind(address).sync()
@@ -67,14 +62,12 @@ object OMHSServer {
   def run(host: String, port: Int,
           handler: HttpHandler,
           sslContext: Option[SslContext],
-          pipeLineChanges: C2C,
           serverBootstrapChanges: S2S
          ): ChannelFuture = {
     run(
       address = new InetSocketAddress(host, port),
       handler = handler,
       sslContext = sslContext,
-      pipeLineChanges = pipeLineChanges,
       serverBootstrapChanges = serverBootstrapChanges
     )
   }
@@ -82,14 +75,12 @@ object OMHSServer {
   def run(port: Int,
           handler: HttpHandler,
           sslContext: Option[SslContext],
-          pipeLineChanges: C2C = noPipelineChanges,
           serverBootstrapChanges: S2S = noServerBootstrapChanges
          ): ChannelFuture = {
     run(
       address = new InetSocketAddress("127.0.0.1", port),
       handler = handler,
       sslContext = sslContext,
-      pipeLineChanges = pipeLineChanges,
       serverBootstrapChanges = serverBootstrapChanges
     )
   }

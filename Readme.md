@@ -194,9 +194,6 @@ OMHSServer.run(9000, route.toHandler)
 OMHSServer.run(
     port = 9000, 
     handler = route.toHandler,
-    pipeLineChanges = (p: ChannelPipeline) => {
-        p.addLast(...)
-    },
     serverBootstrapChanges = (s: ServerBootstrap) => {
         s.options(...).childOptions(...)
     }
