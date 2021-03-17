@@ -542,7 +542,8 @@ private[omhs] object RoutingImpl {
     }
 
     if (tokens.size != actualFunctionParameters.size && !isEmptyFunction) {
-      c.error(focus, "Args lengths are not the same")
+      c.error(focus, s"Args lengths are not the same. " +
+        s"function has ${actualFunctionParameters.size} params, route definition parsed to ${tokens.size}")
     }
 
     // otherwise just ignore all parameters

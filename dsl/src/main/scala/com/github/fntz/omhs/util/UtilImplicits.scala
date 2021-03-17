@@ -13,9 +13,13 @@ import java.net.InetSocketAddress
 private[omhs] object UtilImplicits {
 
   implicit class RuleImplicits(val rule: Rule) extends AnyVal {
-    def toDefs(request: FullHttpRequest, remoteAddress: RemoteAddress, setup: Setup): List[CurrentHttpRequestDef] = {
+    def toDefs(request: FullHttpRequest,
+               remoteAddress: RemoteAddress,
+               setup: Setup,
+               isHttp2: Boolean
+              ): List[CurrentHttpRequestDef] = {
       if (rule.isNeedToPassCurrentRequest) {
-        val currentRequest = CurrentHttpRequest(request, remoteAddress, setup)
+        val currentRequest = CurrentHttpRequest(request, remoteAddress, setup, isHttp2)
         List(CurrentHttpRequestDef(currentRequest))
       } else {
         Nil
@@ -34,7 +38,8 @@ private[omhs] object UtilImplicits {
         } else {
           Nil
         }
-        additionalDefs ++ rule.toDefs(request, remoteAddress, setup) ++ streamDef
+        additionalDefs ++ rule.toDefs(request,
+          remoteAddress, setup, http2Stream.isDefined) ++ streamDef
       }
     }
   }

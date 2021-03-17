@@ -100,8 +100,8 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / *) ~> { (xs: List[String]) =>
-    s"asd: ${xs.mkString(", ")}"
+  val k = get("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
+    s"asd: ${req.isHttp2}"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }
