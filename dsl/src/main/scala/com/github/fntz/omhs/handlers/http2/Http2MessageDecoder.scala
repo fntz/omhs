@@ -16,13 +16,13 @@ class Http2MessageDecoder extends MessageToMessageDecoder[Http2Frame] {
   override def decode(ctx: ChannelHandlerContext, msg: Http2Frame, out: util.List[AnyRef]): Unit = {
     msg match {
       case x: DefaultHttp2HeadersFrame =>
-        current.pushHeader(x)
+        current.set(x)
         if (x.isEndStream) {
           out.add(current.toAggregated(x.stream()))
         }
 
       case x: DefaultHttp2DataFrame =>
-        current.pushData(x)
+        current.set(x)
         if (x.isEndStream) {
           out.add(current.toAggregated(x.stream()))
         }

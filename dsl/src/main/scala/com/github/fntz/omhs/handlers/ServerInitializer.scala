@@ -15,7 +15,7 @@ class ServerInitializer(sslContext: Option[SslContext],
                         setup: Setup,
                         handler: HttpHandler,
                         pipeLineChanges: ChannelPipeline => ChannelPipeline
-                           ) extends ChannelInitializer[SocketChannel] {
+                      ) extends ChannelInitializer[SocketChannel] {
 
   private val logger = LoggerFactory.getLogger(getClass)
 

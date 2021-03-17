@@ -3,12 +3,12 @@ package com.github.fntz.omhs.handlers
 import com.github.fntz.omhs.Setup
 import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
 import io.netty.buffer.Unpooled
-import io.netty.channel.{ChannelDuplexHandler, ChannelHandlerContext}
+import io.netty.channel.{ChannelDuplexHandler, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2HeadersFrame}
 import io.netty.util.{CharsetUtil, ReferenceCountUtil}
 
-class Http2Handler(setup: Setup) extends ChannelDuplexHandler {
+class Http2Handler(setup: Setup) extends ChannelInboundHandlerAdapter {
   import Http2Handler._
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Any): Unit = {
