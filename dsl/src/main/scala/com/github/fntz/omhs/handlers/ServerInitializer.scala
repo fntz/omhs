@@ -46,7 +46,7 @@ class ServerInitializer(sslContext: Option[SslContext],
   private def configureSsl(ch: SocketChannel, ssl: SslContext): Unit = {
     ch.pipeline().addLast(
       ssl.newHandler(ch.alloc()),
-      new HttpMixedHandler(handler)
+      new HttpMixedHandler(handler, setup)
     )
   }
 
@@ -54,6 +54,7 @@ class ServerInitializer(sslContext: Option[SslContext],
     val p = ch.pipeline()
     val codec = new HttpServerCodec()
     p.addLast(codec)
+    p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
     p.addLast(new HttpServerUpgradeHandler(codec, new HttpServerUpgradeHandler.UpgradeCodecFactory {
       override def newUpgradeCodec(protocol: CharSequence): HttpServerUpgradeHandler.UpgradeCodec = {
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
@@ -76,5 +77,8 @@ class ServerInitializer(sslContext: Option[SslContext],
         ctx.fireChannelRead(msg)
       }
     })
+    if (setup.enableCompression) {
+      p.addLast("compressor", new HttpContentCompressor())
+    }
   }
 }
