@@ -19,11 +19,6 @@ object Http2HeadersImplicits {
       current
     }
 
-    def chunked: Http2Headers = {
-      current.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
-      current
-    }
-
     def withLength(length: Int): Http2Headers = {
       current.set(HttpHeaderNames.CONTENT_LENGTH, length.toString)
       current

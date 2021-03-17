@@ -101,9 +101,9 @@ object MyApp extends App {
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
   val k = get("test" / "foo") ~> { (stream: ChunkedOutputStream) =>
-    stream << "asd"
-    stream << "123"
-    stream << "qqq"
+    stream << "asd"*100
+    stream << "123"*100
+    stream << "qqq"*100
   }
 
   val route1 = new Route().addRule(k)

@@ -9,7 +9,7 @@ import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, HttpConversionUtil}
+import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream, HttpConversionUtil}
 import io.netty.util.{CharsetUtil, Version}
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
@@ -36,7 +36,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         ctx.writeAndFlush(route.rewrite(continue))
 
       case request: FullHttpRequest =>
-        val result = process(ctx, request)
+        val result = process(ctx, request, None)
 
         result.asyncResult.onComplete {
           case outResponse: CommonResponse =>
@@ -63,7 +63,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
           agg.data.content(),
           true
         )
-        val result = process(ctx, request)
+        val result = process(ctx, request, Some(agg.stream))
         result.asyncResult.onComplete {
           case outResponse: CommonResponse =>
             write2(
@@ -85,13 +85,16 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     }
   }
 
-  private def process(ctx: ChannelHandlerContext, request: FullHttpRequest): ResourceResultContainer = {
+  private def process(ctx: ChannelHandlerContext,
+                      request: FullHttpRequest,
+                      http2Stream: Option[Http2FrameStream]
+                     ): ResourceResultContainer = {
     val remoteAddress = ctx.remoteAddress(request.headers())
     logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
 
     findRule(request) match {
       case Some((r, ParseResult(_, defs))) =>
-        val materialized = r.rule.materialize(ctx, request, remoteAddress, setup)
+        val materialized = r.rule.materialize(ctx, request, remoteAddress, setup, http2Stream)
         val files = fetchFilesToRelease(materialized)
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
@@ -167,11 +170,13 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
         .withDate(ZonedDateTime.now().format(setup.timeFormatter))
         .withServer(ServerVersion, setup.sendServerHeader)
-        .chunked
 
       ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
+      ctx.write(new DefaultHttp2DataFrame(content, false).stream(agg.stream))
 
       stream.flush()
+
+      ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
 
       val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
         .addListener(new GenericFutureListener[Future[_ >: Void]] {

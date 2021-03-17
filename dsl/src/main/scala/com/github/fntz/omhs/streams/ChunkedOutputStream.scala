@@ -10,7 +10,9 @@ import java.io.OutputStream
 
 // based on: https://gist.github.com/codingtony/6564901
 case class ChunkedOutputStream(private val context: ChannelHandlerContext,
-                               private val chunkSize: Int) extends OutputStream {
+                               private val chunkSize: Int,
+                               private val http2FrameStream: Option[Http2FrameStream]
+                              ) extends OutputStream {
 
   private val buffer = Unpooled.buffer(0, chunkSize)
 
@@ -54,17 +56,20 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext,
   }
 
   override def flush(): Unit = {
-    context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
+    http2FrameStream match {
+      case Some(h2Stream) =>
+        // is end ?
+        println(s"-----------> ${buffer.toString(CharsetUtil.UTF_8)}")
+        context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), false)
+          .stream(h2Stream))
+      case None =>
+        context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
+    }
+
     buffer.clear()
     super.flush()
   }
 
-  def flush2(stream: Http2FrameStream): Unit = {
-    context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), true)
-      .stream(stream))
-    buffer.clear()
-    super.flush()
-  }
 
 
 }

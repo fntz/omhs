@@ -6,7 +6,7 @@ import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieDecoder}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders}
-import io.netty.handler.codec.http2.{DefaultHttp2Headers, DefaultHttp2HeadersFrame}
+import io.netty.handler.codec.http2.{DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream}
 
 import java.net.InetSocketAddress
 
@@ -25,11 +25,12 @@ private[omhs] object UtilImplicits {
     def materialize(ctx: ChannelHandlerContext,
                     request: FullHttpRequest,
                     remoteAddress: RemoteAddress,
-                    setup: Setup
+                    setup: Setup,
+                    http2Stream: Option[Http2FrameStream]
                    ): Either[UnhandledReason, List[ParamDef[_]]] = {
       RequestHelper.fetchAdditionalDefs(request, rule, setup).map { additionalDefs =>
         val streamDef = if (rule.isNeedToStream) {
-          List(StreamDef(ChunkedOutputStream(ctx, setup.chunkSize)))
+          List(StreamDef(ChunkedOutputStream(ctx, setup.chunkSize, http2Stream)))
         } else {
           Nil
         }
