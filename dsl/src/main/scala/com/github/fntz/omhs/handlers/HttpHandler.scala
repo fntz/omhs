@@ -4,10 +4,12 @@ import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util._
 import com.github.fntz.omhs._
+import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
+import io.netty.handler.codec.http2.HttpConversionUtil
 import io.netty.util.Version
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
@@ -27,34 +29,15 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
   private val unhanded = route.currentUnhandled
 
+
+
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
       case request: FullHttpRequest if HttpUtil.is100ContinueExpected(request) =>
         ctx.writeAndFlush(route.rewrite(continue))
 
       case request: FullHttpRequest =>
-        val remoteAddress = ctx.remoteAddress(request.headers())
-        logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
-
-        val result = findRule(request) match {
-          case Some((r, ParseResult(_, defs))) =>
-            val materialized = r.rule.materialize(ctx, request, remoteAddress, setup)
-            val files = fetchFilesToRelease(materialized)
-            try {
-              val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
-                .map(r.run)
-                .fold(fail, identity)
-              ResourceResultContainer(files, asyncResult)
-            } catch {
-              case t: Throwable =>
-                logger.warn("Failed to call function", t)
-                handlers.ResourceResultContainer(files, fail(UnhandledException(t)))
-            }
-
-          case _ =>
-            logger.warn(s"No matched route for ${request.uri()}")
-            handlers.ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
-        }
+        val result = process(ctx, request)
 
         result.asyncResult.onComplete {
           case outResponse: CommonResponse =>
@@ -74,9 +57,44 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
             ).addListener(fileCleaner(result.files))
         }
 
+      case agg: AggregatedHttp2Message =>
+        val request = HttpConversionUtil.toFullHttpRequest(
+          agg.stream.id(),
+          agg.headers.headers(),
+          agg.data.content(),
+          true
+        )
+        val result = process(ctx, request)
+
+
 
       case _ =>
         super.channelRead(ctx, msg)
+    }
+  }
+
+  private def process(ctx: ChannelHandlerContext, request: FullHttpRequest): ResourceResultContainer = {
+    val remoteAddress = ctx.remoteAddress(request.headers())
+    logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
+
+    findRule(request) match {
+      case Some((r, ParseResult(_, defs))) =>
+        val materialized = r.rule.materialize(ctx, request, remoteAddress, setup)
+        val files = fetchFilesToRelease(materialized)
+        try {
+          val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
+            .map(r.run)
+            .fold(fail, identity)
+          ResourceResultContainer(files, asyncResult)
+        } catch {
+          case t: Throwable =>
+            logger.warn("Failed to call function", t)
+            handlers.ResourceResultContainer(files, fail(UnhandledException(t)))
+        }
+
+      case _ =>
+        logger.warn(s"No matched route for ${request.uri()}")
+        handlers.ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
     }
   }
 
