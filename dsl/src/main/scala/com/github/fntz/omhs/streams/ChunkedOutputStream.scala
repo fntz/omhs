@@ -69,6 +69,4 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext,
     super.flush()
   }
 
-
-
 }

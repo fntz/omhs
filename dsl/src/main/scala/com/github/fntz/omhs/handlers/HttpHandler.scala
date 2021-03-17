@@ -98,20 +98,14 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         val files = fetchFilesToRelease(materialized)
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
-            .map { x =>
-              // if user wants to stream data, I should send empty response first
-              val hasStream = materialized.getOrElse(Nil).collectFirst {
-                case _: StreamDef => true
-              }.getOrElse(false)
-              if (hasStream) {
-                http2Stream match {
-                  case Some(stream) =>
-                    writeEmptyOnStream2(ctx, stream)
-                  case _ =>
-                    writeEmptyOnStream(ctx, request)
-                }
-              }
-              r.run(x)
+            .map { params =>
+              beforeStreaming(
+                ctx = ctx,
+                request = request,
+                http2Stream = http2Stream,
+                materialized = materialized
+              )
+              r.run(params)
             }
             .fold(fail, identity)
           ResourceResultContainer(files, asyncResult)
@@ -152,6 +146,27 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     AsyncResult.completed(unhanded.apply(reason))
   }
 
+  private def beforeStreaming(
+                               ctx: ChannelHandlerContext,
+                               request: FullHttpRequest,
+                               http2Stream: Option[Http2FrameStream],
+                               materialized: Either[UnhandledReason, List[ParamDef[_]]]
+                             ): Unit = {
+    // if user wants to stream data, I should send empty response first
+    val hasStream = materialized.getOrElse(Nil).collectFirst {
+      case _: StreamDef => true
+    }.getOrElse(false)
+    if (hasStream) {
+      logger.debug("Streaming detected, write empty response")
+      http2Stream match {
+        case Some(stream) =>
+          writeEmptyOnStream2(ctx, stream)
+        case _ =>
+          writeEmptyOnStream(ctx, request)
+      }
+    }
+  }
+
   private def write2(
                       ctx: ChannelHandlerContext,
                       agg: AggregatedHttp2Message,
@@ -186,21 +201,14 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
                       agg: AggregatedHttp2Message,
                       stream: ChunkedOutputStream
                     ): ChannelFuture = {
-    try {
-      stream.flush()
+    stream.flush()
 
-      ctx.write(new DefaultHttp2DataFrame(Unpooled.EMPTY_BUFFER, true)
-        .stream(agg.stream)).addListener(new GenericFutureListener[Future[_ >: Void]] {
-        override def operationComplete(future: Future[_ >: Void]): Unit = {
-          stream.close()
-        }
-      })
-    } catch {
-      case ex: Throwable =>
-        println("@"*100)
-        println(ex)
-        ???
-    }
+    ctx.write(new DefaultHttp2DataFrame(Unpooled.EMPTY_BUFFER, true)
+      .stream(agg.stream)).addListener(new GenericFutureListener[Future[_ >: Void]] {
+      override def operationComplete(future: Future[_ >: Void]): Unit = {
+        stream.close()
+      }
+    })
   }
 
 

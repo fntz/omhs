@@ -58,7 +58,6 @@ object OMHSServer {
         .childHandler(new ChannelInitializer[SocketChannel] {
           override def initChannel(ch: SocketChannel): Unit = {
             ch.pipeline()
-              .addFirst(new LoggingHandler(LogLevel.DEBUG))
               .addLast(new ServerInitializer(sslContext, setup, handler))
           }
         })
