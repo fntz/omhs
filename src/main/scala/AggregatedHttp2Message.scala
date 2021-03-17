@@ -3,7 +3,7 @@ import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2HeadersF
 case class AggregatedHttp2Message(
                                    streamId: Int,
                                    stream: Http2FrameStream,
-                                   data: Vector[DefaultHttp2DataFrame],
-                                  headers: Vector[DefaultHttp2HeadersFrame]) {
+                                   data: DefaultHttp2DataFrame,
+                                  headers: DefaultHttp2HeadersFrame) {
 
 }

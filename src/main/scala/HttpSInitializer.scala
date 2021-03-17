@@ -1,7 +1,7 @@
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http.{HttpMessage, HttpServerCodec, HttpServerUpgradeHandler}
-import io.netty.handler.codec.http2.{Http2CodecUtil, Http2FrameCodecBuilder, Http2ServerUpgradeCodec}
+import io.netty.handler.codec.http2.{DefaultHttp2Connection, Http2CodecUtil, Http2FrameCodecBuilder, Http2ServerUpgradeCodec, InboundHttp2ToHttpAdapter, InboundHttp2ToHttpAdapterBuilder}
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.stream.ChunkedWriteHandler
 import io.netty.util.AsciiString
@@ -44,6 +44,7 @@ class HttpSInitializer(ssl: Option[SslContext]) extends ChannelInitializer[Socke
   }
 
   def configureSsl(sslContext: SslContext, ch: SocketChannel) = {
+    val conn = new DefaultHttp2Connection(true)
     ch.pipeline().addLast(
       sslContext.newHandler(ch.alloc()),
       new CustomHttp2MessageDecoder(),

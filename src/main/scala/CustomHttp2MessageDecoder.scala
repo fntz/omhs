@@ -1,30 +1,31 @@
+import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.MessageToMessageDecoder
-import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2HeadersFrame, Http2Frame, Http2FrameStream}
+import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2HeadersFrame, EmptyHttp2Headers, Http2Frame, Http2FrameStream}
+import jdk.internal.net.http.common.Log.headers
 
-import scala.collection.mutable.{ArrayBuffer => AB}
 import java.util
 
 class MutableHttp2Message {
-  private var headers = AB[DefaultHttp2HeadersFrame]()
-  private var datas = AB[DefaultHttp2DataFrame]()
+  private var header: DefaultHttp2HeadersFrame =
+    new DefaultHttp2HeadersFrame(EmptyHttp2Headers.INSTANCE)
+  private var data: DefaultHttp2DataFrame =
+    new DefaultHttp2DataFrame(Unpooled.EMPTY_BUFFER)
 
-  def isEmpty = headers.isEmpty && datas.isEmpty
-
-  def pushData(x: DefaultHttp2DataFrame) = {
-    datas += x
+  def set(x: DefaultHttp2DataFrame) = {
+    data = x
   }
 
-  def pushHeader(x: DefaultHttp2HeadersFrame) = {
-    headers += x
+  def set(x: DefaultHttp2HeadersFrame) = {
+    header = x
   }
 
   def toAggregated(streamId: Int, stream: Http2FrameStream): AggregatedHttp2Message = {
     AggregatedHttp2Message(
       streamId = streamId,
       stream = stream,
-      data = datas.toVector,
-      headers = headers.toVector
+      data = data,
+      headers = header
     )
   }
 }
@@ -36,18 +37,19 @@ class CustomHttp2MessageDecoder extends MessageToMessageDecoder[Http2Frame] {
   override def decode(ctx: ChannelHandlerContext, msg: Http2Frame, out: util.List[AnyRef]): Unit = {
     msg match {
       case x: DefaultHttp2HeadersFrame =>
-        keeper.pushHeader(x)
+        keeper.set(x)
         if (x.isEndStream) {
           out.add(keeper.toAggregated(x.stream().id(), x.stream()))
         }
 
       case x: DefaultHttp2DataFrame =>
-        keeper.pushData(x)
+        keeper.set(x)
         if (x.isEndStream) {
           out.add(keeper.toAggregated(x.stream().id(), x.stream()))
         }
 
       case _ =>
+        println(s"==========> $msg")
         out.add(msg)
     }
 
