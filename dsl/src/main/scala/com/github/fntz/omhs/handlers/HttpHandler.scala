@@ -9,7 +9,7 @@ import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http2.HttpConversionUtil
+import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, HttpConversionUtil}
 import io.netty.util.Version
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
@@ -24,12 +24,11 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   import ResponseImplicits._
   import UtilImplicits._
   import ChannelHandlerContextImplicits._
+  import Http2HeadersImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
   private val unhanded = route.currentUnhandled
-
-
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
@@ -65,8 +64,17 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
           true
         )
         val result = process(ctx, request)
+        result.asyncResult.onComplete {
+          case outResponse: CommonResponse =>
+            write2(
+              ctx = ctx,
+              agg = agg,
+              userResponse = outResponse
+            ).addListener(fileCleaner(result.files))
 
-
+          case streamResponse: StreamResponse =>
+            ???
+        }
 
       case _ =>
         super.channelRead(ctx, msg)
@@ -122,6 +130,26 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   private def fail(reason: UnhandledReason): AsyncResult = {
     AsyncResult.completed(unhanded.apply(reason))
   }
+
+  private def write2(
+                      ctx: ChannelHandlerContext,
+                      agg: AggregatedHttp2Message,
+                      userResponse: CommonResponse
+                    ): ChannelFuture = {
+    val content = Unpooled.copiedBuffer(userResponse.content)
+    content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
+
+    val headers = new DefaultHttp2Headers().status(userResponse.status.codeAsText())
+      .withContentType(userResponse.contentType)
+      .withUserHeaders(userResponse.headers)
+      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+      .withLength(userResponse.content.length)
+      .withServer(ServerVersion, setup.sendServerHeader)
+
+    ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
+    ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
+  }
+
 
   private def write(
                      ctx: ChannelHandlerContext,
@@ -201,6 +229,7 @@ object HttpHandler {
     .map { v => s"netty-${v.artifactVersion()}"}
     .getOrElse("unknown")
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
+
   private def empty = new DefaultFullHttpResponse(
     HttpVersion.HTTP_1_1,
     HttpResponseStatus.OK,

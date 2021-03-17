@@ -53,7 +53,7 @@ object OMHSServer {
         .channel(classOf[NioServerSocketChannel])
         .childHandler(new ChannelInitializer[SocketChannel] {
           override def initChannel(ch: SocketChannel): Unit = {
-            new ServerInitializer(sslContext, setup, handler, pipeLineChanges)
+            ch.pipeline().addLast(new ServerInitializer(sslContext, setup, handler, pipeLineChanges))
           }
         })
       val f = serverBootstrapChanges(b).bind(address).sync()

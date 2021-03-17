@@ -33,6 +33,10 @@ case class Setup(
   def withSendServerHeader(flag: Boolean): Setup = {
     copy(sendServerHeader = flag)
   }
+
+  def h2: Setup = {
+    copy(mode = WorkModes.Http2)
+  }
 }
 object Setup {
   val default: Setup = Setup(

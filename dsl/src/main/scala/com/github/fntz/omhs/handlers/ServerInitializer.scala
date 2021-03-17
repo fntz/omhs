@@ -49,7 +49,7 @@ class ServerInitializer(sslContext: Option[SslContext],
   private def configureSsl(ch: SocketChannel, ssl: SslContext): Unit = {
     ch.pipeline().addLast(
       ssl.newHandler(ch.alloc()),
-      new HttpMixedHandler(setup, handler))
+      new HttpMixedHandler(handler))
       pipeLineChanges(ch.pipeline())
   }
 
@@ -63,7 +63,7 @@ class ServerInitializer(sslContext: Option[SslContext],
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
             new Http2MessageDecoder(),
-            new Http2Handler(setup)
+            handler
           )
         } else {
           null
