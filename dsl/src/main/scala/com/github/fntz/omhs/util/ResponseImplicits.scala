@@ -4,7 +4,7 @@ import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeader
 
 private [omhs] object ResponseImplicits {
   import CollectionsConverters._
-  import AdditionalHeaders._
+  import AdditionalHeadersConstants._
 
   implicit class HttpHeadersImplicits(val response: HttpResponse) extends AnyVal {
     def withContentType(contentType: String): HttpResponse = {

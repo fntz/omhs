@@ -2,22 +2,34 @@ package com.github.fntz.omhs.streams
 
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.http.DefaultHttpContent
+import io.netty.handler.codec.http.{DefaultHttpContent, HttpResponseStatus}
+import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream}
+import io.netty.util.CharsetUtil
 
 import java.io.OutputStream
 
-// based is: https://gist.github.com/codingtony/6564901
-case class ChunkedOutputStream(private val context: ChannelHandlerContext, private val chunkSize: Int) extends OutputStream {
+// based on: https://gist.github.com/codingtony/6564901
+case class ChunkedOutputStream(private val context: ChannelHandlerContext,
+                               private val chunkSize: Int,
+                               private val http2FrameStream: Option[Http2FrameStream]
+                              ) extends OutputStream {
 
   private val buffer = Unpooled.buffer(0, chunkSize)
 
   override def write(b: Int): Unit = {
-    flush()
+    if (buffer.maxWritableBytes() < 1) {
+      flush()
+    }
     buffer.writeByte(b)
   }
 
   def <<(b: Array[Byte]): ChunkedOutputStream = {
     write(b)
+    this
+  }
+
+  def <<(b: String): ChunkedOutputStream = {
+    write(b.getBytes(CharsetUtil.UTF_8))
     this
   }
 
@@ -46,7 +58,13 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext, priva
   }
 
   override def flush(): Unit = {
-    context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
+    http2FrameStream match {
+      case Some(h2Stream) =>
+        context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), false).stream(h2Stream))
+      case None =>
+        context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
+
+    }
     buffer.clear()
     super.flush()
   }

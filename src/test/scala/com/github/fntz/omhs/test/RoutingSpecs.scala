@@ -3,7 +3,7 @@ package com.github.fntz.omhs.test
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.streams.ChunkedOutputStream
-import com.github.fntz.omhs.util.AdditionalHeaders
+import com.github.fntz.omhs.util.AdditionalHeadersConstants
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.embedded.EmbeddedChannel
@@ -254,7 +254,7 @@ class RoutingSpecs extends Specification with AfterAll {
   }
 
   "setup" should {
-    import AdditionalHeaders._
+    import AdditionalHeadersConstants._
     val r = get("test") ~> {() => "done"}
 
     "xss-protection" should {

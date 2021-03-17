@@ -1,8 +1,8 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.util.UtilImplicits
+import com.github.fntz.omhs.util.SetupImplicits
 import io.netty.handler.codec.http.cookie.Cookie
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders, HttpMethod, HttpVersion, QueryStringDecoder}
+import io.netty.handler.codec.http._
 import io.netty.util.CharsetUtil
 
 /**
@@ -13,7 +13,7 @@ import io.netty.util.CharsetUtil
  * @param method - current http method
  * @param headers - request headers
  * @param rawBody - body as a string
- * @param version - http protocol version
+ * @param isHttp2 - protocol http2
  * @param remoteAddress - remote address
  * @param cookies - decoded cookies
  */
@@ -24,7 +24,7 @@ case class CurrentHttpRequest(
                              method: HttpMethod,
                              headers: HttpHeaders,
                              rawBody: String,
-                             version: HttpVersion,
+                             isHttp2: Boolean,
                              remoteAddress: RemoteAddress,
                              cookies: Iterable[Cookie]
                       ) {
@@ -59,13 +59,14 @@ case class CurrentHttpRequest(
 
 object CurrentHttpRequest {
 
-  import UtilImplicits._
+  import SetupImplicits._
 
   private val AjaxHeaderValue = "xmlhttprequest"
 
   def apply(request: FullHttpRequest,
             remoteAddress: RemoteAddress,
-            setup: Setup
+            setup: Setup,
+            isHttp2: Boolean
            ): CurrentHttpRequest = {
     val decoder = new QueryStringDecoder(request.uri)
     val cookies = setup.decode(request)
@@ -76,7 +77,7 @@ object CurrentHttpRequest {
       method = request.method(),
       headers = request.headers(),
       rawBody = request.content.toString(CharsetUtil.UTF_8),
-      version = request.protocolVersion(),
+      isHttp2 = isHttp2,
       remoteAddress = remoteAddress,
       cookies = cookies
     )

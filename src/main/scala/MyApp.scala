@@ -1,4 +1,4 @@
-import com.github.fntz.omhs._
+import com.github.fntz.omhs.{WorkModes, _}
 import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef, StringDef}
 import com.github.fntz.omhs.moar.MutableState
 import io.netty.handler.codec.http.multipart.MixedFileUpload
@@ -10,6 +10,7 @@ import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.{DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
+import io.netty.handler.ssl.SslProvider
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -99,16 +100,20 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / "foo") ~> route { (stream: ChunkedOutputStream) =>
-    stream << "asd".getBytes()
+  val k = get("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
+    s"asd: ${req.isHttp2}"
+//    stream << "123"*100
+//    stream << "qqq"*100
   }
-  // X-XSS-Protection: 1; mode=block
 
   val route1 = new Route().addRule(k)
 
-  val z = ServerCookieEncoder.STRICT.encode()
+//  HttpServer.run(9000)
 
-  OMHSServer.run(9000, route1.toHandler)
+//  val z = ServerCookieEncoder.STRICT.encode()
+//
+  OMHSServer.run(9000, route1.toHandler(Setup.default.h2),
+    Some(OMHSServer.getJdkSslContext))
 
 //  HttpServer.run(9000)
 

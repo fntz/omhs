@@ -383,6 +383,7 @@ private[omhs] object RoutingImpl {
 
   private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
     import c.universe._
+    import Shared._
 
     val logger = new Logger(c)
 
@@ -445,25 +446,7 @@ private[omhs] object RoutingImpl {
       "$times" -> TailToken
     )
 
-    val complex: Vector[String] = Vector("body", "query")
-
-    // because helper methods (query, body, long) in the same package as implicits
-    val banned: Vector[String] =
-      Vector(
-        "StringExt",
-        "PathParamExt",
-        "ExecutableRuleExtensions",
-        "post", "get", "head", "put", "patch", "delete"
-      )
-
-    val ignored = banned ++ complex
-
-    val forbiddenWithoutRoute = Vector("contentType", "status", "setCookie", "setHeader")
-    f.collect {
-      case Select(Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
-        TermName(term)) if forbiddenWithoutRoute.contains(term) =>
-        c.abort(focus, s"`$term` must be wrapped in an `route` block")
-    }
+    guardRoutes(c)(f)
 
     val tokens = c.prefix.tree.collect {
       case Select(
@@ -526,6 +509,8 @@ private[omhs] object RoutingImpl {
          |""".stripMargin
     )
 
+    // order of stream and current-request
+    // todo: simplify
     if (isReqParamNeeded && isStreamNeeded) {
       val size = actualFunctionParameters.size
       val isReqLastOrPenultimate = isReqParam(actualFunctionParameters.last._1) ||
@@ -557,7 +542,8 @@ private[omhs] object RoutingImpl {
     }
 
     if (tokens.size != actualFunctionParameters.size && !isEmptyFunction) {
-      c.error(focus, "Args lengths are not the same")
+      c.error(focus, s"Args lengths are not the same. " +
+        s"function has ${actualFunctionParameters.size} params, route definition parsed to ${tokens.size}")
     }
 
     // otherwise just ignore all parameters
@@ -569,11 +555,6 @@ private[omhs] object RoutingImpl {
           c.abort(focus, s"Incorrect type for `$argName`, " +
             s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
         }
-        //      TODO doesn't work with List[String]
-        //      if (!(fp.typeSymbol.asType.toType =:= at)) {
-        //        c.abort(focus, s"Incorrect type for `$argName`, " +
-        //              s"required: ${at.typeSymbol.name}, given: ${fp}")
-        //      }
       }
     }
 
@@ -666,10 +647,7 @@ private[omhs] object RoutingImpl {
                     case $caseClause =>
                       $callFunction
                     case xs =>
-                      println("======TODO==============")
-                      _root_.com.github.fntz.omhs.AsyncResult.completed(
-                        _root_.com.github.fntz.omhs.CommonResponse.empty
-                      )
+                      throw new IllegalStateException("Incorrect order of arguments")
                   }
                 }
               }

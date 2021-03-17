@@ -36,4 +36,29 @@ private[impl] object Shared {
     }
   }
 
+  def guardRoutes(c: whitebox.Context)(f: c.Tree): Unit = {
+    import c.universe._
+    val forbiddenWithoutRoute = Vector("contentType", "status", "setCookie", "setHeader")
+    f.collect {
+      case Select(Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
+      TermName(term)) if forbiddenWithoutRoute.contains(term) =>
+        c.abort(c.enclosingPosition.focus, s"`$term` must be wrapped in an `route` block")
+    }
+  }
+
+  val complex: Vector[String] = Vector("body", "query")
+
+  // because helper methods (query, body, long) in the same package as implicits
+  val banned: Vector[String] =
+    Vector(
+      "StringExt",
+      "PathParamExt",
+      "ExecutableRuleExtensions",
+      "post", "get", "head", "put", "patch", "delete"
+    )
+
+  val ignored = banned ++ complex
+
+
+
 }

@@ -5,6 +5,8 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
+todo configure timeouts
+505 -  HTTP Version Not Supported
 
 # install:
 
@@ -192,9 +194,6 @@ OMHSServer.run(9000, route.toHandler)
 OMHSServer.run(
     port = 9000, 
     handler = route.toHandler,
-    pipeLineChanges = (p: ChannelPipeline) => {
-        p.addLast(...)
-    },
     serverBootstrapChanges = (s: ServerBootstrap) => {
         s.options(...).childOptions(...)
     }
