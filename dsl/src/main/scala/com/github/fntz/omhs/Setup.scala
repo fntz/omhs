@@ -47,7 +47,7 @@ object Setup {
     cookieDecoderStrategy = CookieDecoderStrategies.Strict,
     maxContentLength = 512*1024,
     enableCompression = true,
-    chunkSize = 1024,
+    chunkSize = 3,
     sendXSSProtection = true,
     mode = WorkModes.Http11
   )

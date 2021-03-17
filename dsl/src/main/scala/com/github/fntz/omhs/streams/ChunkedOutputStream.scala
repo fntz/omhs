@@ -17,7 +17,9 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext,
   private val buffer = Unpooled.buffer(0, chunkSize)
 
   override def write(b: Int): Unit = {
-    flush() // todo check
+    if (buffer.maxWritableBytes() < 1) {
+      flush()
+    }
     buffer.writeByte(b)
   }
 
@@ -58,16 +60,13 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext,
   override def flush(): Unit = {
     http2FrameStream match {
       case Some(h2Stream) =>
-        // is end ?
-//        val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
-//        context.write(new DefaultHttp2HeadersFrame(headers).stream(h2Stream))
-        context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), false)
-          .stream(h2Stream))
+        context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), false).stream(h2Stream))
       case None =>
         context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
-        buffer.clear()
-        super.flush()
+
     }
+    buffer.clear()
+    super.flush()
   }
 
 

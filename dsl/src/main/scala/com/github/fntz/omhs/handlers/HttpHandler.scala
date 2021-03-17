@@ -104,7 +104,12 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
                 case _: StreamDef => true
               }.getOrElse(false)
               if (hasStream) {
-                writeEmptyOnStream(ctx, request)
+                http2Stream match {
+                  case Some(stream) =>
+                    writeEmptyOnStream2(ctx, stream)
+                  case _ =>
+                    writeEmptyOnStream(ctx, request)
+                }
               }
               r.run(x)
             }
@@ -166,34 +171,30 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
   }
 
+  private def writeEmptyOnStream2(ctx: ChannelHandlerContext,
+                                  http2Stream: Http2FrameStream) = {
+    val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
+      .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
+      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+      .withServer(ServerVersion, setup.sendServerHeader)
+
+    ctx.write(new DefaultHttp2HeadersFrame(headers, false).stream(http2Stream))
+  }
+
   private def write2(
                       ctx: ChannelHandlerContext,
                       agg: AggregatedHttp2Message,
                       stream: ChunkedOutputStream
                     ): ChannelFuture = {
     try {
-      val content = Unpooled.copiedBuffer("".getBytes(CharsetUtil.UTF_8))
-      content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
-
-      val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
-        .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
-        .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-        .withServer(ServerVersion, setup.sendServerHeader)
-
-      ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
-      ctx.write(new DefaultHttp2DataFrame(content, false).stream(agg.stream))
-
       stream.flush()
 
-      ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
-
-      val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
-        .addListener(new GenericFutureListener[Future[_ >: Void]] {
-          override def operationComplete(future: Future[_ >: Void]): Unit = {
-            stream.close()
-          }
-        })
-      f
+      ctx.write(new DefaultHttp2DataFrame(Unpooled.EMPTY_BUFFER, true)
+        .stream(agg.stream)).addListener(new GenericFutureListener[Future[_ >: Void]] {
+        override def operationComplete(future: Future[_ >: Void]): Unit = {
+          stream.close()
+        }
+      })
     } catch {
       case ex: Throwable =>
         println("@"*100)
@@ -216,7 +217,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withServer(ServerVersion, setup.sendServerHeader)
       .withXSSProtection(setup.sendXSSProtection)
 
-    ctx.writeAndFlush(response)
+    ctx.write(response) // will be flushed with first chunk
   }
 
   private def write(
