@@ -569,11 +569,6 @@ private[omhs] object RoutingImpl {
           c.abort(focus, s"Incorrect type for `$argName`, " +
             s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
         }
-        //      TODO doesn't work with List[String]
-        //      if (!(fp.typeSymbol.asType.toType =:= at)) {
-        //        c.abort(focus, s"Incorrect type for `$argName`, " +
-        //              s"required: ${at.typeSymbol.name}, given: ${fp}")
-        //      }
       }
     }
 
@@ -666,10 +661,7 @@ private[omhs] object RoutingImpl {
                     case $caseClause =>
                       $callFunction
                     case xs =>
-                      println("======TODO==============")
-                      _root_.com.github.fntz.omhs.AsyncResult.completed(
-                        _root_.com.github.fntz.omhs.CommonResponse.empty
-                      )
+                      throw new IllegalStateException("Incorrect order of arguments")
                   }
                 }
               }

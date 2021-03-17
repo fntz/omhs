@@ -42,7 +42,7 @@ object OMHSServer {
         ApplicationProtocolNames.HTTP_1_1
       )).build()
   }
-  // todo runNow and run diff (block thread)
+
   def run(address: InetSocketAddress,
           handler: HttpHandler,
           sslContext: Option[SslContext],

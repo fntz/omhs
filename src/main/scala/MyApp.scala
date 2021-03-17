@@ -100,8 +100,8 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / "foo") ~> { (stream: ChunkedOutputStream) =>
-    stream << "1234567890"
+  val k = get("test" / *) ~> { (xs: List[String]) =>
+    s"asd: ${xs.mkString(", ")}"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }
