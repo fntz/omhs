@@ -1,11 +1,10 @@
 package com.github.fntz.omhs.util
 
-import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs._
-import io.netty.handler.codec.http.cookie.ServerCookieDecoder
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType
 import io.netty.handler.codec.http.multipart.{HttpPostRequestDecoder, MixedFileUpload}
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, QueryStringDecoder}
+import io.netty.handler.codec.http.{FullHttpRequest, QueryStringDecoder}
 import io.netty.util.CharsetUtil
 
 import scala.language.existentials
@@ -13,7 +12,7 @@ import scala.language.existentials
 private[omhs] object RequestHelper {
 
   import CollectionsConverters._
-  import UtilImplicits._
+  import SetupImplicits._
 
   type E[R] = Either[UnhandledReason, List[R]]
 

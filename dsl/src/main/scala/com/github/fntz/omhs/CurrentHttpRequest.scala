@@ -1,8 +1,8 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.util.UtilImplicits
+import com.github.fntz.omhs.util.SetupImplicits
 import io.netty.handler.codec.http.cookie.Cookie
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders, HttpMethod, HttpVersion, QueryStringDecoder}
+import io.netty.handler.codec.http._
 import io.netty.util.CharsetUtil
 
 /**
@@ -59,7 +59,7 @@ case class CurrentHttpRequest(
 
 object CurrentHttpRequest {
 
-  import UtilImplicits._
+  import SetupImplicits._
 
   private val AjaxHeaderValue = "xmlhttprequest"
 

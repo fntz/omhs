@@ -1,7 +1,6 @@
 package com.github.fntz.omhs.util
 
 import java.util
-import scala.collection.mutable
 import scala.collection.mutable.{Buffer => B, Map => mMap}
 
 private [omhs] object CollectionsConverters {
@@ -37,7 +36,5 @@ private [omhs] object CollectionsConverters {
       col
     }
   }
-
-
 
 }

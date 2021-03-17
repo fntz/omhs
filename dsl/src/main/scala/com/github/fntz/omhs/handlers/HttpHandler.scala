@@ -2,7 +2,7 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.streams.ChunkedOutputStream
-import com.github.fntz.omhs.util.{CollectionsConverters, ResponseImplicits, UtilImplicits}
+import com.github.fntz.omhs.util._
 import com.github.fntz.omhs._
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
@@ -21,6 +21,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   import HttpHandler._
   import ResponseImplicits._
   import UtilImplicits._
+  import ChannelHandlerContextImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
