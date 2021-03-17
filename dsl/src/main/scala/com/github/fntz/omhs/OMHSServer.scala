@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.channel.{ChannelFuture, ChannelInitializer, ChannelPipeline}
 import io.netty.handler.codec.http2.Http2SecurityUtil
+import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.handler.ssl.ApplicationProtocolConfig.{SelectedListenerFailureBehavior, SelectorFailureBehavior}
 import io.netty.handler.ssl.util.SelfSignedCertificate
 import io.netty.handler.ssl._
@@ -56,7 +57,9 @@ object OMHSServer {
         .channel(classOf[NioServerSocketChannel])
         .childHandler(new ChannelInitializer[SocketChannel] {
           override def initChannel(ch: SocketChannel): Unit = {
-            ch.pipeline().addLast(new ServerInitializer(sslContext, setup, handler))
+            ch.pipeline()
+              .addFirst(new LoggingHandler(LogLevel.DEBUG))
+              .addLast(new ServerInitializer(sslContext, setup, handler))
           }
         })
       val f = serverBootstrapChanges(b).bind(address).sync()

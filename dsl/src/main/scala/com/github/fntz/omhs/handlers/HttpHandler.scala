@@ -98,7 +98,16 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         val files = fetchFilesToRelease(materialized)
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
-            .map(r.run)
+            .map { x =>
+              // if user wants to stream data, I should send empty response first
+              val hasStream = materialized.getOrElse(Nil).collectFirst {
+                case _: StreamDef => true
+              }.getOrElse(false)
+              if (hasStream) {
+                writeEmptyOnStream(ctx, request)
+              }
+              r.run(x)
+            }
             .fold(fail, identity)
           ResourceResultContainer(files, asyncResult)
         } catch {
@@ -194,24 +203,28 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   }
 
 
-  private def write(
-                     ctx: ChannelHandlerContext,
-                     request: FullHttpRequest,
-                     isKeepAlive: Boolean,
-                     stream: ChunkedOutputStream
-                   ): ChannelFuture = {
-
+  private def writeEmptyOnStream(ctx: ChannelHandlerContext,
+                                 request: FullHttpRequest
+                                ) = {
     val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
 
     response
       .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
       .chunked
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .processKeepAlive(isKeepAlive, request)
+      .processKeepAlive(HttpUtil.isKeepAlive(request), request)
       .withServer(ServerVersion, setup.sendServerHeader)
       .withXSSProtection(setup.sendXSSProtection)
 
-    ctx.write(response) // empty first
+    ctx.writeAndFlush(response)
+  }
+
+  private def write(
+                     ctx: ChannelHandlerContext,
+                     request: FullHttpRequest,
+                     isKeepAlive: Boolean,
+                     stream: ChunkedOutputStream
+                   ): ChannelFuture = {
 
     stream.flush()
 

@@ -11,7 +11,8 @@ import java.util.Locale
  * @param cookieDecoderStrategy - how to decode cookies @see ServerCookieDecoder
  * @param maxContentLength - max length in aggregated request @see OMHSServer
  * @param enableCompression - use HttpContentCompressor @see OMHSServer
- * @param chunkSize - bytes in every chunk
+ * @param chunkSize - bytes in every chunk. Let's say you set chunkSize into 10, then write 100 bytes,
+ *                  as a result the library will split 100 bytes into 10 responses (100/10)
  * @param sendXSSProtection - @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
  *                            @note only for http1.1
  * @param mode - http2/http1.1 or mixed
@@ -46,7 +47,7 @@ object Setup {
     cookieDecoderStrategy = CookieDecoderStrategies.Strict,
     maxContentLength = 512*1024,
     enableCompression = true,
-    chunkSize = 10,
+    chunkSize = 1024,
     sendXSSProtection = true,
     mode = WorkModes.Http11
   )
