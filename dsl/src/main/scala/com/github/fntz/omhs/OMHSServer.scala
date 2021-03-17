@@ -20,6 +20,14 @@ object OMHSServer {
 
   def noServerBootstrapChanges: S2S = (s: ServerBootstrap) => s
 
+  def getJdkSslContext: SslContext = {
+    getSslContext(SslProvider.JDK)
+  }
+
+  def getOpenSslSslContext: SslContext = {
+    getSslContext(SslProvider.OPENSSL)
+  }
+
   def getSslContext(provider: SslProvider): SslContext  = {
     val cert = new SelfSignedCertificate()
     SslContextBuilder.forServer(cert.certificate(), cert.privateKey())
@@ -33,7 +41,7 @@ object OMHSServer {
         ApplicationProtocolNames.HTTP_1_1
       )).build()
   }
-
+  // todo runNow and run diff (block thread)
   def run(address: InetSocketAddress,
           handler: HttpHandler,
           sslContext: Option[SslContext],

@@ -1,4 +1,4 @@
-package com.github.fntz.omhs.handlers
+package com.github.fntz.omhs
 
 import io.netty.handler.ssl.ApplicationProtocolNames
 

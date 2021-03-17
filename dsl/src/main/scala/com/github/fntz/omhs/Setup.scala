@@ -1,7 +1,5 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.handlers.{WorkMode, WorkModes}
-
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -15,7 +13,9 @@ import java.util.Locale
  * @param enableCompression - use HttpContentCompressor @see OMHSServer
  * @param chunkSize - bytes in every chunk
  * @param sendXSSProtection - @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
- */
+ *                            @note only for http1.1
+ * @param mode - http2/http1.1 or mixed
+ **/
 case class Setup(
                   timeFormatter: DateTimeFormatter,
                   sendServerHeader: Boolean,

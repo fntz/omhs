@@ -1,5 +1,4 @@
-import com.github.fntz.omhs._
-import com.github.fntz.omhs.handlers.WorkModes
+import com.github.fntz.omhs.{WorkModes, _}
 import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef, StringDef}
 import com.github.fntz.omhs.moar.MutableState
 import io.netty.handler.codec.http.multipart.MixedFileUpload
