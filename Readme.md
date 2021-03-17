@@ -5,8 +5,8 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
-todo configure timeouts
-505 -  HTTP Version Not Supported
+todo configure timeouts/message aggregator http2: length -> 413 too large
+505 -  HTTP Version Not Supported ? 
 
 # install:
 
@@ -25,7 +25,7 @@ todo configure timeouts
 ```scala
 import com.github.fntz.omhs.RoutingDSL._
 import com.github.fntz.omhs.AsyncResult
-import AsyncResult.Implicits._ // usefule implicits for string/futures
+import AsyncResult.Implicits._ // useful implicits for string/futures
 // simple methods
 get(string / "test" / uuid) ~> { (x: String, u: UUID) => 
   "done"  
@@ -209,7 +209,6 @@ pass `-Domhs.logLevel=verbose|info|none` to sbt/options
 
 todo:
 * swagger (70% ready)
-* http2 (todo)
 
 ### License: MIT
 
