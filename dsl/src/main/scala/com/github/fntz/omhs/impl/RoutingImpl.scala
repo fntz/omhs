@@ -383,6 +383,7 @@ private[omhs] object RoutingImpl {
 
   private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
     import c.universe._
+    import Shared._
 
     val logger = new Logger(c)
 
@@ -445,25 +446,7 @@ private[omhs] object RoutingImpl {
       "$times" -> TailToken
     )
 
-    val complex: Vector[String] = Vector("body", "query")
-
-    // because helper methods (query, body, long) in the same package as implicits
-    val banned: Vector[String] =
-      Vector(
-        "StringExt",
-        "PathParamExt",
-        "ExecutableRuleExtensions",
-        "post", "get", "head", "put", "patch", "delete"
-      )
-
-    val ignored = banned ++ complex
-
-    val forbiddenWithoutRoute = Vector("contentType", "status", "setCookie", "setHeader")
-    f.collect {
-      case Select(Select(Select(Select(_, TermName("omhs")), TermName("moar")), _),
-        TermName(term)) if forbiddenWithoutRoute.contains(term) =>
-        c.abort(focus, s"`$term` must be wrapped in an `route` block")
-    }
+    guardRoutes(c)(f)
 
     val tokens = c.prefix.tree.collect {
       case Select(
@@ -526,6 +509,8 @@ private[omhs] object RoutingImpl {
          |""".stripMargin
     )
 
+    // order of stream and current-request
+    // todo: simplify
     if (isReqParamNeeded && isStreamNeeded) {
       val size = actualFunctionParameters.size
       val isReqLastOrPenultimate = isReqParam(actualFunctionParameters.last._1) ||
