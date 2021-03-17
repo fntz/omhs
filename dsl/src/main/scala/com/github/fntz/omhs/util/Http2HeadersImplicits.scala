@@ -1,6 +1,6 @@
 package com.github.fntz.omhs.util
 
-import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.{HttpHeaderNames, HttpHeaderValues}
 import io.netty.handler.codec.http2.Http2Headers
 
 object Http2HeadersImplicits {
@@ -18,7 +18,12 @@ object Http2HeadersImplicits {
       current.set(HttpHeaderNames.CONTENT_TYPE, contentType)
       current
     }
-    // todo ??? is it need
+
+    def chunked: Http2Headers = {
+      current.set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
+      current
+    }
+
     def withLength(length: Int): Http2Headers = {
       current.set(HttpHeaderNames.CONTENT_LENGTH, length.toString)
       current

@@ -3,11 +3,14 @@ package com.github.fntz.omhs.streams
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.DefaultHttpContent
+import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, Http2FrameStream}
+import io.netty.util.CharsetUtil
 
 import java.io.OutputStream
 
-// based is: https://gist.github.com/codingtony/6564901
-case class ChunkedOutputStream(private val context: ChannelHandlerContext, private val chunkSize: Int) extends OutputStream {
+// based on: https://gist.github.com/codingtony/6564901
+case class ChunkedOutputStream(private val context: ChannelHandlerContext,
+                               private val chunkSize: Int) extends OutputStream {
 
   private val buffer = Unpooled.buffer(0, chunkSize)
 
@@ -18,6 +21,11 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext, priva
 
   def <<(b: Array[Byte]): ChunkedOutputStream = {
     write(b)
+    this
+  }
+
+  def <<(b: String): ChunkedOutputStream = {
+    write(b.getBytes(CharsetUtil.UTF_8))
     this
   }
 
@@ -50,5 +58,13 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext, priva
     buffer.clear()
     super.flush()
   }
+
+  def flush2(stream: Http2FrameStream): Unit = {
+    context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), true)
+      .stream(stream))
+    buffer.clear()
+    super.flush()
+  }
+
 
 }

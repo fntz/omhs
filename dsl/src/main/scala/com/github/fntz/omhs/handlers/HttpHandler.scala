@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, HttpConversionUtil}
-import io.netty.util.Version
+import io.netty.util.{CharsetUtil, Version}
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
@@ -73,7 +73,11 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
             ).addListener(fileCleaner(result.files))
 
           case streamResponse: StreamResponse =>
-            ???
+            write2(
+              ctx = ctx,
+              agg = agg,
+              stream = streamResponse.stream
+            )
         }
 
       case _ =>
@@ -148,6 +152,40 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
 
     ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
     ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
+  }
+
+  private def write2(
+                      ctx: ChannelHandlerContext,
+                      agg: AggregatedHttp2Message,
+                      stream: ChunkedOutputStream
+                    ): ChannelFuture = {
+    try {
+      val content = Unpooled.copiedBuffer("".getBytes(CharsetUtil.UTF_8))
+      content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
+
+      val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
+        .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
+        .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+        .withServer(ServerVersion, setup.sendServerHeader)
+        .chunked
+
+      ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
+
+      stream.flush()
+
+      val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
+        .addListener(new GenericFutureListener[Future[_ >: Void]] {
+          override def operationComplete(future: Future[_ >: Void]): Unit = {
+            stream.close()
+          }
+        })
+      f
+    } catch {
+      case ex: Throwable =>
+        println("@"*100)
+        println(ex)
+        ???
+    }
   }
 
 

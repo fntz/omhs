@@ -100,10 +100,11 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / "foo") ~> { () =>
-    "asd"
+  val k = get("test" / "foo") ~> { (stream: ChunkedOutputStream) =>
+    stream << "asd"
+    stream << "123"
+    stream << "qqq"
   }
-  // X-XSS-Protection: 1; mode=block
 
   val route1 = new Route().addRule(k)
 
@@ -112,7 +113,7 @@ object MyApp extends App {
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
   OMHSServer.run(9000, route1.toHandler(Setup.default.h2),
-    Some(OMHSServer.getSslContext(SslProvider.JDK)))
+    Some(OMHSServer.getJdkSslContext))
 
 //  HttpServer.run(9000)
 
