@@ -4,7 +4,7 @@ import com.github.fntz.omhs.{AsyncResult, CommonResponse, Route, Rule}
 import io.netty.handler.codec.http.{DefaultFullHttpResponse, HttpMethod}
 
 /**
- * This class describe a function which we should run whene rule is matched
+ * This class describes a function which we should run when a rule is matched
  *  for user-request
  * @param rule - set of restrictions
  */

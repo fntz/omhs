@@ -176,7 +176,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withServer(ServerVersion, setup.sendServerHeader)
 
-    ctx.write(new DefaultHttp2HeadersFrame(headers, true).stream(stream))
+    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
   }
 
   private def write2(
@@ -194,7 +194,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withLength(userResponse.content.length)
       .withServer(ServerVersion, setup.sendServerHeader)
 
-    ctx.write(new DefaultHttp2HeadersFrame(headers).stream(agg.stream))
+    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers).stream(agg.stream)))
     ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
   }
 
@@ -205,7 +205,8 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withServer(ServerVersion, setup.sendServerHeader)
 
-    ctx.write(new DefaultHttp2HeadersFrame(headers, false).stream(http2Stream))
+    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, false)
+      .stream(http2Stream)))
   }
 
   private def write2(
@@ -236,7 +237,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .processKeepAlive(HttpUtil.isKeepAlive(request), request)
       .withServer(ServerVersion, setup.sendServerHeader)
 
-    ctx.write(response) // will be flushed with first chunk
+    ctx.write(route.rewrite(response)) // will be flushed with first chunk
   }
 
   private def write(

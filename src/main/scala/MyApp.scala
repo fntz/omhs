@@ -10,6 +10,7 @@ import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.{DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
+import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame
 import io.netty.handler.ssl.SslProvider
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -109,7 +110,12 @@ object MyApp extends App {
 //    stream << "qqq"*100
   }
 
+  val rewriter = (r: DefaultHttp2HeadersFrame) => {
+    r.headers().set("test", "qwe")
+    r
+  }
   val route1 = new Route().addRule(k)
+    .onEveryHttp2Response(rewriter)
 
 //  HttpServer.run(9000)
 

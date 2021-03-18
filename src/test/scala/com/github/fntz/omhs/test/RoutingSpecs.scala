@@ -268,6 +268,20 @@ class RoutingSpecs extends Specification with AfterAll {
     }
   }
 
+  "rewriter" should {
+    val r = get("test") ~> {() => "done"}
+    "add headers" in new RouteTest(r, "/test", isStream = false,
+      setup = Setup.default,
+      f = (x: HttpResponse) => {
+        x.headers().set("foo", "bar")
+        x
+      }
+    ) {
+      status ==== HttpResponseStatus.OK
+      response.headers().get("foo") ==== "bar"
+    }
+  }
+
   private def req(path: String) = {
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1, HttpMethod.GET, path
@@ -276,10 +290,11 @@ class RoutingSpecs extends Specification with AfterAll {
 
   private class RouteTest(rule: ExecutableRule, path: String,
                           isStream: Boolean = false,
-                          setup: Setup = Setup.default
+                          setup: Setup = Setup.default,
+                          f: HttpResponse => HttpResponse = identity
                          ) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
-    val ro = (new Route).addRule(rule).toHandler(setup)
+    val ro = (new Route).addRule(rule).onEveryHttpResponse(f).toHandler(setup)
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
     channel.pipeline()
       .addFirst(new LoggingHandler(LogLevel.DEBUG))

@@ -4,8 +4,10 @@ import com.github.fntz.omhs.handlers.HttpHandler
 import com.github.fntz.omhs.internal.ExecutableRule
 import com.github.fntz.omhs.util.OverlapDetector
 import io.netty.handler.codec.http.{FullHttpResponse, HttpResponse}
+import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame
 import org.slf4j.LoggerFactory
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer => AB}
 
 /**
@@ -17,6 +19,8 @@ class Route {
   private val rules: AB[ExecutableRule] = new AB[ExecutableRule]()
 
   private var defaultResponseHandler = (response: HttpResponse) => response
+
+  private var defaultHttp2ResponseHandler = (frame: DefaultHttp2HeadersFrame) => frame
 
   private var unhandledDefault = (reason: UnhandledReason) => {
     val result = reason match {
@@ -50,19 +54,48 @@ class Route {
     defaultResponseHandler.apply(response)
 
   /**
+   * this method is internal. I use it inside OMHSHttpHandler
+   * update response with user-defined function
+   * @param frame - DefaultHttp2HeadersFrame before send to client
+   * @return modified response
+   */
+  def rewrite(frame: DefaultHttp2HeadersFrame): DefaultHttp2HeadersFrame =
+    defaultHttp2ResponseHandler.apply(frame)
+
+  /**
    * {{{
    *  val rule = get("test") ~> { "done" }
    *  val route = new Route().addRule(rule)
-   *  route.onEveryResponse((r: FullHttpResponse => {
+   *  route.onEveryHttpResponse((r: FullHttpResponse => {
    *     r.headers().set("foo", "bar")
    *     r
    *  })
    * }}}
    * @param rewriter - function for updating response (add headers for example)
    * @return
+   * @note only for non-streaming responses
    */
-  def onEveryResponse(rewriter: HttpResponse => HttpResponse): Route = {
+  def onEveryHttpResponse(rewriter: HttpResponse => HttpResponse): Route = {
     defaultResponseHandler = rewriter
+    this
+  }
+
+  /**
+   * {{{
+   *  val rule = get("test") ~> { "done" }
+   *  val route = new Route().addRule(rule)
+   *  val rewriter = (frame: DefaultHttp2HeadersFrame) => {
+   *    frame.headers().set("foo", "bar")
+   *    frame
+   *  }
+   *  route.onEveryHttp2Response(rewriter)
+   * }}}
+   * @param frameRewriter - function for updating response (add headers for example)
+   * @return
+   * @note only for non-streaming responses
+   */
+  def onEveryHttp2Response(frameRewriter: DefaultHttp2HeadersFrame => DefaultHttp2HeadersFrame): Route = {
+    defaultHttp2ResponseHandler = frameRewriter
     this
   }
 
@@ -74,6 +107,15 @@ class Route {
   def addRule(exe: ExecutableRule): Route = {
     rules += exe
     this
+  }
+
+  def addRules(exes: Iterable[ExecutableRule]): Route = {
+    rules ++= exes
+    this
+  }
+
+  def :::(exes: Iterable[ExecutableRule]): Route = {
+    addRules(exes)
   }
 
   def ::(other: Route): Route = {
