@@ -60,7 +60,7 @@ class ServerInitializer(sslContext: Option[SslContext],
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
-            new Http2MessageDecoder(),
+            new Http2MessageDecoder(setup.maxContentLength),
             handler
           )
         } else {

@@ -100,7 +100,7 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
+  val k = post("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
     s"asd: ${req.isHttp2}"
 //    stream << "123"*100
 //    stream << "qqq"*100
@@ -113,7 +113,7 @@ object MyApp extends App {
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
   OMHSServer.run(9000, route1.toHandler(Setup.default.h2),
-    None)
+    Some(OMHSServer.getJdkSslContext))
 
 //  HttpServer.run(9000)
 

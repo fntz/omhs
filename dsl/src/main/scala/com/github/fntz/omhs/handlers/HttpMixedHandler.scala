@@ -6,7 +6,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.{HttpServerCodec, HttpObjectAggregator, HttpContentCompressor}
 import io.netty.handler.codec.http2.Http2FrameCodecBuilder
 import io.netty.handler.ssl.{ApplicationProtocolNames => APN, ApplicationProtocolNegotiationHandler => APNH}
-import io.netty.handler.stream.ChunkedWriteHandler
 
 class HttpMixedHandler(handler: HttpHandler, setup: Setup)
   extends APNH(APN.HTTP_1_1) {
@@ -16,7 +15,7 @@ class HttpMixedHandler(handler: HttpHandler, setup: Setup)
       case APN.HTTP_2 =>
         ctx.pipeline.addLast(
           Http2FrameCodecBuilder.forServer().build(),
-          new Http2MessageDecoder(),
+          new Http2MessageDecoder(setup.maxContentLength),
           handler
         )
       case APN.HTTP_1_1 =>

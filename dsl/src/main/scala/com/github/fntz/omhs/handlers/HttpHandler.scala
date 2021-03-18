@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream, HttpConversionUtil}
-import io.netty.util.{CharsetUtil, Version}
+import io.netty.util.Version
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
@@ -79,6 +79,9 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
               stream = streamResponse.stream
             )
         }
+
+      case TooLargeObject(stream) =>
+        write413(ctx, stream)
 
       case _ =>
         super.channelRead(ctx, msg)
@@ -165,6 +168,15 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
           writeEmptyOnStream(ctx, request)
       }
     }
+  }
+
+  private def write413(ctx: ChannelHandlerContext, stream: Http2FrameStream) = {
+    val headers = new DefaultHttp2Headers()
+      .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE.codeAsText())
+      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
+      .withServer(ServerVersion, setup.sendServerHeader)
+
+    ctx.write(new DefaultHttp2HeadersFrame(headers, true).stream(stream))
   }
 
   private def write2(
