@@ -3,7 +3,7 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-version := "0.0.1-SNAPSHOT"
+version := "0.0.2-SNAPSHOT"
 
 val nettyVersion = "4.1.60.Final"
 

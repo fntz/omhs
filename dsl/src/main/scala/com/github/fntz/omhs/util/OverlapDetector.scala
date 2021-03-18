@@ -47,8 +47,10 @@ object OverlapDetector {
               true
             case (Some(_), Some(p2)) if p2.isRestParam =>
               true
-            case (Some(_), Some(_)) =>
+            case (Some(a), Some(b)) if a.name == b.name =>
               rec(index + 1, isDone = false)
+            case (Some(a), Some(b)) =>
+              false
             case _ =>
               false
           }

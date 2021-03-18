@@ -69,6 +69,11 @@ class OverlapDetectorSpecs extends Specification {
         r.path("a").path("b"),
         r.path("a").path("b").path(*)
       ) must beFalse
+
+      isOverlapping(
+        r.path("templates").path(*),
+        r.path("js").path(*)
+      ) must beFalse
     }
   }
 
