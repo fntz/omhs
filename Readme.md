@@ -5,7 +5,6 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
-todo configure timeouts
 505 -  HTTP Version Not Supported ? 
 
 # install:

@@ -10,7 +10,8 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream, HttpConversionUtil}
-import io.netty.util.Version
+import io.netty.handler.timeout.ReadTimeoutException
+import io.netty.util.{AttributeKey, Version}
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
@@ -289,11 +290,8 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = {
-    ctx.writeAndFlush(new DefaultFullHttpResponse(
-      HttpVersion.HTTP_1_1,
-      HttpResponseStatus.INTERNAL_SERVER_ERROR,
-      Unpooled.copiedBuffer(cause.getMessage.getBytes())
-    ))
+    logger.warn(cause.getMessage)
+    ctx.close()
   }
 }
 

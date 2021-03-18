@@ -26,30 +26,30 @@ object MyApp extends App {
 
   case class Person(id: Int, name: String)
 
-  implicit val personJson = Json.format[Person]
-  implicit val personBodyReader = JsonSupport.writer[Person]()
-  implicit val bodyWriter = new BodyWriter[String] {
-    override def write(w: String): CommonResponse = {
-      CommonResponse(
-        200, "text/plain", w
-      )
-    }
-  }
-
-  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
-
-  val q = "asd"
-
-  case class Search(query: String)
-  implicit val queryStringReader = new QueryReader[Search] {
-    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
-      queries.get("query").flatMap(_.headOption).map(Search)
-    }
-  }
-
-  implicit val bodyReader = new BodyReader[Search] {
-    override def read(str: String): Search = Search("dsa")
-  }
+//  implicit val personJson = Json.format[Person]
+//  implicit val personBodyReader = JsonSupport.writer[Person]()
+//  implicit val bodyWriter = new BodyWriter[String] {
+//    override def write(w: String): CommonResponse = {
+//      CommonResponse(
+//        200, "text/plain", w
+//      )
+//    }
+//  }
+//
+//  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
+//
+//  val q = "asd"
+//
+//  case class Search(query: String)
+//  implicit val queryStringReader = new QueryReader[Search] {
+//    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
+//      queries.get("query").flatMap(_.headOption).map(Search)
+//    }
+//  }
+//
+//  implicit val bodyReader = new BodyReader[Search] {
+//    override def read(str: String): Search = Search("dsa")
+//  }
 
   import com.github.fntz.omhs.moar._
 
