@@ -101,7 +101,10 @@ object MyApp extends App {
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
   val k = post("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
-    s"asd: ${req.isHttp2}"
+    import scala.collection.JavaConverters._
+    req.headers.entries().asScala.foreach { x =>
+    }
+    "asd"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }

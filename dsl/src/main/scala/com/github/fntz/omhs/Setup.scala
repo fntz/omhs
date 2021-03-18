@@ -38,6 +38,10 @@ case class Setup(
   def h2: Setup = {
     copy(mode = WorkModes.Http2)
   }
+
+  def h11: Setup = {
+    copy(mode = WorkModes.Http11)
+  }
 }
 object Setup {
   val default: Setup = Setup(
@@ -49,6 +53,6 @@ object Setup {
     enableCompression = true,
     chunkSize = 512,
     sendXSSProtection = true,
-    mode = WorkModes.Http11
+    mode = WorkModes.Http2
   )
 }

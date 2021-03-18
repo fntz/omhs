@@ -28,7 +28,6 @@ class ServerInitializer(sslContext: Option[SslContext],
           configureClearText(ch)
       }
     } else {
-      // plain
       val p = ch.pipeline()
       sslContext.foreach { ssl =>
         p.addLast(ssl.newHandler(ch.alloc()))
