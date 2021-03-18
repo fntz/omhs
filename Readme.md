@@ -73,7 +73,6 @@ implicit val querySearchReader = new QueryReader[SearchQuery] {
 ### Read Body
 
 for reading body from current request need to implement `BodyReader`. 
-If your work with play-json, then your could to add `"com.github.fntz" %% "omhs-play-support" % "0.0.1-SNAPSHOT"` 
 
 ```scala
 case class Person(id: Int)
@@ -87,6 +86,9 @@ and then:
 ```scala
 post("test" <<< body[Person]) ~> { (p: Person) ~> "done" }
 ```
+
+Curently the project supports [play-json](https://github.com/playframework/play-json), 
+and [circle](https://github.com/circe/circe).
 
 ### Files
 
@@ -170,12 +172,14 @@ val rule = get("test" / string) ~> route { (x: String) =>
 
 ```scala
 val customSetup = Setup(
-  timeFormatter = ???,
+  timeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
+    .withZone(ZoneOffset.UTC).withLocale(Locale.US),
   sendServerHeader = false,
   cookieDecoderStrategy = CookieDecoderStrategy.Lax,
   maxContentLength = 512*1024,
   enableCompression = false,
-  chunkSize = 1000
+  chunkSize = 1000,
+  mode = WorkModes.Http2
 )
 ```
 

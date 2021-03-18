@@ -236,7 +236,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .processKeepAlive(HttpUtil.isKeepAlive(request), request)
       .withServer(ServerVersion, setup.sendServerHeader)
-      .withXSSProtection(setup.sendXSSProtection)
 
     ctx.write(response) // will be flushed with first chunk
   }
@@ -275,7 +274,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withLength(userResponse.content.length)
       .withServer(ServerVersion, setup.sendServerHeader)
-      .withXSSProtection(setup.sendXSSProtection)
 
     val f = ctx.writeAndFlush(route.rewrite(response))
 

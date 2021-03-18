@@ -255,18 +255,6 @@ class RoutingSpecs extends Specification with AfterAll {
     import AdditionalHeadersConstants._
     val r = get("test") ~> {() => "done"}
 
-    "xss-protection" should {
-      "enable" in new RouteTest(r, "/test") {
-        response.headers().get(xssProtection) ==== xssProtectionValue
-      }
-
-      "disable" in new RouteTest(r, "/test", isStream = false,
-        Setup.default.withSendXSSProtection(false)
-      ) {
-        Option(response.headers().get(xssProtection)) must beNone
-      }
-    }
-
     "server header" should {
       "enable" in new RouteTest(r, "/test") {
         response.headers().get(HttpHeaderNames.SERVER) must contain("netty")
