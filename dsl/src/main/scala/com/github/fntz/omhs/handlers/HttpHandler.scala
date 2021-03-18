@@ -1,17 +1,16 @@
 package com.github.fntz.omhs.handlers
 
+import com.github.fntz.omhs._
+import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
 import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util._
-import com.github.fntz.omhs._
-import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
-import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream, HttpConversionUtil}
-import io.netty.handler.timeout.ReadTimeoutException
-import io.netty.util.{AttributeKey, Version}
+import io.netty.handler.codec.http2._
+import io.netty.util.Version
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
@@ -21,11 +20,11 @@ import scala.language.existentials
 @Sharable
 case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
+  import ChannelHandlerContextImplicits._
+  import Http2HeadersImplicits._
   import HttpHandler._
   import ResponseImplicits._
   import UtilImplicits._
-  import ChannelHandlerContextImplicits._
-  import Http2HeadersImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
