@@ -102,10 +102,7 @@ object MyApp extends App {
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
   val k = post("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
-    import scala.collection.JavaConverters._
-    req.headers.entries().asScala.foreach { x =>
-    }
-    s"asd + ${System.currentTimeMillis()}"
+    s"asd + ${System.currentTimeMillis()} + ${req.isSsl}"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }
@@ -121,7 +118,7 @@ object MyApp extends App {
 
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
-  OMHSServer.run(9000, route1.toHandler(Setup.default.h11), None)
+  OMHSServer.run(9000, route1.toHandler(Setup.default.h2), None)
 
 //  HttpServer.run(9000)
 

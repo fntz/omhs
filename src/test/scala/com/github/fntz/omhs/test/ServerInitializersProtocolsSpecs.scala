@@ -1,12 +1,11 @@
 package com.github.fntz.omhs.test
 
-import com.github.fntz.omhs.{AsyncResult, CommonResponse, CurrentHttpRequest, OMHSServer, Route, RoutingDSL, Setup}
 import com.github.fntz.omhs.handlers.ServerInitializer
-import com.github.fntz.omhs.internal.ExecutableRule
-import io.netty.buffer.{ByteBuf, ByteBufUtil}
+import com.github.fntz.omhs.{CurrentHttpRequest, Route, RoutingDSL, Setup}
+import io.netty.buffer.ByteBuf
 import io.netty.channel.embedded.EmbeddedChannel
-import io.netty.handler.codec.http.HttpConstants.{CR, LF}
-import io.netty.handler.codec.http.{DefaultFullHttpRequest, DefaultFullHttpResponse, DefaultHttpContent, DefaultHttpResponse, FullHttpRequest, FullHttpResponse, HttpConstants, HttpContentCompressor, HttpHeaderNames, HttpMethod, HttpObjectAggregator, HttpObjectEncoder, HttpRequestDecoder, HttpResponse, HttpResponseEncoder, HttpResponseStatus, HttpServerCodec, HttpVersion}
+import io.netty.handler.codec.http._
+import io.netty.handler.codec.http2._
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.util.CharsetUtil
 import org.specs2.mutable.Specification
@@ -15,7 +14,6 @@ import org.specs2.specification.Scope
 class ServerInitializersProtocolsSpecs extends Specification {
 
   import RoutingDSL._
-  import AsyncResult.Implicits._
 
   private val path = "test"
   private val rule = get(path) ~> {(x: CurrentHttpRequest) =>
@@ -28,8 +26,8 @@ class ServerInitializersProtocolsSpecs extends Specification {
       response must contain(HttpVersion.HTTP_1_1.toString)
     }
 
-    "works with http2" in {
-      success
+    "works with http2" in new MyTest(Setup.default.h2) {
+      response must contain("HTTP/2.0")
     }
   }
 
@@ -44,19 +42,32 @@ class ServerInitializersProtocolsSpecs extends Specification {
     val handler = route.toHandler(setup.withoutCompression)
     val channel = new EmbeddedChannel(
       new LoggingHandler(LogLevel.DEBUG),
-      new ServerInitializer(Some(OMHSServer.getJdkSslContext),
+      new ServerInitializer(None,
         setup.withoutCompression, handler)
     )
+    var response: String = ""
+    if (setup.isH1) {
+      val request = new DefaultFullHttpRequest(
+        HttpVersion.HTTP_1_1, HttpMethod.GET, path
+      )
+      channel.writeInbound(request)
+      val buf: ByteBuf = channel.readOutbound()
+      response = buf.toString(CharsetUtil.UTF_8)
+    } else {
+      val http2Headers = new DefaultHttp2Headers()
+      val data = new DefaultHttp2HeadersFrame(http2Headers, true).stream(
+        new Http2FrameStream {
+          override def id(): Int = 1
 
-    val request = new DefaultFullHttpRequest(
-      HttpVersion.HTTP_1_1, HttpMethod.GET, path
-    )
+          override def state(): Http2Stream.State = Http2Stream.State.OPEN
+        }
+      )
+      channel.writeInbound(data)
+      val result = channel.readInbound()
+      response = s"asd"
+    }
 
-    channel.writeInbound(request)
-    val buf: ByteBuf = channel.readOutbound()
-    val response = buf.toString(CharsetUtil.UTF_8)
+    channel.close().sync()
   }
-
-
 
 }

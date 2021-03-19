@@ -9,6 +9,7 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2._
+import io.netty.handler.ssl.SslHandler
 import org.slf4j.LoggerFactory
 
 import scala.language.existentials
@@ -68,12 +69,14 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
                       request: FullHttpRequest,
                       http2Stream: Option[Http2FrameStream]
                      ): ResourceResultContainer = {
+    val isSsl = Option(ctx.channel().pipeline().get(classOf[SslHandler])).isDefined
     val remoteAddress = ctx.remoteAddress(request.headers())
     logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
 
     request.findRule(byMethod) match {
       case Some((r, ParseResult(_, defs))) =>
-        val materialized = r.rule.materialize(ctx, request, remoteAddress, setup, http2Stream)
+        val materialized = r.rule.materialize(ctx,
+          request, remoteAddress, setup, http2Stream, isSsl)
         val files = materialized.fetchFilesToRelease
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)

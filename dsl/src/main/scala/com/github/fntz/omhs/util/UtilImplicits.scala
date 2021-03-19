@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieDecoder}
 import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpHeaders}
 import io.netty.handler.codec.http2.{DefaultHttp2Headers, DefaultHttp2HeadersFrame, Http2FrameStream}
+import io.netty.handler.ssl.SslHandler
 
 import java.net.InetSocketAddress
 
@@ -24,10 +25,17 @@ private[omhs] object UtilImplicits {
     def toDefs(request: FullHttpRequest,
                remoteAddress: RemoteAddress,
                setup: Setup,
-               isHttp2: Boolean
+               isHttp2: Boolean,
+               isSsl: Boolean
               ): List[CurrentHttpRequestDef] = {
       if (rule.isNeedToPassCurrentRequest) {
-        val currentRequest = CurrentHttpRequest(request, remoteAddress, setup, isHttp2)
+        val currentRequest = CurrentHttpRequest(
+          request = request,
+          remoteAddress = remoteAddress,
+          setup = setup,
+          isHttp2 = isHttp2,
+          isSsl = isSsl
+        )
         List(CurrentHttpRequestDef(currentRequest))
       } else {
         Nil
@@ -38,7 +46,8 @@ private[omhs] object UtilImplicits {
                     request: FullHttpRequest,
                     remoteAddress: RemoteAddress,
                     setup: Setup,
-                    http2Stream: Option[Http2FrameStream]
+                    http2Stream: Option[Http2FrameStream],
+                    isSsl: Boolean
                    ): Either[UnhandledReason, List[ParamDef[_]]] = {
       RequestHelper.fetchAdditionalDefs(request, rule, setup).map { additionalDefs =>
         val streamDef = if (rule.isNeedToStream) {
@@ -47,7 +56,7 @@ private[omhs] object UtilImplicits {
           Nil
         }
         additionalDefs ++ rule.toDefs(request,
-          remoteAddress, setup, http2Stream.isDefined) ++ streamDef
+          remoteAddress, setup, http2Stream.isDefined, isSsl) ++ streamDef
       }
     }
   }
