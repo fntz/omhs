@@ -21,7 +21,6 @@ class HttpMixedHandler(handler: HttpHandler, setup: Setup) extends APNH(APN.HTTP
         val p = ctx.pipeline()
         p.addLast("codec", new HttpServerCodec())
         p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
-
         p.addLast("omhs", handler)
         if (setup.enableCompression) {
           p.addLast("compressor", new HttpContentCompressor())

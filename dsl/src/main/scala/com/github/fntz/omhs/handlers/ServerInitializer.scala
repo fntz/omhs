@@ -2,7 +2,6 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs.Setup
 import com.github.fntz.omhs.handlers.http2.Http2MessageDecoder
-import io.netty.channel.socket.SocketChannel
 import io.netty.channel.{AbstractChannel, ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2.{Http2CodecUtil, Http2FrameCodecBuilder, Http2ServerUpgradeCodec}
@@ -55,7 +54,6 @@ class ServerInitializer(sslContext: Option[SslContext],
     p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
     p.addLast(new HttpServerUpgradeHandler(codec, new HttpServerUpgradeHandler.UpgradeCodecFactory {
       override def newUpgradeCodec(protocol: CharSequence): HttpServerUpgradeHandler.UpgradeCodec = {
-        println("$"*100 + s"--> ${protocol}")
         if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME, protocol)) {
           new Http2ServerUpgradeCodec(
             Http2FrameCodecBuilder.forServer().build(),
