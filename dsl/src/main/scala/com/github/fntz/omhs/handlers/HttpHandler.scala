@@ -2,6 +2,7 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
+import com.github.fntz.omhs.handlers.writers.{Http2ResponseWriter, HttpResponseWriter, ServerVersion}
 import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util._
@@ -25,6 +26,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   import HttpHandler._
   import ResponseImplicits._
   import UtilImplicits._
+  import ServerVersion._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
@@ -37,24 +39,12 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
 
       case request: FullHttpRequest =>
         val result = process(ctx, request, None)
-
-        result.asyncResult.onComplete {
-          case outResponse: CommonResponse =>
-            write(
-              ctx = ctx,
-              request = request,
-              isKeepAlive = HttpUtil.isKeepAlive(request),
-              userResponse = outResponse
-            ).addListener(fileCleaner(result.files))
-
-          case streamResponse: StreamResponse =>
-            write(
-              ctx = ctx,
-              request = request,
-              isKeepAlive = HttpUtil.isKeepAlive(request),
-              stream = streamResponse.stream
-            ).addListener(fileCleaner(result.files))
-        }
+        HttpResponseWriter(
+          route = route,
+          setup = setup,
+          ctx = ctx,
+          request = request
+        ).write(process(ctx, request, None))
 
       case agg: AggregatedHttp2Message =>
         val request = HttpConversionUtil.toFullHttpRequest(
@@ -63,22 +53,12 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
           agg.data.content(),
           true
         )
-        val result = process(ctx, request, Some(agg.stream))
-        result.asyncResult.onComplete {
-          case outResponse: CommonResponse =>
-            write2(
-              ctx = ctx,
-              agg = agg,
-              userResponse = outResponse
-            ).addListener(fileCleaner(result.files))
-
-          case streamResponse: StreamResponse =>
-            write2(
-              ctx = ctx,
-              agg = agg,
-              stream = streamResponse.stream
-            )
-        }
+        Http2ResponseWriter(
+          setup = setup,
+          route = route,
+          ctx = ctx,
+          agg = agg
+        ).write(process(ctx, request, Some(agg.stream)))
 
       case TooLargeObject(stream) =>
         write413(ctx, stream)
@@ -179,25 +159,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
   }
 
-  private def write2(
-                      ctx: ChannelHandlerContext,
-                      agg: AggregatedHttp2Message,
-                      userResponse: CommonResponse
-                    ): ChannelFuture = {
-    val content = Unpooled.copiedBuffer(userResponse.content)
-    content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
-
-    val headers = new DefaultHttp2Headers().status(userResponse.status.codeAsText())
-      .withContentType(userResponse.contentType)
-      .withUserHeaders(userResponse.headers)
-      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .withLength(userResponse.content.length)
-      .withServer(ServerVersion, setup.sendServerHeader)
-
-    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers).stream(agg.stream)))
-    ctx.write(new DefaultHttp2DataFrame(content, true).stream(agg.stream))
-  }
-
   private def writeEmptyOnStream2(ctx: ChannelHandlerContext,
                                   http2Stream: Http2FrameStream) = {
     val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
@@ -208,22 +169,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, false)
       .stream(http2Stream)))
   }
-
-  private def write2(
-                      ctx: ChannelHandlerContext,
-                      agg: AggregatedHttp2Message,
-                      stream: ChunkedOutputStream
-                    ): ChannelFuture = {
-    stream.flush()
-
-    ctx.write(new DefaultHttp2DataFrame(Unpooled.EMPTY_BUFFER, true)
-      .stream(agg.stream)).addListener(new GenericFutureListener[Future[_ >: Void]] {
-      override def operationComplete(future: Future[_ >: Void]): Unit = {
-        stream.close()
-      }
-    })
-  }
-
 
   private def writeEmptyOnStream(ctx: ChannelHandlerContext,
                                  request: FullHttpRequest
@@ -240,49 +185,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     ctx.write(route.rewrite(response)) // will be flushed with first chunk
   }
 
-  private def write(
-                     ctx: ChannelHandlerContext,
-                     request: FullHttpRequest,
-                     isKeepAlive: Boolean,
-                     stream: ChunkedOutputStream
-                   ): ChannelFuture = {
-
-    stream.flush()
-
-    val f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT)
-      .addListener(new GenericFutureListener[Future[_ >: Void]] {
-        override def operationComplete(future: Future[_ >: Void]): Unit = {
-          stream.close()
-        }
-      })
-    if (!isKeepAlive) {
-      f.addListener(ChannelFutureListener.CLOSE)
-    }
-    f
-  }
-
-  private def write(ctx: ChannelHandlerContext,
-                    request: FullHttpRequest,
-                    isKeepAlive: Boolean,
-                    userResponse: CommonResponse): ChannelFuture = {
-
-    val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
-      .processKeepAlive(isKeepAlive, request)
-      .withUserHeaders(userResponse.headers)
-      .setStatus(userResponse.status)
-      .withContentType(userResponse.contentType)
-      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .withLength(userResponse.content.length)
-      .withServer(ServerVersion, setup.sendServerHeader)
-
-    val f = ctx.writeAndFlush(route.rewrite(response))
-
-    if (!isKeepAlive) {
-      f.addListener(ChannelFutureListener.CLOSE)
-    }
-    f
-  }
-
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
     ctx.flush()
   }
@@ -297,17 +199,8 @@ object HttpHandler {
 
   import CollectionsConverters._
 
-  private val currentProject = "omhs"
-  private val ServerVersion = s"$currentProject on " + Version.identify().values.toScala.headOption
-    .map { v => s"netty-${v.artifactVersion()}"}
-    .getOrElse("unknown")
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
 
-  private def empty = new DefaultFullHttpResponse(
-    HttpVersion.HTTP_1_1,
-    HttpResponseStatus.OK,
-    Unpooled.EMPTY_BUFFER
-  )
 }
 
 private case class ResourceResultContainer(

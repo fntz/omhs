@@ -121,7 +121,7 @@ object MyApp extends App {
 
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
-  OMHSServer.run(9000, route1.toHandler(Setup.default.h2),
+  OMHSServer.run(9000, route1.toHandler(Setup.default.h11),
     Some(OMHSServer.getJdkSslContext))
 
 //  HttpServer.run(9000)

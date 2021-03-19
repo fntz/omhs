@@ -5,12 +5,10 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
-505 -  HTTP Version Not Supported ? 
-
 # install:
 
 ```scala
- "com.github.fntz" %% "dsl" % "0.0.1-SNAPSHOT"
+ "com.github.fntz" %% "omhs-dsl" % "0.0.1-SNAPSHOT"
 ```
 
 ### before work: 
@@ -190,13 +188,14 @@ val rule1 = ...
 val rule2 = ...
 val rule3 = ...
 
-val route = new Route().addRule(rule1).addRule(rule2).addRule(rule3)
+val route = new Route().addRules(rule1, rule2, rule3)
 OMHSServer.run(9000, route.toHandler)
 
-// change netty-pipeline or ServerBootstrap
+// you can change ServerBootstrap
 OMHSServer.run(
     port = 9000, 
     handler = route.toHandler,
+    sslContext = Some(OMHSServer.getJdkSslContext),
     serverBootstrapChanges = (s: ServerBootstrap) => {
         s.options(...).childOptions(...)
     }
