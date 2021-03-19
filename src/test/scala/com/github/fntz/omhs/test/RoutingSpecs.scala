@@ -299,7 +299,7 @@ class RoutingSpecs extends Specification with AfterAll {
     channel.pipeline()
       .addFirst(new LoggingHandler(LogLevel.DEBUG))
       .addLast("codec", new HttpRequestDecoder())
-      .addLast("aggregator", new HttpObjectAggregator(512*1024))
+      .addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
       .addLast(ro)
     channels += channel
     val request = makeRequest(path)

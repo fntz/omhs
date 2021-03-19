@@ -105,7 +105,7 @@ object MyApp extends App {
     import scala.collection.JavaConverters._
     req.headers.entries().asScala.foreach { x =>
     }
-    "asd"
+    s"asd + ${System.currentTimeMillis()}"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }
@@ -121,8 +121,7 @@ object MyApp extends App {
 
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
-  OMHSServer.run(9000, route1.toHandler(Setup.default.h11),
-    Some(OMHSServer.getJdkSslContext))
+  OMHSServer.run(9000, route1.toHandler(Setup.default.h11), None)
 
 //  HttpServer.run(9000)
 

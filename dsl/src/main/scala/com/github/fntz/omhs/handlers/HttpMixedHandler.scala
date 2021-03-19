@@ -7,8 +7,7 @@ import io.netty.handler.codec.http.{HttpContentCompressor, HttpObjectAggregator,
 import io.netty.handler.codec.http2.Http2FrameCodecBuilder
 import io.netty.handler.ssl.{ApplicationProtocolNames => APN, ApplicationProtocolNegotiationHandler => APNH}
 
-class HttpMixedHandler(handler: HttpHandler, setup: Setup)
-  extends APNH(APN.HTTP_1_1) {
+class HttpMixedHandler(handler: HttpHandler, setup: Setup) extends APNH(APN.HTTP_1_1) {
 
   override def configurePipeline(ctx: ChannelHandlerContext, protocol: String): Unit = {
     protocol match {
@@ -23,10 +22,10 @@ class HttpMixedHandler(handler: HttpHandler, setup: Setup)
         p.addLast("codec", new HttpServerCodec())
         p.addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
 
+        p.addLast("omhs", handler)
         if (setup.enableCompression) {
           p.addLast("compressor", new HttpContentCompressor())
         }
-        p.addLast("omhs", handler)
 
       case _ =>
         throw new IllegalStateException(s"Unknown protocol: $protocol")

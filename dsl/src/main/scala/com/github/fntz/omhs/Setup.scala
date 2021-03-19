@@ -35,6 +35,10 @@ case class Setup(
   def h11: Setup = {
     copy(mode = WorkModes.Http11)
   }
+
+  def withoutCompression: Setup = {
+    copy(enableCompression = false)
+  }
 }
 object Setup {
   val default: Setup = Setup(
