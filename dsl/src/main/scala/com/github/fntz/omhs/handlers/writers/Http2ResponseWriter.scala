@@ -18,7 +18,7 @@ case class Http2ResponseWriter(route: Route,
                                request: FullHttpRequest,
                                ctx: ChannelHandlerContext,
                                agg: AggregatedHttp2Message
-                ) extends FileCleaner with CommonWriter {
+                ) extends CommonWriter {
 
   import ServerVersionHelper._
   import Http2HeadersImplicits._

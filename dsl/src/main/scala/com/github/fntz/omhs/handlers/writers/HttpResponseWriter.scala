@@ -15,7 +15,7 @@ case class HttpResponseWriter(route: Route,
                               setup: Setup,
                               ctx: ChannelHandlerContext,
                               request: FullHttpRequest
-                             ) extends FileCleaner with CommonWriter {
+                             ) extends CommonWriter {
 
   import ServerVersionHelper._
   import HttpResponseWriter._

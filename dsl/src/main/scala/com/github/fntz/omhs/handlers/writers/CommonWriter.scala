@@ -1,9 +1,11 @@
 package com.github.fntz.omhs.handlers.writers
 
 import com.github.fntz.omhs.CommonResponse
+import com.github.fntz.omhs.internal.FileDef
 import com.github.fntz.omhs.util.FullHttpRequestImplicits
 import io.netty.buffer.{ByteBuf, Unpooled}
-import io.netty.handler.codec.http.{FullHttpRequest, HttpHeaderNames, HttpResponse}
+import io.netty.channel.{ChannelFuture, ChannelFutureListener}
+import io.netty.handler.codec.http.FullHttpRequest
 import org.slf4j.LoggerFactory
 
 trait CommonWriter {
@@ -15,7 +17,7 @@ trait CommonWriter {
 
   import FullHttpRequestImplicits._
 
-  def toContent(userResponse: CommonResponse): ByteBuf = {
+  protected def toContent(userResponse: CommonResponse): ByteBuf = {
     if (request.isHead) {
       // https://tools.ietf.org/html/rfc7231#page-25
       // @note I do not remove content* headers:
@@ -29,11 +31,17 @@ trait CommonWriter {
     }
   }
 
-  def checkContentTypeOnTraceMethod(userResponse: CommonResponse): Unit = {
+  protected def checkContentTypeOnTraceMethod(userResponse: CommonResponse): Unit = {
     // https://tools.ietf.org/html/rfc7231#section-4.3.8
     if (request.isTrace && userResponse.contentType.toLowerCase != expectedContentType) {
       logger.warn(s"You use `trace`-method with illegal content-type: ${userResponse.contentType} " +
         s"expected is '$expectedContentType'")
+    }
+  }
+
+  protected def fileCleaner(files: List[FileDef]): ChannelFutureListener = {
+    (_: ChannelFuture) => {
+      files.flatMap(_.value).filter(_.refCnt() != 0).map(_.release())
     }
   }
 }
