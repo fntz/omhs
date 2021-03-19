@@ -16,6 +16,10 @@ object FullHttpRequestImplicits {
         .map { x => (x, ParamsParser.parse(target, x.rule.currentParams)) }
         .find(_._2.isSuccess)
     }
+
+    def isHead: Boolean = request.method() == HttpMethod.HEAD
+
+    def isTrace: Boolean = request.method() == HttpMethod.TRACE
   }
 
 }

@@ -206,6 +206,17 @@ class RoutingSpecs extends Specification with AfterAll {
       status ==== HttpResponseStatus.OK
       content ==== "123456789"
     }
+
+    val r19 = head("/test") ~> {() => "abc"}
+    "head response#empty" in new RouteTest(r19, "/test") {
+      override def makeRequest(path: String): DefaultFullHttpRequest = {
+        val r = req(path)
+        r.setMethod(HttpMethod.HEAD)
+        r
+      }
+      status ==== HttpResponseStatus.OK
+      content must be empty
+    }
   }
 
   "moar/syntax" should {

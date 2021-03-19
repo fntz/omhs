@@ -15,7 +15,7 @@ case class HttpResponseWriter(route: Route,
                               setup: Setup,
                               ctx: ChannelHandlerContext,
                               request: FullHttpRequest
-                             ) extends FileCleaner {
+                             ) extends FileCleaner with CommonWriter {
 
   import ServerVersionHelper._
   import HttpResponseWriter._
@@ -34,7 +34,9 @@ case class HttpResponseWriter(route: Route,
   }
 
   private def write(userResponse: CommonResponse): ChannelFuture = {
-    val response = empty.replace(Unpooled.copiedBuffer(userResponse.content))
+    checkContentTypeOnTraceMethod(userResponse)
+    val content = toContent(userResponse)
+    val response = empty.replace(content)
       .processKeepAlive(isKeepAlive, request)
       .withUserHeaders(userResponse.headers)
       .setStatus(userResponse.status)

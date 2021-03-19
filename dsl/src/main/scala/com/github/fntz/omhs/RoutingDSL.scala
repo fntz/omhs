@@ -41,11 +41,6 @@ object RoutingDSL {
   def head(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.HEAD)
   def head(x: Rule): Rule = x.withMethod(HttpMethod.HEAD)
 
-  def connect(x: String): Rule = Rule(HttpMethod.CONNECT).path(x)
-  def connect(x: PathParam): Rule = Rule(HttpMethod.CONNECT).path(x)
-  def connect(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.CONNECT)
-  def connect(x: Rule): Rule = x.withMethod(HttpMethod.CONNECT)
-
   def options(x: String): Rule = Rule(HttpMethod.OPTIONS).path(x)
   def options(x: PathParam): Rule = Rule(HttpMethod.OPTIONS).path(x)
   def options(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.OPTIONS)

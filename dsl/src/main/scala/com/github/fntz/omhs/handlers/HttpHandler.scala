@@ -54,6 +54,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
           setup = setup,
           route = route,
           ctx = ctx,
+          request = request,
           agg = agg
         ).write(process(ctx, request, Some(agg.stream)))
 

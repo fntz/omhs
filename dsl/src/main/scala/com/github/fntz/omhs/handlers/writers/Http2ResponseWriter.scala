@@ -3,10 +3,11 @@ package com.github.fntz.omhs.handlers.writers
 import com.github.fntz.omhs.handlers.ResourceResultContainer
 import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
 import com.github.fntz.omhs.streams.ChunkedOutputStream
-import com.github.fntz.omhs.util.Http2HeadersImplicits
+import com.github.fntz.omhs.util.{Http2HeadersImplicits, FullHttpRequestImplicits}
 import com.github.fntz.omhs.{CommonResponse, Route, Setup, StreamResponse}
 import io.netty.buffer.Unpooled
 import io.netty.channel.{ChannelFuture, ChannelHandlerContext}
+import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http2.{DefaultHttp2DataFrame, DefaultHttp2Headers, DefaultHttp2HeadersFrame}
 import io.netty.util.concurrent.{Future, GenericFutureListener}
 
@@ -14,12 +15,14 @@ import java.time.ZonedDateTime
 
 case class Http2ResponseWriter(route: Route,
                                setup: Setup,
+                               request: FullHttpRequest,
                                ctx: ChannelHandlerContext,
                                agg: AggregatedHttp2Message
-                ) extends FileCleaner {
+                ) extends FileCleaner with CommonWriter {
 
   import ServerVersionHelper._
   import Http2HeadersImplicits._
+  import FullHttpRequestImplicits._
 
   def write(result: ResourceResultContainer): Unit = {
     result.asyncResult.onComplete {
@@ -32,8 +35,9 @@ case class Http2ResponseWriter(route: Route,
   }
 
   private def write(userResponse: CommonResponse): ChannelFuture = {
-    val content = Unpooled.copiedBuffer(userResponse.content)
-    content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
+    checkContentTypeOnTraceMethod(userResponse)
+    val content = toContent(userResponse)
+    //??? content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
 
     val headers = new DefaultHttp2Headers().status(userResponse.status.codeAsText())
       .withContentType(userResponse.contentType)

@@ -54,7 +54,7 @@ private[impl] object Shared {
       "StringExt",
       "PathParamExt",
       "ExecutableRuleExtensions",
-      "post", "get", "head", "put", "patch", "delete", "trace", "options", "connect"
+      "post", "get", "head", "put", "patch", "delete", "trace", "options"
     )
 
   val ignored = banned ++ complex
