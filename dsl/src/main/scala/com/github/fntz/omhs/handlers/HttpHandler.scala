@@ -2,7 +2,7 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
-import com.github.fntz.omhs.handlers.writers.{BeforeStreamingWriter, Http2ResponseWriter, HttpResponseWriter, ServerVersionHelper}
+import com.github.fntz.omhs.handlers.writers.{BeforeStreamingWriter, ErrorWriters, Http2ResponseWriter, HttpResponseWriter}
 import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.util._
 import io.netty.channel.ChannelHandler.Sharable
@@ -11,16 +11,14 @@ import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2._
 import org.slf4j.LoggerFactory
 
-import java.time.ZonedDateTime
 import scala.language.existentials
 
 @Sharable
 case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandlerAdapter {
 
   import ChannelHandlerContextImplicits._
-  import Http2HeadersImplicits._
+  import FullHttpRequestImplicits._
   import HttpHandler._
-  import ServerVersionHelper._
   import UtilImplicits._
 
   private val logger = LoggerFactory.getLogger(getClass)
@@ -59,7 +57,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         ).write(process(ctx, request, Some(agg.stream)))
 
       case TooLargeObject(stream) =>
-        write413(ctx, stream)
+        ErrorWriters(route, setup).write413(ctx, stream)
 
       case _ =>
         super.channelRead(ctx, msg)
@@ -73,10 +71,10 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     val remoteAddress = ctx.remoteAddress(request.headers())
     logger.debug(s"${request.method()} -> ${request.uri()} from $remoteAddress")
 
-    findRule(request) match {
+    request.findRule(byMethod) match {
       case Some((r, ParseResult(_, defs))) =>
         val materialized = r.rule.materialize(ctx, request, remoteAddress, setup, http2Stream)
-        val files = fetchFilesToRelease(materialized)
+        val files = materialized.fetchFilesToRelease
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
             .map { params =>
@@ -102,34 +100,9 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     }
   }
 
-  private def fetchFilesToRelease(defs: Either[UnhandledReason, List[ParamDef[_]]]): List[FileDef] = {
-    defs.getOrElse(Nil).collect {
-      case f: FileDef => f
-    }
-  }
-
-  private def findRule(request: FullHttpRequest): Option[(ExecutableRule, ParseResult)] = {
-    val decoder = new QueryStringDecoder(request.uri)
-    val target = decoder.rawPath()
-    byMethod
-      .getOrElse(request.method(), Vector.empty)
-      .map { x => (x, ParamsParser.parse(target, x.rule.currentParams)) }
-      .find(_._2.isSuccess)
-  }
-
   private def fail(reason: UnhandledReason): AsyncResult = {
     AsyncResult.completed(unhanded.apply(reason))
   }
-
-  private def write413(ctx: ChannelHandlerContext, stream: Http2FrameStream) = {
-    val headers = new DefaultHttp2Headers()
-      .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE.codeAsText())
-      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .withServer(ServerVersion, setup.sendServerHeader)
-
-    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
-  }
-
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
     ctx.flush()

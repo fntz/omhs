@@ -1,7 +1,7 @@
 package com.github.fntz.omhs.util
 
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.internal.{CurrentHttpRequestDef, ParamDef, StreamDef}
+import com.github.fntz.omhs.internal.{CurrentHttpRequestDef, FileDef, ParamDef, StreamDef}
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieDecoder}
@@ -11,6 +11,14 @@ import io.netty.handler.codec.http2.{DefaultHttp2Headers, DefaultHttp2HeadersFra
 import java.net.InetSocketAddress
 
 private[omhs] object UtilImplicits {
+
+  implicit class EitherExt(val defs: Either[UnhandledReason, List[ParamDef[_]]]) extends AnyVal {
+    def fetchFilesToRelease: List[FileDef] = {
+      defs.getOrElse(Nil).collect {
+        case f: FileDef => f
+      }
+    }
+  }
 
   implicit class RuleImplicits(val rule: Rule) extends AnyVal {
     def toDefs(request: FullHttpRequest,
