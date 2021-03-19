@@ -2,17 +2,13 @@ package com.github.fntz.omhs.handlers
 
 import com.github.fntz.omhs._
 import com.github.fntz.omhs.handlers.http2.AggregatedHttp2Message
-import com.github.fntz.omhs.handlers.writers.{Http2ResponseWriter, HttpResponseWriter, ServerVersion}
+import com.github.fntz.omhs.handlers.writers.{BeforeStreamingWriter, Http2ResponseWriter, HttpResponseWriter, ServerVersionHelper}
 import com.github.fntz.omhs.internal._
-import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util._
-import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandler.Sharable
-import io.netty.channel.{ChannelFuture, ChannelFutureListener, ChannelHandlerContext, ChannelInboundHandlerAdapter}
+import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2._
-import io.netty.util.Version
-import io.netty.util.concurrent.{Future, GenericFutureListener}
 import org.slf4j.LoggerFactory
 
 import java.time.ZonedDateTime
@@ -24,13 +20,16 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
   import ChannelHandlerContextImplicits._
   import Http2HeadersImplicits._
   import HttpHandler._
-  import ResponseImplicits._
+  import ServerVersionHelper._
   import UtilImplicits._
-  import ServerVersion._
 
   private val logger = LoggerFactory.getLogger(getClass)
   private val byMethod = route.current.groupBy(_.rule.currentMethod)
   private val unhanded = route.currentUnhandled
+  private val beforeStreamingWriter = BeforeStreamingWriter(
+    route = route,
+    setup = setup
+  )
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Object): Unit = {
     msg match {
@@ -38,7 +37,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         ctx.writeAndFlush(route.rewrite(continue))
 
       case request: FullHttpRequest =>
-        val result = process(ctx, request, None)
         HttpResponseWriter(
           route = route,
           setup = setup,
@@ -82,7 +80,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         try {
           val asyncResult = materialized.map(defs.filterNot(_.skip) ++ _)
             .map { params =>
-              beforeStreaming(
+              beforeStreamingWriter.write(
                 ctx = ctx,
                 request = request,
                 http2Stream = http2Stream,
@@ -101,12 +99,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
       case _ =>
         logger.warn(s"No matched route for ${request.uri()}")
         handlers.ResourceResultContainer(Nil, fail(PathNotFound(request.uri())))
-    }
-  }
-
-  private def fileCleaner(files: List[FileDef]): ChannelFutureListener = {
-    (_: ChannelFuture) => {
-      files.flatMap(_.value).filter(_.refCnt() != 0).map(_.release())
     }
   }
 
@@ -129,27 +121,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     AsyncResult.completed(unhanded.apply(reason))
   }
 
-  private def beforeStreaming(
-                               ctx: ChannelHandlerContext,
-                               request: FullHttpRequest,
-                               http2Stream: Option[Http2FrameStream],
-                               materialized: Either[UnhandledReason, List[ParamDef[_]]]
-                             ): Unit = {
-    // if user wants to stream data, I should send empty response first
-    val hasStream = materialized.getOrElse(Nil).collectFirst {
-      case _: StreamDef => true
-    }.getOrElse(false)
-    if (hasStream) {
-      logger.debug("Streaming detected, write empty response")
-      http2Stream match {
-        case Some(stream) =>
-          writeEmptyOnStream2(ctx, stream)
-        case _ =>
-          writeEmptyOnStream(ctx, request)
-      }
-    }
-  }
-
   private def write413(ctx: ChannelHandlerContext, stream: Http2FrameStream) = {
     val headers = new DefaultHttp2Headers()
       .status(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE.codeAsText())
@@ -159,31 +130,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
     ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
   }
 
-  private def writeEmptyOnStream2(ctx: ChannelHandlerContext,
-                                  http2Stream: Http2FrameStream) = {
-    val headers = new DefaultHttp2Headers().status(HttpResponseStatus.OK.codeAsText())
-      .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
-      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .withServer(ServerVersion, setup.sendServerHeader)
-
-    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, false)
-      .stream(http2Stream)))
-  }
-
-  private def writeEmptyOnStream(ctx: ChannelHandlerContext,
-                                 request: FullHttpRequest
-                                ) = {
-    val response = new DefaultHttpResponse(request.protocolVersion(), HttpResponseStatus.OK)
-
-    response
-      .withContentType(HttpHeaderValues.APPLICATION_OCTET_STREAM.toString)
-      .chunked
-      .withDate(ZonedDateTime.now().format(setup.timeFormatter))
-      .processKeepAlive(HttpUtil.isKeepAlive(request), request)
-      .withServer(ServerVersion, setup.sendServerHeader)
-
-    ctx.write(route.rewrite(response)) // will be flushed with first chunk
-  }
 
   override def channelReadComplete(ctx: ChannelHandlerContext): Unit = {
     ctx.flush()
@@ -196,8 +142,6 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
 }
 
 object HttpHandler {
-
-  import CollectionsConverters._
 
   private val continue = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE)
 

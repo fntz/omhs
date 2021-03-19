@@ -18,7 +18,7 @@ case class Http2ResponseWriter(route: Route,
                                agg: AggregatedHttp2Message
                 ) extends FileCleaner {
 
-  import ServerVersion._
+  import ServerVersionHelper._
   import Http2HeadersImplicits._
 
   def write(result: ResourceResultContainer): Unit = {

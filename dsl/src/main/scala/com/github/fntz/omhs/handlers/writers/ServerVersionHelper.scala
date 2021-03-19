@@ -3,7 +3,7 @@ package com.github.fntz.omhs.handlers.writers
 import com.github.fntz.omhs.util.CollectionsConverters
 import io.netty.util.Version
 
-object ServerVersion {
+object ServerVersionHelper {
   import CollectionsConverters._
 
   private val currentProject = "omhs"

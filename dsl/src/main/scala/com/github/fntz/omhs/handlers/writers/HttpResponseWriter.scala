@@ -1,7 +1,6 @@
 package com.github.fntz.omhs.handlers.writers
 
 import com.github.fntz.omhs.handlers.ResourceResultContainer
-import com.github.fntz.omhs.internal.FileDef
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import com.github.fntz.omhs.util.ResponseImplicits
 import com.github.fntz.omhs.{CommonResponse, Route, Setup, StreamResponse}
@@ -18,7 +17,7 @@ case class HttpResponseWriter(route: Route,
                               request: FullHttpRequest
                              ) extends FileCleaner {
 
-  import ServerVersion._
+  import ServerVersionHelper._
   import HttpResponseWriter._
   import ResponseImplicits._
 
@@ -42,7 +41,7 @@ case class HttpResponseWriter(route: Route,
       .withContentType(userResponse.contentType)
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withLength(userResponse.content.length)
-      .withServer(ServerVersion, setup.sendServerHeader) todo
+      .withServer(ServerVersion, setup.sendServerHeader)
 
     val f = ctx.writeAndFlush(route.rewrite(response))
 
