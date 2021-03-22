@@ -8,9 +8,8 @@ import scala.concurrent.{ExecutionContext, Future}
   ChannelHandler is not thread safe by design in netty
  */
 class AsyncResult {
-  // todo tests multithreading
-  @volatile private var value: Response = null.asInstanceOf[Response]
-  @volatile private var completeWith: Response => Unit = null
+  @volatile private var value: Response = _
+  @volatile private var completeWith: Response => Unit = _
 
   def current: Response = value
 

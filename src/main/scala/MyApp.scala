@@ -1,4 +1,4 @@
-import com.github.fntz.omhs.{WorkModes, _}
+import com.github.fntz.omhs._
 import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef, StringDef}
 import com.github.fntz.omhs.moar.MutableState
 import io.netty.handler.codec.http.multipart.MixedFileUpload
@@ -10,6 +10,7 @@ import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.{DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
+import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame
 import io.netty.handler.ssl.SslProvider
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,30 +27,30 @@ object MyApp extends App {
 
   case class Person(id: Int, name: String)
 
-  implicit val personJson = Json.format[Person]
-  implicit val personBodyReader = JsonSupport.writer[Person]()
-  implicit val bodyWriter = new BodyWriter[String] {
-    override def write(w: String): CommonResponse = {
-      CommonResponse(
-        200, "text/plain", w
-      )
-    }
-  }
-
-  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
-
-  val q = "asd"
-
-  case class Search(query: String)
-  implicit val queryStringReader = new QueryReader[Search] {
-    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
-      queries.get("query").flatMap(_.headOption).map(Search)
-    }
-  }
-
-  implicit val bodyReader = new BodyReader[Search] {
-    override def read(str: String): Search = Search("dsa")
-  }
+//  implicit val personJson = Json.format[Person]
+//  implicit val personBodyReader = JsonSupport.writer[Person]()
+//  implicit val bodyWriter = new BodyWriter[String] {
+//    override def write(w: String): CommonResponse = {
+//      CommonResponse(
+//        200, "text/plain", w
+//      )
+//    }
+//  }
+//
+//  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
+//
+//  val q = "asd"
+//
+//  case class Search(query: String)
+//  implicit val queryStringReader = new QueryReader[Search] {
+//    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
+//      queries.get("query").flatMap(_.headOption).map(Search)
+//    }
+//  }
+//
+//  implicit val bodyReader = new BodyReader[Search] {
+//    override def read(str: String): Search = Search("dsa")
+//  }
 
   import com.github.fntz.omhs.moar._
 
@@ -100,20 +101,24 @@ object MyApp extends App {
 
   implicit val ec = ServerCookieEncoder.STRICT
   // content is not needed
-  val k = get("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
-    s"asd: ${req.isHttp2}"
+  val k = post("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
+    s"asd + ${System.currentTimeMillis()} + ${req.isSsl}"
 //    stream << "123"*100
 //    stream << "qqq"*100
   }
 
+  val rewriter = (r: DefaultHttp2HeadersFrame) => {
+    r.headers().set("test", "qwe")
+    r
+  }
   val route1 = new Route().addRule(k)
+    .onEveryHttp2Response(rewriter)
 
 //  HttpServer.run(9000)
 
 //  val z = ServerCookieEncoder.STRICT.encode()
 //
-  OMHSServer.run(9000, route1.toHandler(Setup.default.h2),
-    None)
+  OMHSServer.run(9000, route1.toHandler(Setup.default.h2), None)
 
 //  HttpServer.run(9000)
 

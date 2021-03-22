@@ -5,13 +5,10 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
-todo configure timeouts/message aggregator http2: length -> 413 too large
-505 -  HTTP Version Not Supported ? 
-
 # install:
 
 ```scala
- "com.github.fntz" %% "dsl" % "0.0.1-SNAPSHOT"
+ "com.github.fntz" %% "omhs-dsl" % "0.0.1-SNAPSHOT"
 ```
 
 ### before work: 
@@ -74,7 +71,6 @@ implicit val querySearchReader = new QueryReader[SearchQuery] {
 ### Read Body
 
 for reading body from current request need to implement `BodyReader`. 
-If your work with play-json, then your could to add `"com.github.fntz" %% "omhs-play-support" % "0.0.1-SNAPSHOT"` 
 
 ```scala
 case class Person(id: Int)
@@ -88,6 +84,9 @@ and then:
 ```scala
 post("test" <<< body[Person]) ~> { (p: Person) ~> "done" }
 ```
+
+Curently the project supports [play-json](https://github.com/playframework/play-json), 
+and [circle](https://github.com/circe/circe).
 
 ### Files
 
@@ -171,12 +170,14 @@ val rule = get("test" / string) ~> route { (x: String) =>
 
 ```scala
 val customSetup = Setup(
-  timeFormatter = ???,
+  timeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
+    .withZone(ZoneOffset.UTC).withLocale(Locale.US),
   sendServerHeader = false,
   cookieDecoderStrategy = CookieDecoderStrategy.Lax,
   maxContentLength = 512*1024,
   enableCompression = false,
-  chunkSize = 1000
+  chunkSize = 1000,
+  mode = WorkModes.Http2
 )
 ```
 
@@ -187,13 +188,14 @@ val rule1 = ...
 val rule2 = ...
 val rule3 = ...
 
-val route = new Route().addRule(rule1).addRule(rule2).addRule(rule3)
+val route = new Route().addRules(rule1, rule2, rule3)
 OMHSServer.run(9000, route.toHandler)
 
-// change netty-pipeline or ServerBootstrap
+// you can change ServerBootstrap
 OMHSServer.run(
     port = 9000, 
     handler = route.toHandler,
+    sslContext = Some(OMHSServer.getJdkSslContext),
     serverBootstrapChanges = (s: ServerBootstrap) => {
         s.options(...).childOptions(...)
     }

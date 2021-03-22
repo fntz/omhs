@@ -63,7 +63,6 @@ case class ChunkedOutputStream(private val context: ChannelHandlerContext,
         context.writeAndFlush(new DefaultHttp2DataFrame(buffer.copy(), false).stream(h2Stream))
       case None =>
         context.writeAndFlush(new DefaultHttpContent(buffer.copy()))
-
     }
     buffer.clear()
     super.flush()

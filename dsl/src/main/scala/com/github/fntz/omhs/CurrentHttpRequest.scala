@@ -25,6 +25,7 @@ case class CurrentHttpRequest(
                              headers: HttpHeaders,
                              rawBody: String,
                              isHttp2: Boolean,
+                             isSsl: Boolean,
                              remoteAddress: RemoteAddress,
                              cookies: Iterable[Cookie]
                       ) {
@@ -66,7 +67,8 @@ object CurrentHttpRequest {
   def apply(request: FullHttpRequest,
             remoteAddress: RemoteAddress,
             setup: Setup,
-            isHttp2: Boolean
+            isHttp2: Boolean,
+            isSsl: Boolean
            ): CurrentHttpRequest = {
     val decoder = new QueryStringDecoder(request.uri)
     val cookies = setup.decode(request)
@@ -78,6 +80,7 @@ object CurrentHttpRequest {
       headers = request.headers(),
       rawBody = request.content.toString(CharsetUtil.UTF_8),
       isHttp2 = isHttp2,
+      isSsl = isSsl,
       remoteAddress = remoteAddress,
       cookies = cookies
     )

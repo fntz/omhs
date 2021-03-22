@@ -9,6 +9,8 @@ import scala.util.matching.Regex
 
 object RoutingDSL {
 
+  /*********** http methods ******************/
+
   def get(x: String): Rule = Rule(HttpMethod.GET).path(x)
   def get(x: PathParam): Rule = Rule(HttpMethod.GET).path(x)
   def get(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.GET)
@@ -33,6 +35,23 @@ object RoutingDSL {
   def patch(x: PathParam): Rule = Rule(HttpMethod.PATCH).path(x)
   def patch(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.PATCH)
   def patch(x: Rule): Rule = x.withMethod(HttpMethod.PATCH)
+
+  def head(x: String): Rule = Rule(HttpMethod.HEAD).path(x)
+  def head(x: PathParam): Rule = Rule(HttpMethod.HEAD).path(x)
+  def head(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.HEAD)
+  def head(x: Rule): Rule = x.withMethod(HttpMethod.HEAD)
+
+  def options(x: String): Rule = Rule(HttpMethod.OPTIONS).path(x)
+  def options(x: PathParam): Rule = Rule(HttpMethod.OPTIONS).path(x)
+  def options(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.OPTIONS)
+  def options(x: Rule): Rule = x.withMethod(HttpMethod.OPTIONS)
+
+  def trace(x: String): Rule = Rule(HttpMethod.TRACE).path(x)
+  def trace(x: PathParam): Rule = Rule(HttpMethod.TRACE).path(x)
+  def trace(x: LikeRule): Rule = x.rule.withMethod(HttpMethod.TRACE)
+  def trace(x: Rule): Rule = x.withMethod(HttpMethod.TRACE)
+
+  /********************** dsl *************************/
 
   def string(name: String, description: Option[String]): StringParam = StringParam(name, description)
   def string(name: String): StringParam = string(name, None)

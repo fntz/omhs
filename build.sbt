@@ -3,7 +3,7 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-version := "0.0.1-SNAPSHOT"
+version := "0.0.2-SNAPSHOT"
 
 val nettyVersion = "4.1.60.Final"
 
@@ -34,6 +34,7 @@ val netty = Seq(
   "io.netty" % "netty-codec-http2" % nettyVersion
 )
 
+val slf4j = Seq("org.slf4j" % "slf4j-api" % "1.7.30")
 val logback = Seq("ch.qos.logback"  %  "logback-classic"    % "1.2.3")
 
 val libs = Seq(
@@ -56,7 +57,8 @@ lazy val jsonlibs = playJson ++ circe
 val dsl = project.settings(opts)
   .settings(
     name := "omhs-dsl",
-    libraryDependencies ++= netty.map(_ % "provided, test") ++ logback ++ specs2 ++ Seq(
+    libraryDependencies ++= netty.map(_ % "provided, test") ++ slf4j.map(_ % "provided")
+      ++ specs2 ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
     ),
@@ -90,7 +92,7 @@ val circeSupport = Project("circe-support", file("circe-support"))
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
-    libraryDependencies ++= libs ++ specs2 ++ jsonlibs ++ Seq(
+    libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonlibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
     crossScalaVersions := Nil,

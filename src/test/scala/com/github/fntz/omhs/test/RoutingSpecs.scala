@@ -206,6 +206,17 @@ class RoutingSpecs extends Specification with AfterAll {
       status ==== HttpResponseStatus.OK
       content ==== "123456789"
     }
+
+    val r19 = head("/test") ~> {() => "abc"}
+    "head response#empty" in new RouteTest(r19, "/test") {
+      override def makeRequest(path: String): DefaultFullHttpRequest = {
+        val r = req(path)
+        r.setMethod(HttpMethod.HEAD)
+        r
+      }
+      status ==== HttpResponseStatus.OK
+      content must be empty
+    }
   }
 
   "moar/syntax" should {
@@ -255,18 +266,6 @@ class RoutingSpecs extends Specification with AfterAll {
     import AdditionalHeadersConstants._
     val r = get("test") ~> {() => "done"}
 
-    "xss-protection" should {
-      "enable" in new RouteTest(r, "/test") {
-        response.headers().get(xssProtection) ==== xssProtectionValue
-      }
-
-      "disable" in new RouteTest(r, "/test", isStream = false,
-        Setup.default.withSendXSSProtection(false)
-      ) {
-        Option(response.headers().get(xssProtection)) must beNone
-      }
-    }
-
     "server header" should {
       "enable" in new RouteTest(r, "/test") {
         response.headers().get(HttpHeaderNames.SERVER) must contain("netty")
@@ -280,6 +279,20 @@ class RoutingSpecs extends Specification with AfterAll {
     }
   }
 
+  "rewriter" should {
+    val r = get("test") ~> {() => "done"}
+    "add headers" in new RouteTest(r, "/test", isStream = false,
+      setup = Setup.default,
+      f = (x: HttpResponse) => {
+        x.headers().set("foo", "bar")
+        x
+      }
+    ) {
+      status ==== HttpResponseStatus.OK
+      response.headers().get("foo") ==== "bar"
+    }
+  }
+
   private def req(path: String) = {
     new DefaultFullHttpRequest(
       HttpVersion.HTTP_1_1, HttpMethod.GET, path
@@ -288,15 +301,16 @@ class RoutingSpecs extends Specification with AfterAll {
 
   private class RouteTest(rule: ExecutableRule, path: String,
                           isStream: Boolean = false,
-                          setup: Setup = Setup.default
+                          setup: Setup = Setup.default,
+                          f: HttpResponse => HttpResponse = identity
                          ) extends Scope {
     def makeRequest(path: String): FullHttpRequest = req(path)
-    val ro = (new Route).addRule(rule).toHandler(setup)
+    val ro = (new Route).addRule(rule).onEveryHttpResponse(f).toHandler(setup)
     val channel = new EmbeddedChannel(new LoggingHandler(LogLevel.DEBUG))
     channel.pipeline()
       .addFirst(new LoggingHandler(LogLevel.DEBUG))
       .addLast("codec", new HttpRequestDecoder())
-      .addLast("aggregator", new HttpObjectAggregator(512*1024))
+      .addLast("aggregator", new HttpObjectAggregator(setup.maxContentLength))
       .addLast(ro)
     channels += channel
     val request = makeRequest(path)

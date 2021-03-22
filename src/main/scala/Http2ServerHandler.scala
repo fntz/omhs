@@ -11,6 +11,7 @@ class Http2ServerHandler extends ChannelInboundHandlerAdapter {
     .unreleasableBuffer(Unpooled.copiedBuffer("Hello World", CharsetUtil.UTF_8))
 
   override def channelRead(ctx: ChannelHandlerContext, msg: Any): Unit = {
+    println(s"----> ${msg.getClass}")
     msg match {
       case agg: AggregatedHttp2Message =>
         val request = HttpConversionUtil.toFullHttpRequest(
@@ -25,8 +26,6 @@ class Http2ServerHandler extends ChannelInboundHandlerAdapter {
           case data: MixedFileUpload if data.getHttpDataType == HttpDataType.FileUpload =>
             data.copy()
         }.toList
-        println("@"*100)
-        println(files.map(_.getName))
 
 
         val content = ctx.alloc().buffer()

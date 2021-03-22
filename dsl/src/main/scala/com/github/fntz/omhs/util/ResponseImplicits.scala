@@ -49,13 +49,6 @@ private [omhs] object ResponseImplicits {
       response
     }
 
-    def withXSSProtection(isNeedToSend: Boolean): HttpResponse = {
-      if (isNeedToSend) {
-        response.headers().set(xssProtection, xssProtectionValue)
-      }
-      response
-    }
-
   }
 
 }
