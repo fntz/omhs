@@ -5,15 +5,27 @@ Netty-based dsl
  
 * No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
+### TODO
+
+* more settings/swagger
+
 # install:
 
 ```scala
- "com.github.fntz" %% "omhs-dsl" % "0.0.1-SNAPSHOT"
+"com.github.fntz" %% "omhs-dsl" % "0.0.1-SNAPSHOT"
+// play-json support
+"com.github.fntz" %% "play-json-support" % "0.0.1-SNAPSHOT"
+// circle-json support
+"com.github.fntz" %% "circe-support" % "0.0.1-SNAPSHOT"
 ```
 
 ### before work: 
 1. add `-Ydelambdafy:inline` in scalacOptions
 2. add reflect: `"org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"`
+
+# Example:
+
+[code](https://github.com/fntz/omhs/blob/master/src/main/scala/MyApp.scala)
 
 # Using
 
@@ -177,7 +189,7 @@ val customSetup = Setup(
   maxContentLength = 512*1024,
   enableCompression = false,
   chunkSize = 1000,
-  mode = WorkModes.Http2
+  isSupportHttp2 = true
 )
 ```
 
@@ -206,11 +218,6 @@ OMHSServer.run(
 # check codegen: 
 pass `-Domhs.logLevel=verbose|info|none` to sbt/options
 
-
-  
-
-todo:
-* swagger (70% ready)
 
 ### License: MIT
 
