@@ -22,11 +22,11 @@ trait CommonWriter {
       // https://tools.ietf.org/html/rfc7231#page-25
       // @note I do not remove content* headers:
       // https://tools.ietf.org/html/rfc7231#section-3.3
-      Unpooled.EMPTY_BUFFER
-    } else {
       if (userResponse.content.nonEmpty) {
         logger.warn("You try to send non-empty response with `head`-method")
       }
+      Unpooled.EMPTY_BUFFER
+    } else {
       Unpooled.copiedBuffer(userResponse.content)
     }
   }
