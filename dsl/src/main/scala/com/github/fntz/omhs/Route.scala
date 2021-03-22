@@ -109,13 +109,13 @@ class Route {
     this
   }
 
-  def addRules(exes: Iterable[ExecutableRule]): Route = {
+  def addRules(exes: ExecutableRule*): Route = {
     rules ++= exes
     this
   }
 
-  def :::(exes: Iterable[ExecutableRule]): Route = {
-    addRules(exes)
+  def :::(exes: ExecutableRule*): Route = {
+    addRules(exes : _*)
   }
 
   def ::(other: Route): Route = {

@@ -25,7 +25,7 @@ trait HeaderOrCookieLikeParam extends LikeRule {
     }
   }
 
-  def <<<(c: CookieParam): HeaderOrCookieLikeParam = {
+  def <<(c: CookieParam): HeaderOrCookieLikeParam = {
     val tmp = rule.cookie(c)
     new HeaderOrCookieLikeParam {
       override  val rule: Rule = tmp
