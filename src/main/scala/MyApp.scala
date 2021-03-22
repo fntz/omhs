@@ -1,125 +1,110 @@
 import com.github.fntz.omhs._
-import com.github.fntz.omhs.internal.{ExecutableRule, ParamDef, StringDef}
-import com.github.fntz.omhs.moar.MutableState
-import io.netty.handler.codec.http.multipart.MixedFileUpload
-import com.github.fntz.omhs.swagger.{ExternalDocumentation, Response, Server, SwaggerImplicits}
-import io.netty.channel.ChannelPipeline
-import io.netty.handler.codec.http.{FullHttpResponse, HttpMethod, HttpResponseStatus}
-import io.netty.handler.logging.{LogLevel, LoggingHandler}
-import play.api.libs.json.Json
 import com.github.fntz.omhs.playjson.JsonSupport
 import com.github.fntz.omhs.streams.ChunkedOutputStream
-import io.netty.handler.codec.http.cookie.{DefaultCookie, ServerCookieDecoder, ServerCookieEncoder}
+import io.netty.handler.codec.http.HttpResponse
+import io.netty.handler.codec.http.cookie.{Cookie, ServerCookieEncoder}
+import io.netty.handler.codec.http.multipart.FileUpload
 import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame
-import io.netty.handler.ssl.SslProvider
+import io.netty.util.CharsetUtil
+import play.api.libs.json.Json
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 
 object MyApp extends App {
-  import AsyncResult._
+  import RoutingDSL._
+  import com.github.fntz.omhs.moar._
   import AsyncResult.Implicits._
   import AsyncResult.Streaming._
-  import JsonSupport._
-  import RoutingDSL._
+
   import scala.concurrent.ExecutionContext.Implicits.global
 
   case class Person(id: Int, name: String)
 
-//  implicit val personJson = Json.format[Person]
-//  implicit val personBodyReader = JsonSupport.writer[Person]()
-//  implicit val bodyWriter = new BodyWriter[String] {
-//    override def write(w: String): CommonResponse = {
-//      CommonResponse(
-//        200, "text/plain", w
-//      )
-//    }
-//  }
-//
-//  implicit val bodyWriterPerson = JsonSupport.reader[Person]()
-//
-//  val q = "asd"
-//
-//  case class Search(query: String)
-//  implicit val queryStringReader = new QueryReader[Search] {
-//    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
-//      queries.get("query").flatMap(_.headOption).map(Search)
-//    }
-//  }
-//
-//  implicit val bodyReader = new BodyReader[Search] {
-//    override def read(str: String): Search = Search("dsa")
-//  }
+  implicit val personJson = Json.format[Person]
+  implicit val personBodyReader = JsonSupport.reader[Person]()
+  implicit val personBodyWriter = JsonSupport.writer[Person]()
 
-  import com.github.fntz.omhs.moar._
-
-  /*
-  // how to do:
-
-   if (x == "asd")
-     status 404
-   else
-     status 200
-
-    response is fullHttpResponse
-
-    contentType("json") => replace as
-      response.headers().set("content-type", "json")
-
-    get(string / "test") ~> run { (x: String) =>
-       contentType("json")
-       cookie("asd", "dsa")
-       status 200
-       // or status HttpResponseStatus.OK
-       "done"
-    } => ExecutableRule(r: get(string / "test")) {
-
-      def run2(defs: List[ParamDef]) = {
-        val response = new DefaultHttpResponse()
-        response.headers.set("content-type", "json")
-        response.headers.set("cookie", "asd=dsa")
-        response.setStatus(200)
-        "done" // <--------------- TODO how to transform? is it needs to transform?
-      }
+  case class Search(query: String)
+  implicit val searchQueryReader = new QueryReader[Search] {
+    override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
+      queries.get("query").flatMap(_.headOption).map(Search)
     }
-
-   */
-  val x = 100
-//  val z = get(string) >> route {
-//    if (x == 100) {
-//      contentType("application/javascript")
-//    } else {
-//      contentType("application/javascript")
-//    }
-//    AsyncResult.completed(CommonResponse.empty)
-//  }
-// val z = get("string") ~> { (stream: AppStream) =>
-//   stream.write("asd")
-//
-// }
-
-  implicit val ec = ServerCookieEncoder.STRICT
-  // content is not needed
-  val k = post("test" / *) ~> { (xs: List[String], req: CurrentHttpRequest) =>
-    s"asd + ${System.currentTimeMillis()} + ${req.isSsl}"
-//    stream << "123"*100
-//    stream << "qqq"*100
   }
 
-  val rewriter = (r: DefaultHttp2HeadersFrame) => {
+
+  implicit val cookieEncoder = ServerCookieEncoder.STRICT
+
+  val simpleGet = get("test" / "foo") ~> {() =>
+    "foo"
+//  or  AsyncResult.completed("foo")
+  }
+
+  val getWithParams = get("bar" / string) ~> {(x: String) =>
+    s"given: $x"
+  }
+
+  val currentReq = get("example") ~> {(req: CurrentHttpRequest) =>
+    req.path
+  }
+
+  val list = get("example" / "foo" / *) ~> { (xs: List[String]) =>
+    xs.mkString(", ")
+  }
+
+  val chunked = get("chunks") ~> {(stream: ChunkedOutputStream) =>
+    stream << "123"
+    stream << "456"
+    stream << "789"
+  }
+
+  val postPerson = post("person" <<< body[Person]) ~> {(p: Person) =>
+    Future(p)
+  }
+
+  val fileRoute = post("file" <<< file) ~> {(fs: List[FileUpload]) =>
+    println(fs.head.content().toString(CharsetUtil.UTF_8))
+    fs.map(_.getName).mkString(", ")
+  }
+
+  val queryRoute = get("search" :? query[Search]) ~> {(q: Search) =>
+    q.query
+  }
+
+  val cookieOrHeaderRoute = get("ch" << header("foo") << cookie("abc") << header("mmm") ) ~> {(h1: String, c: Cookie, h2: String) =>
+    h1 + c + h2
+  }
+
+  val moreRouting = get("more") ~> route {() =>
+    setHeader("test", "abc")
+    status(201)
+    "done"
+  }
+
+  val rewriterH2 = (r: DefaultHttp2HeadersFrame) => {
     r.headers().set("test", "qwe")
     r
   }
-  val route1 = new Route().addRule(k)
-    .onEveryHttp2Response(rewriter)
+  val rewriterH1 = (r: HttpResponse) => {
+    r.headers().set("test", "qwe")
+    r
+  }
+  val route1 = new Route().addRules(
+    simpleGet,
+    getWithParams,
+    currentReq,
+    list,
+    chunked,
+    postPerson,
+    fileRoute,
+    queryRoute,
+    cookieOrHeaderRoute,
+    moreRouting
+  )
+    .onEveryHttp2Response(rewriterH2)
+    .onEveryHttpResponse(rewriterH1)
 
-//  HttpServer.run(9000)
-
-//  val z = ServerCookieEncoder.STRICT.encode()
-//
-  OMHSServer.run(9000, route1.toHandler(Setup.default.h2), None)
-
-//  HttpServer.run(9000)
+  OMHSServer.run(9000, route1.toHandler(Setup.default), None)
 
 }
