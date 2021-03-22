@@ -18,8 +18,8 @@ class ServerInitializer(sslContext: Option[SslContext],
   private val logger = LoggerFactory.getLogger(getClass)
 
   override def initChannel(ch: AbstractChannel): Unit = {
-    logger.debug(s"http2: ${setup.mode.isH2}, ssl: ${sslContext.isDefined}")
-    if (setup.mode.isH2) {
+    logger.debug(s"http2: ${setup.isH2}, ssl: ${sslContext.isDefined}")
+    if (setup.isH2) {
       sslContext match {
         case Some(ssl) =>
           configureSsl(ch, ssl)
@@ -72,8 +72,9 @@ class ServerInitializer(sslContext: Option[SslContext],
         val p = ctx.pipeline()
         val current = p.context(this)
         p.remove(upgradeHandler)
-        p.addAfter(current.name(), null, handler)
+        p.addAfter(current.name(), Omhs, handler)
         p.replace(this, Aggregator, new HttpObjectAggregator(setup.maxContentLength))
+
         if (setup.enableCompression) {
           p.addLast(Compressor, new HttpContentCompressor())
         }

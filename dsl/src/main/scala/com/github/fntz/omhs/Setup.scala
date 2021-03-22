@@ -22,26 +22,26 @@ case class Setup(
                   maxContentLength: Int,
                   enableCompression: Boolean,
                   chunkSize: Int,
-                  mode: WorkMode
+                  isSupportHttp2: Boolean
                 ) {
   def withSendServerHeader(flag: Boolean): Setup = {
     copy(sendServerHeader = flag)
   }
 
   def h2: Setup = {
-    copy(mode = WorkModes.Http2)
+    copy(isSupportHttp2 = true)
   }
 
-  def h11: Setup = {
-    copy(mode = WorkModes.Http11)
+  def h1: Setup = {
+    copy(isSupportHttp2 = false)
   }
 
   def withoutCompression: Setup = {
     copy(enableCompression = false)
   }
 
-  def isH2: Boolean = mode == WorkModes.Http2
-  def isH1: Boolean = mode == WorkModes.Http11
+  def isH2: Boolean = isSupportHttp2
+  def isH1: Boolean = !isSupportHttp2
 }
 object Setup {
   val default: Setup = Setup(
@@ -52,6 +52,6 @@ object Setup {
     maxContentLength = 512*1024,
     enableCompression = true,
     chunkSize = 512,
-    mode = WorkModes.Http2
+    isSupportHttp2 = true
   )
 }
