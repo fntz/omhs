@@ -1,6 +1,7 @@
 package com.github.fntz.omhs.util
 
 import com.github.fntz.omhs.Rule
+import com.github.fntz.omhs.internal.StringParam
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
@@ -36,20 +37,27 @@ object OverlapDetector {
 
     if (r1.currentUrl == r2.currentUrl) {
       true
-    } else if (r1.hasTail || r2.hasTail) {
+    } else  {
       @tailrec
       def rec(index: Int, isDone: Boolean): Boolean = {
         if (isDone) {
           false
         } else {
           (ps1.lift(index), ps2.lift(index)) match {
+            // /a/b <> /a/*
             case (Some(p1), Some(_)) if p1.isRestParam =>
               true
             case (Some(_), Some(p2)) if p2.isRestParam =>
               true
+            // /a/b <> /a/{:string}
+            case (Some(StringParam(_, _)), Some(b)) if b.isUserDefined =>
+              true
+            case (Some(a), Some(StringParam(_, _))) if a.isUserDefined =>
+              true
+            // /a/b <> /a/b => continue
             case (Some(a), Some(b)) if a.name == b.name =>
               rec(index + 1, isDone = false)
-            case (Some(a), Some(b)) =>
+            case (Some(_), Some(_)) =>
               false
             case _ =>
               false
@@ -57,8 +65,6 @@ object OverlapDetector {
         }
       }
       rec(0, isDone = false)
-    } else {
-      false
     }
 
   }

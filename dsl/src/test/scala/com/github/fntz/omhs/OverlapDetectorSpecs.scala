@@ -14,6 +14,11 @@ class OverlapDetectorSpecs extends Specification {
   "overlap detector" should {
     "isOverlapping" in {
       isOverlapping(
+        r.path("a").path(string),
+        r.path("a").path("b")
+      ) must beTrue
+
+      isOverlapping(
         r.path("a")
          .path(string)
          .path(long),
