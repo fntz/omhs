@@ -3,13 +3,27 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-version := "0.0.2-SNAPSHOT"
+version := "0.0.1"
+
+organization := "com.github.fntz"
+homepage := Some(url("https://github.com/fntz/omhs"))
+scmInfo := Some(ScmInfo(url("https://github.com/fntz/omhs"), "git@github.com:fntz/omhs.git"))
+developers := List(Developer("mike", "mike", "mike.fch1@gmail.com", url("https://gitlab.com/fntz")))
+licenses += ("MIT", url("https://github.com/fntz/omhs/blob/master/LICENSE"))
+publishMavenStyle := true
 
 val nettyVersion = "4.1.60.Final"
 
 ThisBuild / organization := "com.github.fntz"
 ThisBuild / version      := version.value
 ThisBuild / scalaVersion := scala12
+
+publishTo := Some(
+  if (isSnapshot.value)
+    Opts.resolver.sonatypeSnapshots
+  else
+    Opts.resolver.sonatypeStaging
+)
 
 
 val opts = Seq(
