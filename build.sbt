@@ -8,7 +8,7 @@ version := "0.0.1"
 organization := "com.github.fntz"
 homepage := Some(url("https://github.com/fntz/omhs"))
 scmInfo := Some(ScmInfo(url("https://github.com/fntz/omhs"), "git@github.com:fntz/omhs.git"))
-developers := List(Developer("mike", "mike", "mike.fch1@gmail.com", url("https://gitlab.com/fntz")))
+developers := List(Developer("mike", "mike", "mike.fch1@gmail.com", url("https://github.com/fntz")))
 licenses += ("MIT", url("https://github.com/fntz/omhs/blob/master/LICENSE"))
 publishMavenStyle := true
 
