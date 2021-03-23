@@ -19,6 +19,26 @@ class OverlapDetectorSpecs extends Specification {
       ) must beTrue
 
       isOverlapping(
+        r.path("a").path(string).path("c"),
+        r.path("a").path("b")
+      ) must beFalse
+
+      isOverlapping(
+        r.path("a").path("b"),
+        r.path("a").path(string).path("c")
+      ) must beFalse
+
+      isOverlapping(
+        r.path("a").path("b").path(string),
+        r.path("a").path("b").path("c")
+      ) must beTrue
+
+      isOverlapping(
+        r.path("a").path(string),
+        r.path("a").path(uuid)
+      ) must beTrue
+
+      isOverlapping(
         r.path("a")
          .path(string)
          .path(long),

@@ -38,6 +38,9 @@ object OverlapDetector {
     if (r1.currentUrl == r2.currentUrl) {
       true
     } else  {
+      val l1 = ps1.length - 1
+      val l2 = ps2.length - 1
+      val isTheSame = l1 == l2
       @tailrec
       def rec(index: Int, isDone: Boolean): Boolean = {
         if (isDone) {
@@ -49,10 +52,10 @@ object OverlapDetector {
               true
             case (Some(_), Some(p2)) if p2.isRestParam =>
               true
-            // /a/b <> /a/{:string}
-            case (Some(StringParam(_, _)), Some(b)) if b.isUserDefined =>
+            // /a/b <> /a/{:string} and is last
+            case (Some(StringParam(_, _)), Some(_)) if index == l1 && isTheSame =>
               true
-            case (Some(a), Some(StringParam(_, _))) if a.isUserDefined =>
+            case (Some(_), Some(StringParam(_, _))) if index == l1 && isTheSame =>
               true
             // /a/b <> /a/b => continue
             case (Some(a), Some(b)) if a.name == b.name =>
