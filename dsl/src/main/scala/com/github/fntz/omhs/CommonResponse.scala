@@ -65,4 +65,9 @@ object CommonResponse {
     new CommonResponse(HttpResponseStatus.valueOf(status), contentType,
       content.getBytes(CharsetUtil.UTF_8))
   }
+
+  def apply(status: Int, contentType: String,
+            content: Array[Byte]): CommonResponse = {
+    new CommonResponse(HttpResponseStatus.valueOf(status), contentType, content)
+  }
 }
