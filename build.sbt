@@ -111,7 +111,6 @@ lazy val mainProject = Project("omhs", file("."))
     libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonlibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
-    crossScalaVersions := Nil,
     publish / skip := true
   )
   .dependsOn(dsl, playJsonSupport, circeSupport, swagger)

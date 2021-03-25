@@ -18,8 +18,7 @@ case class ErrorWriters(route: Route, setup: Setup) {
       .withDate(ZonedDateTime.now().format(setup.timeFormatter))
       .withServer(ServerVersion, setup.sendServerHeader)
 
-    ctx.write(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
-
+    ctx.writeAndFlush(route.rewrite(new DefaultHttp2HeadersFrame(headers, true).stream(stream)))
   }
 
 }

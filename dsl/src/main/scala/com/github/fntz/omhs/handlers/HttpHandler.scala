@@ -10,6 +10,7 @@ import io.netty.channel.{ChannelHandlerContext, ChannelInboundHandlerAdapter}
 import io.netty.handler.codec.http._
 import io.netty.handler.codec.http2._
 import io.netty.handler.ssl.SslHandler
+import io.netty.util.ReferenceCountUtil
 import org.slf4j.LoggerFactory
 
 import scala.language.existentials
@@ -62,7 +63,7 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         ErrorWriters(route, setup).write413(ctx, stream)
 
       case _ =>
-        super.channelRead(ctx, msg)
+        ReferenceCountUtil.release(msg)
     }
   }
 
