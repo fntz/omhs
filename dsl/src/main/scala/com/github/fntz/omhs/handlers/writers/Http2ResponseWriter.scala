@@ -37,7 +37,6 @@ case class Http2ResponseWriter(route: Route,
   private def write(userResponse: CommonResponse): ChannelFuture = {
     checkContentTypeOnTraceMethod(userResponse)
     val content = toContent(userResponse)
-    //??? content.writeBytes(Unpooled.EMPTY_BUFFER.duplicate())
 
     val headers = new DefaultHttp2Headers().status(userResponse.status.codeAsText())
       .withContentType(userResponse.contentType)

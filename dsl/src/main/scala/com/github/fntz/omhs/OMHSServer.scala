@@ -5,12 +5,11 @@ import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.channel.{ChannelFuture, ChannelInitializer, ChannelPipeline}
+import io.netty.channel.{ChannelFuture, ChannelInitializer}
 import io.netty.handler.codec.http2.Http2SecurityUtil
-import io.netty.handler.logging.{LogLevel, LoggingHandler}
 import io.netty.handler.ssl.ApplicationProtocolConfig.{SelectedListenerFailureBehavior, SelectorFailureBehavior}
-import io.netty.handler.ssl.util.SelfSignedCertificate
 import io.netty.handler.ssl._
+import io.netty.handler.ssl.util.SelfSignedCertificate
 import org.slf4j.LoggerFactory
 
 import java.net.InetSocketAddress
@@ -43,39 +42,70 @@ object OMHSServer {
       )).build()
   }
 
-  def run(address: InetSocketAddress,
-          handler: HttpHandler,
-          sslContext: Option[SslContext],
-          serverBootstrapChanges: S2S
-         ): ChannelFuture = {
-    val setup = handler.setup
-    val boss = new NioEventLoopGroup()
-    val worker = new NioEventLoopGroup()
-    val b = new ServerBootstrap()
-    try {
-      b.group(boss, worker)
-        .channel(classOf[NioServerSocketChannel])
-        .childHandler(new ChannelInitializer[SocketChannel] {
-          override def initChannel(ch: SocketChannel): Unit = {
-            ch.pipeline().addLast(
-              new ServerInitializer(sslContext, setup, handler)
-            )
-          }
-        })
-      val f = serverBootstrapChanges(b).bind(address).sync()
-      f.channel().closeFuture().sync()
-    } finally {
-      worker.shutdownGracefully()
-      boss.shutdownGracefully()
+  class Instance(address: InetSocketAddress,
+                 handler: HttpHandler,
+                 sslContext: Option[SslContext],
+                 serverBootstrapChanges: S2S) {
+
+    private val logger = LoggerFactory.getLogger(getClass)
+
+    private val setup = handler.setup
+    private val boss = new NioEventLoopGroup()
+    private val worker = new NioEventLoopGroup()
+    private var future: ChannelFuture  = _
+
+    def start(): Unit = {
+      try {
+        val b = new ServerBootstrap()
+        b.group(boss, worker)
+          .channel(classOf[NioServerSocketChannel])
+          .childHandler(new ChannelInitializer[SocketChannel] {
+            override def initChannel(ch: SocketChannel): Unit = {
+              ch.pipeline().addLast(
+                new ServerInitializer(sslContext, setup, handler)
+              )
+            }
+          })
+        future = serverBootstrapChanges(b).bind(address).sync()
+        logger.debug(s"OMHS server started on $address")
+      } catch {
+        case ex:  Throwable =>
+          logger.warn(s"Failed to start server: on $address", ex)
+      }
+    }
+
+    def stop(): Unit = {
+      try {
+        worker.shutdownGracefully().sync()
+        boss.shutdownGracefully().sync()
+        future.channel().closeFuture().sync()
+        logger.debug("OMHS server stopped")
+      } catch {
+        case ex: Throwable =>
+          logger.warn(s"Fail in stop server on $address", ex)
+      }
     }
   }
 
-  def run(host: String, port: Int,
-          handler: HttpHandler,
-          sslContext: Option[SslContext],
-          serverBootstrapChanges: S2S
-         ): ChannelFuture = {
-    run(
+  def init(address: InetSocketAddress,
+           handler: HttpHandler,
+           sslContext: Option[SslContext],
+           serverBootstrapChanges: S2S
+         ): Instance = {
+    new Instance(
+      address = address,
+      handler = handler,
+      sslContext = sslContext,
+      serverBootstrapChanges = serverBootstrapChanges
+    )
+  }
+
+  def init(host: String, port: Int,
+           handler: HttpHandler,
+           sslContext: Option[SslContext],
+           serverBootstrapChanges: S2S
+         ): Instance = {
+    init(
       address = new InetSocketAddress(host, port),
       handler = handler,
       sslContext = sslContext,
@@ -83,12 +113,12 @@ object OMHSServer {
     )
   }
 
-  def run(port: Int,
+  def init(port: Int,
           handler: HttpHandler,
           sslContext: Option[SslContext],
           serverBootstrapChanges: S2S = noServerBootstrapChanges
-         ): ChannelFuture = {
-    run(
+         ): Instance = {
+    init(
       address = new InetSocketAddress("127.0.0.1", port),
       handler = handler,
       sslContext = sslContext,

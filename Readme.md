@@ -228,10 +228,10 @@ val rule2 = ...
 val rule3 = ...
 
 val route = new Route().addRules(rule1, rule2, rule3)
-OMHSServer.run(9000, route.toHandler)
+val server = OMHSServer.init(9000, route.toHandler)
 
 // you can change ServerBootstrap
-OMHSServer.run(
+val server = OMHSServer.run(
     port = 9000, 
     handler = route.toHandler,
     sslContext = Some(OMHSServer.getJdkSslContext),
@@ -239,6 +239,14 @@ OMHSServer.run(
         s.options(...).childOptions(...)
     }
   )
+
+// then 
+
+server.start()  
+  
+// and stop programmatically
+
+server.stop()  
 
 ```
 
