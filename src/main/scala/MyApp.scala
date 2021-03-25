@@ -104,6 +104,13 @@ object MyApp extends App {
   )
     .onEveryHttp2Response(rewriterH2)
     .onEveryHttpResponse(rewriterH1)
+    .onUnhandled {
+      case PathNotFound(p) =>
+        CommonResponse.json(404, s"$p not found")
+      case _ =>
+        CommonResponse.json(500, "boom")
+    }
+
 
   val server = OMHSServer.init(9000, route1.toHandler(Setup.default), None)
 

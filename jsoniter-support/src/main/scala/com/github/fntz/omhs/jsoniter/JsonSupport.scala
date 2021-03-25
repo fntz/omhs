@@ -2,7 +2,6 @@ package com.github.fntz.omhs.jsoniter
 
 import java.nio.charset.StandardCharsets.UTF_8
 import com.github.fntz.omhs.{BodyReader, BodyWriter, CommonResponse}
-import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 
 object JsonSupport {

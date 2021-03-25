@@ -12,11 +12,13 @@ Netty-based dsl
 # install:
 
 ```scala
-"com.github.fntz" %% "omhs-dsl" % "0.0.1-SNAPSHOT"
+"com.github.fntz" %% "omhs-dsl" % "0.0.2"
 // play-json support
-"com.github.fntz" %% "play-json-support" % "0.0.1-SNAPSHOT"
+"com.github.fntz" %% "omhs-play-json-support" % "0.0.2"
 // circle-json support
-"com.github.fntz" %% "circe-support" % "0.0.1-SNAPSHOT"
+"com.github.fntz" %% "omhs-circe-support" % "0.0.2"
+// jsoniter support
+"com.github.fntz" %% "omhs-jsoniter-support" % "0.0.2"
 ```
 
 # idea
@@ -50,7 +52,7 @@ transform from raw string to necessary object.
 1. add `-Ydelambdafy:inline` in scalacOptions
 2. add reflect: `"org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"`
 
-# Example:
+# Examples:
 
 [code](https://github.com/fntz/omhs/blob/master/src/main/scala/MyApp.scala)
 
@@ -204,6 +206,16 @@ val rule = get("test" / string) ~> route { (x: String) =>
 
 ```
 
+### Error handling in an application
+
+```scala
+val route = new Route().addRules(r1, r2, r3).onUnhandled {
+    case PathNotFound(p) =>
+      CommonResponse.json(404, s"$p not found")
+    case _ =>
+      CommonResponse.json(500, "boom")
+  }
+```
 
 ### Options:
 
@@ -219,6 +231,7 @@ val customSetup = Setup(
   isSupportHttp2 = true
 )
 ```
+
 
 ### Run server
 
