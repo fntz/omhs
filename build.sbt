@@ -3,28 +3,27 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-version := "0.0.1"
-
-organization := "com.github.fntz"
-homepage := Some(url("https://github.com/fntz/omhs"))
-scmInfo := Some(ScmInfo(url("https://github.com/fntz/omhs"), "git@github.com:fntz/omhs.git"))
-developers := List(Developer("mike", "mike", "mike.fch1@gmail.com", url("https://github.com/fntz")))
-licenses += ("MIT", url("https://github.com/fntz/omhs/blob/master/LICENSE"))
-publishMavenStyle := true
-
-val nettyVersion = "4.1.60.Final"
+ThisBuild / version := "0.0.1"
+scalaVersion := scala12
 
 ThisBuild / organization := "com.github.fntz"
-ThisBuild / version      := version.value
-ThisBuild / scalaVersion := scala12
+ThisBuild / homepage := Some(url("https://github.com/fntz/omhs"))
+ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/fntz/omhs"), "git@github.com:fntz/omhs.git"))
+ThisBuild / developers := List(Developer("mike", "mike", "mike.fch1@gmail.com", url("https://github.com/fntz")))
+ThisBuild / licenses += ("MIT", url("https://github.com/fntz/omhs/blob/master/LICENSE"))
 
-publishTo := Some(
+sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+sonatypeCredentialHost := "s01.oss.sonatype.org"
+
+publishMavenStyle := true
+
+ThisBuild / publishTo := {
+  val nexus = "https://s01.oss.sonatype.org/"
   if (isSnapshot.value)
-    Opts.resolver.sonatypeSnapshots
+    Some("snapshots" at nexus + "content/repositories/snapshots/")
   else
-    Opts.resolver.sonatypeStaging
-)
-
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
 
 val opts = Seq(
   scalaVersion := scala12,
@@ -42,6 +41,8 @@ val opts = Seq(
   ),
   scalacOptions in Test ++= Seq("-Yrangepos")
 )
+
+val nettyVersion = "4.1.60.Final"
 
 val netty = Seq(
   "io.netty" % "netty-codec-http" % nettyVersion,
@@ -84,7 +85,8 @@ val swagger = project.in(file("swagger"))
   .settings(
     name := "omhs-swagger",
     libraryDependencies ++= playJson ++ netty, // todo rm
-    crossScalaVersions := supportedVersions
+    crossScalaVersions := supportedVersions,
+    publish / skip := true
   ).dependsOn(dsl)
 
 val playJsonSupport = Project("play-json-support", file("play-json-support"))
@@ -109,7 +111,6 @@ lazy val mainProject = Project("omhs", file("."))
     libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonlibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
-    crossScalaVersions := Nil,
     publish / skip := true
   )
   .dependsOn(dsl, playJsonSupport, circeSupport, swagger)

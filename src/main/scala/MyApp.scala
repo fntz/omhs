@@ -105,6 +105,11 @@ object MyApp extends App {
     .onEveryHttp2Response(rewriterH2)
     .onEveryHttpResponse(rewriterH1)
 
-  OMHSServer.run(9000, route1.toHandler(Setup.default), None)
+  val server = OMHSServer.init(9000, route1.toHandler(Setup.default), None)
+
+  server.start()
+
+//  server.stop()
+
 
 }
