@@ -3,7 +3,7 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-ThisBuild / version := "0.0.2"
+ThisBuild / version := "0.0.3"
 scalaVersion := scala12
 
 ThisBuild / organization := "com.github.fntz"
@@ -50,7 +50,7 @@ val netty = Seq(
 )
 
 val slf4j = Seq("org.slf4j" % "slf4j-api" % "1.7.30")
-val logback = Seq("ch.qos.logback"  %  "logback-classic"    % "1.2.3")
+val logback = Seq("ch.qos.logback"  %  "logback-classic" % "1.2.3")
 
 val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
@@ -77,9 +77,9 @@ lazy val jsonLibs = playJson ++ circe ++ jsoniterScala
 val dsl = project.settings(opts)
   .settings(
     name := "omhs-dsl",
-    libraryDependencies ++= netty.map(_ % "provided, test") ++ slf4j.map(_ % "provided")
+    libraryDependencies ++= netty.map(_ % "provided") ++ slf4j.map(_ % "provided")
       ++ specs2 ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided, test",
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
     ),
     crossScalaVersions := supportedVersions
@@ -100,7 +100,7 @@ val playJsonSupport = Project("play-json-support", file("play-json-support"))
     name := "omhs-play-support",
     libraryDependencies ++= playJson.map(_ % "provided"),
     crossScalaVersions := supportedVersions
-  ).dependsOn(dsl)
+  ).dependsOn(dsl % "provided")
 
 val circeSupport = Project("circe-support", file("circe-support"))
   .settings(opts)
@@ -108,7 +108,7 @@ val circeSupport = Project("circe-support", file("circe-support"))
     name := "omhs-circe-support",
     libraryDependencies ++= circe.map(_ % "provided"),
     crossScalaVersions := supportedVersions
-  ).dependsOn(dsl)
+  ).dependsOn(dsl % "provided")
 
 val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
   .settings(opts)
@@ -116,7 +116,7 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
     name := "omhs-jsoniter-support",
     libraryDependencies ++= jsoniterScala.map(_ % "provided") ++ netty.map(_ % "provided"),
     crossScalaVersions := supportedVersions
-  ).dependsOn(dsl)
+  ).dependsOn(dsl % "provided")
 
 lazy val mainProject = Project("omhs", file("."))
   .settings(
