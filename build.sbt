@@ -3,7 +3,7 @@ val scala12 = "2.12.13"
 val scala13 = "2.13.5"
 val supportedVersions = Seq(scala12, scala13)
 
-ThisBuild / version := "0.0.2"
+ThisBuild / version := "0.0.1"
 scalaVersion := scala12
 
 ThisBuild / organization := "com.github.fntz"
