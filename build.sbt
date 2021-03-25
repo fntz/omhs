@@ -67,7 +67,12 @@ val circe = Seq(
   "io.circe" %% "circe-parser" % "0.13.0"
 )
 
-lazy val jsonlibs = playJson ++ circe
+val jsoniterScala = Seq(
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.6.4",
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.6.4"
+)
+
+lazy val jsonLibs = playJson ++ circe ++ jsoniterScala
 
 val dsl = project.settings(opts)
   .settings(
@@ -105,13 +110,21 @@ val circeSupport = Project("circe-support", file("circe-support"))
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl)
 
+val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
+  .settings(opts)
+  .settings(
+    name := "omhs-jsoniter-support",
+    libraryDependencies ++= jsoniterScala.map(_ % "provided"),
+    crossScalaVersions := supportedVersions
+  ).dependsOn(dsl)
+
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
-    libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonlibs ++ Seq(
+    libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonLibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
     publish / skip := true
   )
-  .dependsOn(dsl, playJsonSupport, circeSupport, swagger)
-  .aggregate(dsl, playJsonSupport, circeSupport, swagger)
+  .dependsOn(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .aggregate(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)

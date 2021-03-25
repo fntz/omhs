@@ -1,4 +1,4 @@
-package com.github.fntz.omhs.playjson
+package com.github.fntz.omhs.circe
 
 import com.github.fntz.omhs.{BodyReader, BodyWriter, CommonResponse}
 import io.circe._
