@@ -1,9 +1,9 @@
 
 # One More Http Server
 
-Netty-based dsl
+Netty-based routing dsl
  
-* No additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
+* no additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
 
 ### TODO
 
@@ -12,13 +12,13 @@ Netty-based dsl
 # install:
 
 ```scala
-"com.github.fntz" %% "omhs-dsl" % "0.0.2"
+"com.github.fntz" %% "omhs-dsl" % "0.0.3"
 // play-json support
-"com.github.fntz" %% "omhs-play-json-support" % "0.0.2"
+"com.github.fntz" %% "omhs-play-json-support" % "0.0.3"
 // circle-json support
-"com.github.fntz" %% "omhs-circe-support" % "0.0.2"
+"com.github.fntz" %% "omhs-circe-support" % "0.0.3"
 // jsoniter support
-"com.github.fntz" %% "omhs-jsoniter-support" % "0.0.2"
+"com.github.fntz" %% "omhs-jsoniter-support" % "0.0.3"
 ```
 
 # idea
@@ -206,7 +206,7 @@ val rule = get("test" / string) ~> route { (x: String) =>
 
 ```
 
-### Error handling in an application
+### Error handling in application
 
 ```scala
 val route = new Route().addRules(r1, r2, r3).onUnhandled {

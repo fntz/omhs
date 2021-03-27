@@ -39,7 +39,8 @@ val opts = Seq(
     "-Xverify",
     "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
   ),
-  scalacOptions in Test ++= Seq("-Yrangepos")
+  scalacOptions in Test ++= Seq("-Yrangepos"),
+  testFrameworks += new TestFramework("munit.Framework")
 )
 
 val nettyVersion = "4.1.60.Final"
@@ -56,7 +57,7 @@ val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
 ) ++ netty ++ logback
 
-val specs2 = Seq("org.specs2" %% "specs2-core" % "4.10.0" % "test")
+val munit = Seq("org.scalameta" %% "munit" % "0.7.22" % "test")
 
 val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2"
@@ -78,7 +79,7 @@ val dsl = project.settings(opts)
   .settings(
     name := "omhs-dsl",
     libraryDependencies ++= netty.map(_ % "provided") ++ slf4j.map(_ % "provided")
-      ++ specs2 ++ Seq(
+      ++ munit ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
     ),
@@ -121,7 +122,7 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
-    libraryDependencies ++= libs ++ slf4j ++ logback ++ specs2 ++ jsonLibs ++ Seq(
+    libraryDependencies ++= libs ++ slf4j ++ logback ++ munit ++ jsonLibs ++ Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
     ),
     publish / skip := true
