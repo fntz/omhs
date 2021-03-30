@@ -26,16 +26,31 @@ Netty-based routing dsl
 `OMHS` is not a web-framework.
 It's a macro-library for generating routing on top of Netty, something like [sinatra.rb](http://sinatrarb.com/).
 The base idea is simple to execute a function on every path match.
+
 `/foo/bar` -> execute some function.
+
 Params should be passed from the path to function as arguments.
+
 `/foo/:string: -> {(s: String) => ...}`
+
 Every function should return something which possible to deserialize to http-response. 
-Ok, in `OMHS` it is `Response`-type. For simple requests (fire-and-forget let's say) I use `CommonResponse`, 
+
+In `OMHS` it is `Response`-type. For simple requests (fire-and-forget let's say) I use `CommonResponse`, 
 for streaming is `StreamResponse`.
+
 But in everyday life, we do not work usually with objects like a simple string, 
-number, most of the cases are get strings/numbers from a database, or from a remote connection, these results probably are wrapped into scala Future, or zio Task, or another IO-like structure. So for compatibility with another's libraries, OMHS use the AsyncResult object to translate library-wrapped result to OMHS result.
+number, most of the cases are get strings/numbers from a database, or from a remote connection, these results probably are wrapped into scala `Future`, or `zio.Task`, or another IO-like structure. 
+So for compatibility with another's libraries, 
+OMHS use the `AsyncResult` object to translate library-wrapped result to OMHS result.
 Therefore every function should return `AsyncResult` of `Response`. 
-For example transform ZIO-Task to `AsyncResult`:
+
+```scala
+get("test" / uuid) ~> {(uuid: UUID) => 
+  AsyncResult.completed(CommonResponse.plain(s"$uuid".getBytes))
+}
+```
+
+Transform ZIO-Task to `AsyncResult`:
 
 ```scala
 val value = zio.Runtime.default.unsafeRun(task) // task returns CommonResponse
@@ -44,8 +59,10 @@ AsyncResult.completed(value)
 
 Paths are described as method + url like structure: `/foo/bar/` + 
 additional helpers: `uuid`/`string`/`long`/and `regex`/ or full url-path matcher: `*`.
+
 `headers` and `cookies` do not participate in matching, just paths.
-for deserializing `body`/`query` need to implement a deserialization strategy: 
+
+For deserializing `body`/`query` need to implement a deserialization strategy: 
 transform from raw string to necessary object.
 
 ### before work: 
@@ -55,6 +72,8 @@ transform from raw string to necessary object.
 # Examples:
 
 [code](https://github.com/fntz/omhs/blob/master/src/main/scala/MyApp.scala)
+
+[code based on zio.Task](https://github.com/truerss/truerss/blob/master/src/main/scala/truerss/api/SourcesApi.scala)
 
 # Using
 
