@@ -63,8 +63,8 @@ case class HttpHandler(route: Route, setup: Setup) extends ChannelInboundHandler
         ErrorWriters(route, setup).write413(ctx, stream)
 
       case _ =>
-        ReferenceCountUtil.release(msg)
     }
+    ReferenceCountUtil.release(msg)
   }
 
   private def process(ctx: ChannelHandlerContext,
