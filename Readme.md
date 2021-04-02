@@ -145,8 +145,8 @@ and then:
 post("test" <<< body[Person]) ~> { (p: Person) ~> "done" }
 ```
 
-Curently the project supports [play-json](https://github.com/playframework/play-json), 
-and [circle](https://github.com/circe/circe).
+Curently the project supports [play-json](https://github.com/playframework/play-json),  
+[circle](https://github.com/circe/circe), and [jsoniter](https://github.com/plokhotnyuk/jsoniter-scala)
 
 ### Files
 
