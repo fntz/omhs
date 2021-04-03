@@ -374,6 +374,40 @@ class RoutingTests extends FunSuite {
     assertEquals(result.header("foo"), "bar")
   }
 
+  routeTest(
+    "detect ajax request#1",
+    get("test") ~> {(c: CurrentHttpRequest) => s"${c.isXHR}"}
+  ) { result =>
+    result.isOk
+    result.contains("false")
+  }
+
+  routeTest(
+    "detect ajax request#2",
+    get("test") ~> {(c: CurrentHttpRequest) => s"${c.isXHR}"},
+    request = Some({
+      val r = req("test")
+      r.headers().add(HttpHeaderNames.X_REQUESTED_WITH, "xmlhttprequest")
+      r
+    })
+  ) { result =>
+    result.isOk
+    result.contains("true")
+  }
+
+  routeTest(
+    "detect ajax request#3",
+    get("test") ~> {(c: CurrentHttpRequest) => s"${c.isXHR}"},
+    request = Some({
+      val r = req("test")
+      r.headers().add(HttpHeaderNames.X_REQUESTED_WITH, "foo")
+      r
+    })
+  ) { result =>
+    result.isOk
+    result.contains("false")
+  }
+
 
   private def req(path: String) = {
     new DefaultFullHttpRequest(

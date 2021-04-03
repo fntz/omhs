@@ -50,7 +50,7 @@ case class CurrentHttpRequest(
 
   def isXHR: Boolean = {
     Option(headers.get(HttpHeaderNames.X_REQUESTED_WITH))
-      .forall(_.toLowerCase == AjaxHeaderValue)
+      .exists(_.toLowerCase == AjaxHeaderValue)
   }
 
   def userAgent: Option[String] = {

@@ -12,13 +12,13 @@ Netty-based routing dsl
 # install:
 
 ```scala
-"com.github.fntz" %% "omhs-dsl" % "0.0.4"
+"com.github.fntz" %% "omhs-dsl" % "0.0.5"
 // play-json support
-"com.github.fntz" %% "omhs-play-json-support" % "0.0.4"
+"com.github.fntz" %% "omhs-play-json-support" % "0.0.5"
 // circle-json support
-"com.github.fntz" %% "omhs-circe-support" % "0.0.4"
+"com.github.fntz" %% "omhs-circe-support" % "0.0.5"
 // jsoniter support
-"com.github.fntz" %% "omhs-jsoniter-support" % "0.0.4"
+"com.github.fntz" %% "omhs-jsoniter-support" % "0.0.5"
 ```
 
 # idea
