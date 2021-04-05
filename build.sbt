@@ -39,7 +39,7 @@ val opts = Seq(
     "-Xverify",
     "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
   ),
-  scalacOptions in Test ++= Seq("-Yrangepos"),
+  Test / scalacOptions ++= Seq("-Yrangepos"),
   testFrameworks += new TestFramework("munit.Framework")
 )
 

@@ -3,53 +3,7 @@ package com.github.fntz.omhs.impl
 import scala.tools.reflect.{ToolBox, ToolBoxError}
 import munit.FunSuite
 
-// based on https://stackoverflow.com/a/15323481/13751202
 class CompilationTests extends FunSuite {
-
-  def compile(code: String): Unit = {
-    try {
-      tryCompile(code)
-      assert(cond = true)
-    } catch {
-      case _: Throwable =>
-        assert(cond = false)
-    }
-  }
-
-  def doesntCompile(code: String): Unit = {
-    try {
-      tryCompile(code)
-      assert(cond = false)
-    } catch {
-      case _: ToolBoxError =>
-        assert(cond = true)
-    }
-  }
-
-  def doesntCompile(code: String, expectedErrorMessage: String): Unit = {
-    try {
-      tryCompile(code)
-      assert(cond = false)
-    } catch {
-      case ex: ToolBoxError =>
-       assert(ex.message.contains(expectedErrorMessage))
-    }
-  }
-
-  def tryCompile(code: String): Any = {
-    eval(code)
-  }
-
-  private def eval(code: String, compileOptions: String = "-cp target/classes -Ydelambdafy:inline"): Any = {
-    val tb = mkToolbox(compileOptions)
-    tb.eval(tb.parse(code))
-  }
-
-  private def mkToolbox(compileOptions: String = ""): ToolBox[_ <: scala.reflect.api.Universe] = {
-    val m = scala.reflect.runtime.currentMirror
-    m.mkToolBox(options = compileOptions)
-  }
-
 
   test("doesn't compile: CurrentRequest should be the last argument") {
     doesntCompile(
@@ -98,7 +52,7 @@ class CompilationTests extends FunSuite {
       s"com.github.fntz.omhs.CurrentHttpRequest or com.github.fntz.omhs.streams.ChunkedOutputStream must be the last arguments in the function")
   }
 
-  test("doesn't compile when parameters count is not the same as function arguments length") {
+  test("doesn't compile: when parameters count is not the same as function arguments length") {
     doesntCompile(
       s"""
          import io.netty.handler.codec.http.multipart.FileUpload
@@ -113,7 +67,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "Args lengths are not the same")
   }
 
-  test("doesn't compile if the alternative is in not params") {
+  test("doesn't compile: if the alternative is in not params") {
     doesntCompile(
       s"""
          import com.github.fntz.omhs._
@@ -127,7 +81,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "Args lengths are not the same")
   }
 
-  test("doesn't compile when parameters are in incorrect sequence#1") {
+  test("doesn't compile: when parameters are in incorrect sequence#1") {
     doesntCompile(
       s"""
          import io.netty.handler.codec.http.multipart.FileUpload
@@ -142,7 +96,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "Incorrect type for `s`, required: Long, given: String")
   }
 
-  test("doesn't compile when parameters are in incorrect sequence#2") {
+  test("doesn't compile: when parameters are in incorrect sequence#2") {
     doesntCompile(
       s"""
          import io.netty.handler.codec.http.multipart.FileUpload
@@ -157,7 +111,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "Incorrect type for `file`, required: Long, given: io.netty.handler.codec.http.multipart.FileUpload")
   }
 
-  test("doesn't compile `status` without `route`-function") {
+  test("doesn't compile: `status` without `route`-function") {
     doesntCompile(
       s"""
          import com.github.fntz.omhs._
@@ -173,7 +127,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "`status` must be wrapped in an `route` block")
   }
 
-  test("doesn't compile `setHeader` without `route`-function") {
+  test("doesn't compile: `setHeader` without `route`-function") {
     doesntCompile(
       s"""
          import com.github.fntz.omhs._
@@ -189,7 +143,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "`setHeader` must be wrapped in an `route` block")
   }
 
-  test("doesn't compile `setCookie` without `route`-function") {
+  test("doesn't compile: `setCookie` without `route`-function") {
     doesntCompile(
       s"""
          import com.github.fntz.omhs._
@@ -207,7 +161,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin, "`setCookie` must be wrapped in an `route` block")
   }
 
-  test("doesn't compile `contentType` without `route`-function") {
+  test("doesn't compile: `contentType` without `route`-function") {
     doesntCompile(
       s"""
          import com.github.fntz.omhs._
@@ -238,7 +192,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin)
   }
 
-  test("pass CurrentRequestParam to function") {
+  test("pass CurrentRequestParam") {
     compile(
       s"""
          import io.netty.handler.codec.http.multipart.FileUpload
@@ -253,7 +207,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin)
   }
 
-  test("pass Stream to function") {
+  test("pass Stream") {
     compile(
       s"""
          import com.github.fntz.omhs.streams.ChunkedOutputStream
@@ -374,7 +328,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin)
   }
 
-  test("Alternative check") {
+  test("alternative syntax") {
     compile(
       s"""
          import com.github.fntz.omhs._
@@ -403,7 +357,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin)
   }
 
-  test("pass cookie") {
+  test("pass Cookie") {
     compile(
       s"""
          import io.netty.handler.codec.http.cookie.Cookie
@@ -475,7 +429,7 @@ class CompilationTests extends FunSuite {
          """.stripMargin)
   }
 
-  test("success compilation") {
+  test("success compilation#1") {
     compile(
       s"""
         import com.github.fntz.omhs._
@@ -488,7 +442,7 @@ class CompilationTests extends FunSuite {
       """.stripMargin)
   }
 
-  test("success compilation #1") {
+  test("success compilation#2") {
     compile(
       s"""
         import com.github.fntz.omhs._
@@ -500,6 +454,51 @@ class CompilationTests extends FunSuite {
         get(string / "test" / long / uuid) ~> { (x: String, l: Long, u: UUID) => "done" }
 
       """.stripMargin)
+  }
+
+  // based on https://stackoverflow.com/a/15323481/13751202
+  def compile(code: String): Unit = {
+    try {
+      tryCompile(code)
+      assert(cond = true)
+    } catch {
+      case _: Throwable =>
+        assert(cond = false)
+    }
+  }
+
+  def doesntCompile(code: String): Unit = {
+    try {
+      tryCompile(code)
+      assert(cond = false)
+    } catch {
+      case _: ToolBoxError =>
+        assert(cond = true)
+    }
+  }
+
+  def doesntCompile(code: String, expectedErrorMessage: String): Unit = {
+    try {
+      tryCompile(code)
+      assert(cond = false)
+    } catch {
+      case ex: ToolBoxError =>
+        assert(ex.message.contains(expectedErrorMessage))
+    }
+  }
+
+  def tryCompile(code: String): Any = {
+    eval(code)
+  }
+
+  private def eval(code: String, compileOptions: String = "-cp target/classes -Ydelambdafy:inline"): Any = {
+    val tb = mkToolbox(compileOptions)
+    tb.eval(tb.parse(code))
+  }
+
+  private def mkToolbox(compileOptions: String = ""): ToolBox[_ <: scala.reflect.api.Universe] = {
+    val m = scala.reflect.runtime.currentMirror
+    m.mkToolBox(options = compileOptions)
   }
 
 }
