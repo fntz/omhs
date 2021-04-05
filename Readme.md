@@ -1,13 +1,9 @@
 
 # One More Http Server
 
-Netty-based routing dsl
+Routing DSL on Netty
  
-* no additional dependencies (shapeless/scalaz/zio/cats/etc...), only netty (scala-reflect for compiling time)
-
-### TODO
-
-* more settings/swagger
+* no additional dependencies (shapeless/scalaz/zio/cats/etc...), only Netty (scala-reflect for compiling time)
 
 # install:
 
@@ -21,31 +17,40 @@ Netty-based routing dsl
 "com.github.fntz" %% "omhs-jsoniter-support" % "0.0.5"
 ```
 
+### before work:
+1. add `-Ydelambdafy:inline` in `scalacOptions`
+2. add reflect: `"org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"`
+3. add `Netty` libraries: 
+
+```sbt
+"io.netty" % "netty-codec-http" % NettyVersion,
+"io.netty" % "netty-codec-http2" % NettyVersion
+```
+
 # idea
+`OMHS` is a library for creating routing on top of `Netty`, like [sinatra.rb](http://sinatrarb.com/).
 
-`OMHS` is not a web-framework.
-It's a macro-library for generating routing on top of Netty, something like [sinatra.rb](http://sinatrarb.com/).
-The base idea is simple to execute a function on every path match.
+`OMHS` will execute `function` on every path match.
 
-`/foo/bar` -> execute some function.
+`/foo/bar` -> execute function.
 
-Params should be passed from the path to function as arguments.
+Params should be passed from the matched path to function as arguments.
 
 `/foo/:string: -> {(s: String) => ...}`
 
-Every function should return something which possible to deserialize to http-response. 
+Every function should return an object which should be possible to deserialize to HTTP-response.
 
-In `OMHS` it is `Response`-type. For simple requests (fire-and-forget let's say) I use `CommonResponse`, 
+In `OMHS` it is `Response`-type. For simple requests (fire-and-forget let's say) I use `CommonResponse`,
 for streaming is `StreamResponse`.
 
-But in everyday life, we do not work usually with objects like a simple string, 
-number, most of the cases are get strings/numbers from a database, or from a remote connection, these results probably are wrapped into scala `Future`, or `zio.Task`, or another IO-like structure. 
-So for compatibility with another's libraries, 
+But in everyday life, we do not work usually with objects like a simple string,
+number, most of the cases are get strings/numbers from a database, or a remote connection, these results probably are wrapped into scala `Future`, or `zio.Task`, or another IO-like structure.
+So for compatibility with another's libraries,
 OMHS use the `AsyncResult` object to translate library-wrapped result to OMHS result.
-Therefore every function should return `AsyncResult` of `Response`. 
+Therefore every function should return `AsyncResult` of `Response`.
 
 ```scala
-get("test" / uuid) ~> {(uuid: UUID) => 
+get("test" / uuid) ~> {(uuid: UUID) =>
   AsyncResult.completed(CommonResponse.plain(s"$uuid".getBytes))
 }
 ```
@@ -57,17 +62,13 @@ val value = zio.Runtime.default.unsafeRun(task) // task returns CommonResponse
 AsyncResult.completed(value)
 ```
 
-Paths are described as method + url like structure: `/foo/bar/` + 
+Paths are described as method + url like structure: `/foo/bar/` +
 additional helpers: `uuid`/`string`/`long`/and `regex`/ or full url-path matcher: `*`.
 
 `headers` and `cookies` do not participate in matching, just paths.
 
-For deserializing `body`/`query` need to implement a deserialization strategy: 
+For deserializing `body`/`query` need to implement a deserialization strategy:
 transform from raw string to necessary object.
-
-### before work: 
-1. add `-Ydelambdafy:inline` in scalacOptions
-2. add reflect: `"org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile"`
 
 # Examples:
 
@@ -192,8 +193,8 @@ implicit val ec = executor
 
 import com.github.fntz.omhs.AsyncResult.Implicits._ 
 
-get("asd") ~> {() => 
-  Future("dsad")
+get("persons" / long) ~> {(id: Long) => 
+  Future(DB.persons.byId(id))      // as example
 }
 
 ```
@@ -223,6 +224,12 @@ val rule = get("test" / string) ~> route { (x: String) =>
   }
 }
 
+// available functions are:
+- contentType
+- status
+- setCookie
+- setHeader
+
 ```
 
 ### Error handling in application
@@ -234,6 +241,18 @@ val route = new Route().addRules(r1, r2, r3).onUnhandled {
     case _ =>
       CommonResponse.json(500, "boom")
   }
+```
+
+#### reasons are:
+
+```
++ PathNotFound(path: String)
++ QueryIsUnparsable(params: Map[String, Iterable[String]])
++ CookieIsMissing(cookieName: String)
++ HeaderIsMissing(headerName: String)
++ BodyIsUnparsable(ex: Throwable)
++ FilesIsUnparsable(ex: Throwable)
++ UnhandledException(ex:  Throwable)
 ```
 
 ### Options:
@@ -284,6 +303,11 @@ server.stop()
 
 # check codegen: 
 pass `-Domhs.logLevel=verbose|info|none` to sbt/options
+
+### TODO
+
+* more settings/swagger
+
 
 # License: MIT
 
