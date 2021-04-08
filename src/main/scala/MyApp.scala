@@ -26,6 +26,10 @@ object MyApp extends App {
   implicit val personBodyReader = JsonSupport.reader[Person]()
   implicit val personBodyWriter = JsonSupport.writer[Person]()
 
+  case class Foo(id: Long)
+  implicit val fooJson = Json.format[Foo]
+  implicit val fooBodyWriter = JsonSupport.writer[Foo]
+
   case class Search(query: String)
   implicit val searchQueryReader = new QueryReader[Search] {
     override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
@@ -36,30 +40,30 @@ object MyApp extends App {
 
   implicit val cookieEncoder = ServerCookieEncoder.STRICT
 
-  val simpleGet = get("test" / "foo") ~> {() =>
+  val simpleGetRoute = get("test" / "foo") ~> { () =>
     "foo"
 //  or  AsyncResult.completed("foo")
   }
 
-  val getWithParams = get("bar" / string) ~> {(x: String) =>
+  val getWithParamsRoute = get("bar" / string) ~> { (x: String) =>
     s"given: $x"
   }
 
-  val currentReq = get("example") ~> {(req: CurrentHttpRequest) =>
+  val currentReqRoute = get("example") ~> { (req: CurrentHttpRequest) =>
     req.path
   }
 
-  val list = get("example" / "foo" / *) ~> { (xs: List[String]) =>
+  val listRoute = get("example" / "foo" / *) ~> { (xs: List[String]) =>
     xs.mkString(", ")
   }
 
-  val chunked = get("chunks") ~> {(stream: ChunkedOutputStream) =>
+  val chunkedRoute = get("chunks") ~> { (stream: ChunkedOutputStream) =>
     stream << "123"
     stream << "456"
     stream << "789"
   }
 
-  val postPerson = post("person" <<< body[Person]) ~> {(p: Person) =>
+  val postPersonRoute = post("person" <<< body[Person]) ~> { (p: Person) =>
     Future(p)
   }
 
@@ -76,10 +80,14 @@ object MyApp extends App {
     h1 + c + h2
   }
 
-  val moreRouting = get("more") ~> route {() =>
+  val moreRoute = get("more") ~> route { () =>
     setHeader("test", "abc")
     status(201)
     "done"
+  }
+
+  val fooRoute = get("foo" / long) ~> {(id: Long) =>
+    Foo(id)
   }
 
   val rewriterH2 = (r: DefaultHttp2HeadersFrame) => {
@@ -91,16 +99,17 @@ object MyApp extends App {
     r
   }
   val route1 = new Route().addRules(
-    simpleGet,
-    getWithParams,
-    currentReq,
-    list,
-    chunked,
-    postPerson,
+    simpleGetRoute,
+    getWithParamsRoute,
+    currentReqRoute,
+    listRoute,
+    chunkedRoute,
+    postPersonRoute,
     fileRoute,
     queryRoute,
     cookieOrHeaderRoute,
-    moreRouting
+    moreRoute,
+    fooRoute
   )
     .onEveryHttp2Response(rewriterH2)
     .onEveryHttpResponse(rewriterH1)

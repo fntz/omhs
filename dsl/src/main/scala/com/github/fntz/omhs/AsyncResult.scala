@@ -67,6 +67,10 @@ object AsyncResult {
       AsyncResult.completed(CommonResponse.plain(value))
     }
 
+    implicit def anyToAsyncResult[T](value: T)(implicit w: BodyWriter[T]): AsyncResult = {
+      AsyncResult.completed(w.write(value))
+    }
+
     implicit def future2Async[T](f: Future[T])(
       implicit writer: BodyWriter[T],
       ec: ExecutionContext
