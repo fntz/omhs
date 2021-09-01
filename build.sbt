@@ -1,10 +1,11 @@
 
 val scala12 = "2.12.13"
-val scala13 = "2.13.5"
-val supportedVersions = Seq(scala12, scala13)
+val scala13 = "2.13.6"
+val scala3  = "3.0.0"
+val supportedVersions = Seq(scala13, scala3)
 
 ThisBuild / version := "0.0.5"
-scalaVersion := scala12
+scalaVersion := scala3
 
 ThisBuild / organization := "com.github.fntz"
 ThisBuild / homepage := Some(url("https://github.com/fntz/omhs"))
@@ -26,7 +27,7 @@ ThisBuild / publishTo := {
 }
 
 val opts = Seq(
-  scalaVersion := scala12,
+  scalaVersion := scala13,
   scalacOptions ++= Seq(
     "-deprecation",
     "-encoding", "UTF-8",
@@ -57,7 +58,7 @@ val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
 ) ++ netty ++ logback
 
-val munit = Seq("org.scalameta" %% "munit" % "0.7.22" % "test")
+val munit = Seq("org.scalameta" %% "munit" % "0.7.29" % "test")
 
 val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2"
@@ -79,13 +80,20 @@ val dsl = project.settings(opts)
   .settings(
     name := "omhs-dsl",
     libraryDependencies ++= netty.map(_ % "provided") ++ slf4j.map(_ % "provided")
-      ++ munit ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-    ),
+      ++ munit ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) =>
+          Seq(
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
+            "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+          )
+        case _ =>
+          Seq.empty
+      }
+    },
     crossScalaVersions := supportedVersions
   )
-
+/*
 val swagger = project.in(file("swagger"))
   .settings(opts)
   .settings(
@@ -118,14 +126,14 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
     libraryDependencies ++= jsoniterScala.map(_ % "provided") ++ netty.map(_ % "provided"),
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl % "provided")
-
+*/
 lazy val mainProject = Project("omhs", file("."))
   .settings(
-    opts,
-    libraryDependencies ++= libs ++ slf4j ++ logback ++ munit ++ jsonLibs ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
-    ),
+    opts, // jsonLibs ++ Seq(
+//    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
+//  )
+    libraryDependencies ++= libs ++ slf4j ++ logback ++ munit,
     publish / skip := true
   )
-  .dependsOn(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)
-  .aggregate(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .dependsOn(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .aggregate(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)

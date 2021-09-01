@@ -11,7 +11,6 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
 private[omhs] object RoutingImpl {
-  import Shared._
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
                            (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
@@ -382,8 +381,8 @@ private[omhs] object RoutingImpl {
 
 
   private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
-    import c.universe._
     import Shared._
+    import c.universe._
 
     val logger = new Logger(c)
 
