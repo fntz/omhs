@@ -10,7 +10,7 @@ Routing DSL on Netty
 ```scala
 "com.github.fntz" %% "omhs-dsl" % "0.0.5"
 // play-json support
-"com.github.fntz" %% "omhs-play-json-support" % "0.0.5"
+"com.github.fntz" %% "omhs-play-support" % "0.0.5"
 // circle-json support
 "com.github.fntz" %% "omhs-circe-support" % "0.0.5"
 // jsoniter support
