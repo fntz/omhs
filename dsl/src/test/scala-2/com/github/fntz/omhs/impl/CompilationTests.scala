@@ -491,7 +491,7 @@ class CompilationTests extends FunSuite {
     eval(code)
   }
 
-  private def eval(code: String, compileOptions: String = "-cp target/classes -Ydelambdafy:inline"): Any = {
+  private def eval(code: String, compileOptions: String = s"-cp ${System.getProperty("java.class.path")} -Ydelambdafy:inline"): Any = {
     val tb = mkToolbox(compileOptions)
     tb.eval(tb.parse(code))
   }

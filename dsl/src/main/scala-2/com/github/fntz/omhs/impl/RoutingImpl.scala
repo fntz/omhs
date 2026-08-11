@@ -11,7 +11,6 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 
 private[omhs] object RoutingImpl {
-  import Shared._
 
   def run0[R: c.WeakTypeTag](c: whitebox.Context)
                            (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
@@ -382,8 +381,8 @@ private[omhs] object RoutingImpl {
 
 
   private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
-    import c.universe._
     import Shared._
+    import c.universe._
 
     val logger = new Logger(c)
 
@@ -636,22 +635,19 @@ private[omhs] object RoutingImpl {
                 rule.withStream()
               }
 
-              val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
-                  val defsMap = defs.groupBy(_.sortProp).map { x =>
-                    x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
-                  }
-                  val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
-
-                  sorted match {
-                    case $caseClause =>
-                      $callFunction
-                    case xs =>
-                      throw new IllegalStateException("Incorrect order of arguments")
-                  }
+              new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule, (defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]) => {
+                val defsMap = defs.groupBy(_.sortProp).map { x =>
+                  x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
                 }
-              }
-              rf
+                val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
+
+                sorted match {
+                  case $caseClause =>
+                    $callFunction
+                  case xs =>
+                    throw new IllegalStateException("Incorrect order of arguments")
+                }
+              })
             }
             $funName()
         }

@@ -15,7 +15,7 @@ class RequestHelperTests extends FunSuite {
   private val method = HttpMethod.POST
   private val setup = Setup.default
   case class Search(q: String)
-  implicit val searchQueryParser = new QueryReader[Search] {
+  implicit val searchQueryParser: QueryReader[Search] = new QueryReader[Search] {
     override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
       queries.get("q").flatMap(_.headOption).map(Search)
     }
@@ -31,7 +31,7 @@ class RequestHelperTests extends FunSuite {
 
   case class Foo(bar: Int)
 
-  implicit val fooBodyReader = new BodyReader[Foo] {
+  implicit val fooBodyReader: BodyReader[Foo] = new BodyReader[Foo] {
     override def read(str: String): Foo = {
       Foo(1)
     }

@@ -1,10 +1,11 @@
 
-val scala12 = "2.12.17"
-val scala13 = "2.13.10"
-val supportedVersions = Seq(scala12, scala13)
+val scala213 = "2.13.17"
+val scala3   = "3.7.1"
+val supportedVersions = Seq(scala213, scala3)
 
 ThisBuild / version := "0.0.6"
-scalaVersion := scala12
+ThisBuild / scalaVersion := scala3
+ThisBuild / crossScalaVersions := supportedVersions
 
 ThisBuild / organization := "com.github.fntz"
 ThisBuild / homepage := Some(url("https://github.com/fntz/omhs"))
@@ -25,21 +26,40 @@ ThisBuild / publishTo := {
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
-val opts = Seq(
-  scalaVersion := scala12,
-  scalacOptions ++= Seq(
+def commonScalacOptions(scalaV: String): Seq[String] = {
+  val shared = Seq(
     "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-language:postfixOps",
-    "-language:reflectiveCalls",
-    "-unchecked",
-    "-Xverify",
-    "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
-  ),
-  Test / scalacOptions ++= Seq("-Yrangepos"),
+    "-unchecked"
+  )
+  CrossVersion.partialVersion(scalaV) match {
+    case Some((2, _)) =>
+      shared ++ Seq(
+        "-language:higherKinds",
+        "-language:implicitConversions",
+        "-language:postfixOps",
+        "-language:reflectiveCalls",
+        "-Xverify",
+        "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
+      )
+    case Some((3, _)) =>
+      shared ++ Seq(
+        "-language:implicitConversions",
+        "-language:postfixOps"
+      )
+    case _ => shared
+  }
+}
+
+val opts = Seq(
+  scalacOptions ++= commonScalacOptions(scalaVersion.value),
+  Test / scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq("-Yrangepos")
+      case _            => Nil
+    }
+  },
   testFrameworks += new TestFramework("munit.Framework")
 )
 
@@ -57,7 +77,7 @@ val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
 ) ++ netty ++ logback
 
-val munit = Seq("org.scalameta" %% "munit" % "0.7.29" % "test")
+val munit = Seq("org.scalameta" %% "munit" % "1.1.0" % "test")
 
 val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.3"
@@ -79,13 +99,20 @@ val dsl = project.settings(opts)
   .settings(
     name := "omhs-dsl",
     libraryDependencies ++= netty.map(_ % "provided") ++ slf4j.map(_ % "provided")
-      ++ munit ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-    ),
+      ++ munit ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 13)) =>
+          Seq(
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value % "compile",
+            "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+          )
+        case _ =>
+          Seq.empty
+      }
+    },
     crossScalaVersions := supportedVersions
   )
-
+/*
 val swagger = project.in(file("swagger"))
   .settings(opts)
   .settings(
@@ -118,15 +145,22 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
     libraryDependencies ++= jsoniterScala.map(_ % "provided") ++ netty.map(_ % "provided"),
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl % "provided")
-
+*/
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
     libraryDependencies ++= libs ++ slf4j ++ logback ++ munit ++ jsonLibs ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test",
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1" % "test"
-    ),
-    publish / skip := true
+    ) ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) =>
+          Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "test")
+        case _ =>
+          Seq.empty
+      }
+    },
+    publish / skip := true,
+    crossScalaVersions := supportedVersions
   )
-  .dependsOn(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)
-  .aggregate(dsl, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .dependsOn(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .aggregate(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)

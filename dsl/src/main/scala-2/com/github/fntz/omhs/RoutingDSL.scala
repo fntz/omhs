@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
-import com.github.fntz.omhs.internal._
 import com.github.fntz.omhs.impl.RoutingImpl
+import com.github.fntz.omhs.internal._
 import io.netty.handler.codec.http.HttpMethod
 
 import scala.language.experimental.macros
