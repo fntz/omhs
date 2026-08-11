@@ -63,7 +63,7 @@ val opts = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-val nettyVersion = "4.1.84.Final"
+val nettyVersion = "4.1.137.Final"
 
 val netty = Seq(
   "io.netty" % "netty-codec-http" % nettyVersion,
