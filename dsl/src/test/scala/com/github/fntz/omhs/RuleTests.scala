@@ -8,11 +8,11 @@ import munit.FunSuite
 class RuleTests extends FunSuite {
 
   case class Foo(id: Int)
-  implicit val queryReader = new QueryReader[Foo] {
+  implicit val queryReader: QueryReader[Foo] = new QueryReader[Foo] {
     override def read(queries: Map[String, Iterable[String]]): Option[Foo] =
       Some(Foo(1))
   }
-  implicit val fooReader = new BodyReader[Foo] {
+  implicit val fooReader: BodyReader[Foo] = new BodyReader[Foo] {
     override def read(str: String): Foo = Foo(1)
   }
 

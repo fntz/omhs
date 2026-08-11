@@ -1,11 +1,11 @@
 
-val scala12 = "2.12.13"
-val scala13 = "2.13.6"
-val scala3  = "3.0.0"
-val supportedVersions = Seq(scala13, scala3)
+val scala213 = "2.13.17"
+val scala3   = "3.7.1"
+val supportedVersions = Seq(scala213, scala3)
 
 ThisBuild / version := "0.0.5"
-scalaVersion := scala3
+ThisBuild / scalaVersion := scala3
+ThisBuild / crossScalaVersions := supportedVersions
 
 ThisBuild / organization := "com.github.fntz"
 ThisBuild / homepage := Some(url("https://github.com/fntz/omhs"))
@@ -26,21 +26,40 @@ ThisBuild / publishTo := {
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
-val opts = Seq(
-  scalaVersion := scala13,
-  scalacOptions ++= Seq(
+def commonScalacOptions(scalaV: String): Seq[String] = {
+  val shared = Seq(
     "-deprecation",
     "-encoding", "UTF-8",
     "-feature",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-language:postfixOps",
-    "-language:reflectiveCalls",
-    "-unchecked",
-    "-Xverify",
-    "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
-  ),
-  Test / scalacOptions ++= Seq("-Yrangepos"),
+    "-unchecked"
+  )
+  CrossVersion.partialVersion(scalaV) match {
+    case Some((2, _)) =>
+      shared ++ Seq(
+        "-language:higherKinds",
+        "-language:implicitConversions",
+        "-language:postfixOps",
+        "-language:reflectiveCalls",
+        "-Xverify",
+        "-Ydelambdafy:inline" // https://github.com/scala/bug/issues/10554
+      )
+    case Some((3, _)) =>
+      shared ++ Seq(
+        "-language:implicitConversions",
+        "-language:postfixOps"
+      )
+    case _ => shared
+  }
+}
+
+val opts = Seq(
+  scalacOptions ++= commonScalacOptions(scalaVersion.value),
+  Test / scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) => Seq("-Yrangepos")
+      case _            => Nil
+    }
+  },
   testFrameworks += new TestFramework("munit.Framework")
 )
 
@@ -58,7 +77,7 @@ val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
 ) ++ netty ++ logback
 
-val munit = Seq("org.scalameta" %% "munit" % "0.7.29" % "test")
+val munit = Seq("org.scalameta" %% "munit" % "1.1.0" % "test")
 
 val playJson = Seq(
   "com.typesafe.play" %% "play-json" % "2.9.2"
@@ -129,11 +148,10 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
 */
 lazy val mainProject = Project("omhs", file("."))
   .settings(
-    opts, // jsonLibs ++ Seq(
-//    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "test"
-//  )
+    opts,
     libraryDependencies ++= libs ++ slf4j ++ logback ++ munit,
-    publish / skip := true
+    publish / skip := true,
+    crossScalaVersions := supportedVersions
   )
   .dependsOn(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)
   .aggregate(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)

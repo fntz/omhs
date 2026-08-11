@@ -1,437 +1,57 @@
 package com.github.fntz.omhs.impl
 
-import com.github.fntz.omhs._
-import com.github.fntz.omhs.internal._
+import com.github.fntz.omhs.*
+import com.github.fntz.omhs.internal.*
 import com.github.fntz.omhs.streams.ChunkedOutputStream
 import io.netty.handler.codec.http.cookie.Cookie
 import io.netty.handler.codec.http.multipart.FileUpload
 
 import java.util.UUID
-import scala.quoted.{Quotes, Expr}
+import scala.collection.mutable.ListBuffer
+import scala.quoted.*
 
 private[omhs] object RoutingImpl {
 
-  def run0[R: c.WeakTypeTag](c: whitebox.Context)
-                           (f: c.Expr[() => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
+  def generate[F: Type](rule: Expr[Rule], f: Expr[F])(using Quotes): Expr[ExecutableRule] = {
+    import Shared.*
+    import quotes.reflect.*
 
-  def run1[T1: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                               (f: c.Expr[(T1) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
+    val logger = new Logger()
 
-
-  def run2[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run3[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run4[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run5[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run6[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run7[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run8[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run9[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                        (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run10[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run11[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run12[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run13[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run14[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run15[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run16[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run17[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run18[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag,
-    T18: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run19[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag,
-    T18: c.WeakTypeTag,
-    T19: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run20[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag,
-    T18: c.WeakTypeTag,
-    T19: c.WeakTypeTag,
-    T20: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run21[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag,
-    T18: c.WeakTypeTag,
-    T19: c.WeakTypeTag,
-    T20: c.WeakTypeTag,
-    T21: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  def run22[T1: c.WeakTypeTag,
-    T2: c.WeakTypeTag,
-    T3: c.WeakTypeTag,
-    T4: c.WeakTypeTag,
-    T5: c.WeakTypeTag,
-    T6: c.WeakTypeTag,
-    T7: c.WeakTypeTag,
-    T8: c.WeakTypeTag,
-    T9: c.WeakTypeTag,
-    T10: c.WeakTypeTag,
-    T11: c.WeakTypeTag,
-    T12: c.WeakTypeTag,
-    T13: c.WeakTypeTag,
-    T14: c.WeakTypeTag,
-    T15: c.WeakTypeTag,
-    T16: c.WeakTypeTag,
-    T17: c.WeakTypeTag,
-    T18: c.WeakTypeTag,
-    T19: c.WeakTypeTag,
-    T20: c.WeakTypeTag,
-    T21: c.WeakTypeTag,
-    T22: c.WeakTypeTag, R: c.WeakTypeTag](c: whitebox.Context)
-                                         (f: c.Expr[(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22) => R]): c.Expr[ExecutableRule] = {
-    generate(c)(f.tree)
-  }
-
-
-  private def generate(c: whitebox.Context)(f: c.Tree): c.Expr[ExecutableRule] = {
-    import Shared._
-    import c.universe._
-
-    val logger = new Logger(c)
-
-    val focus = c.enclosingPosition.focus
-
-    guardSbtOptions(c)
-
-    sealed trait ParamToken {
+    sealed trait ParamToken:
       def isBody = false
       def isFile = false
-      def isQuery = false
-    }
+
     case object StringToken extends ParamToken
     case object LongToken extends ParamToken
     case object UUIDToken extends ParamToken
     case object RegexToken extends ParamToken
     case object AlternativeToken extends ParamToken
     case object TailToken extends ParamToken
-    case class BodyToken(tpe: c.universe.Type, reader: c.universe.Tree)
-      extends ParamToken {
+    case class BodyToken(tpe: TypeRepr) extends ParamToken:
       override def isBody: Boolean = true
-    }
     case object HeaderToken extends ParamToken
     case object CurrentRequestToken extends ParamToken
-    case object FileToken extends ParamToken {
+    case object FileToken extends ParamToken:
       override def isFile = true
-    }
     case object CookieToken extends ParamToken
-    case class QueryToken(tpe: c.universe.Type, reader: c.universe.Tree) extends ParamToken {
-      override def isQuery: Boolean = true
-    }
+    case class QueryToken(tpe: TypeRepr) extends ParamToken
     case object StreamToken extends ParamToken
 
-    def getType(c: whitebox.Context, p: ParamToken): c.universe.Type = {
-      p match {
-        case StringToken => c.typeTag[String].tpe
-        case LongToken => c.typeTag[Long].tpe
-        case UUIDToken => c.typeTag[UUID].tpe
-        case RegexToken => c.typeTag[String].tpe
-        case TailToken => c.typeTag[List[String]].tpe
-        case AlternativeToken => c.typeTag[String].tpe
-        case BodyToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
-        case HeaderToken => c.typeTag[String].tpe
-        case CurrentRequestToken => c.typeTag[CurrentHttpRequest].tpe
-        case FileToken => c.typeTag[List[FileUpload]].tpe
-        case CookieToken => c.typeTag[Cookie].tpe
-        case QueryToken(tpt, _) => tpt.asInstanceOf[c.universe.Type]
-        case StreamToken => c.typeTag[ChunkedOutputStream].tpe
-      }
-    }
+    def tokenType(p: ParamToken): TypeRepr = p match
+      case StringToken           => TypeRepr.of[String]
+      case LongToken             => TypeRepr.of[Long]
+      case UUIDToken             => TypeRepr.of[UUID]
+      case RegexToken            => TypeRepr.of[String]
+      case TailToken             => TypeRepr.of[List[String]]
+      case AlternativeToken      => TypeRepr.of[String]
+      case BodyToken(tpt)        => tpt
+      case HeaderToken           => TypeRepr.of[String]
+      case CurrentRequestToken   => TypeRepr.of[CurrentHttpRequest]
+      case FileToken             => TypeRepr.of[List[FileUpload]]
+      case CookieToken           => TypeRepr.of[Cookie]
+      case QueryToken(tpt)       => tpt
+      case StreamToken           => TypeRepr.of[ChunkedOutputStream]
 
     val availableParams = Map(
       "string" -> StringToken,
@@ -441,61 +61,86 @@ private[omhs] object RoutingImpl {
       "header" -> HeaderToken,
       "cookie" -> CookieToken,
       "file" -> FileToken,
+      "*" -> TailToken,
       "$times" -> TailToken
     )
 
-    guardRoutes(c)(f)
+    def unwrap(tree: Tree): Tree = tree match
+      case Inlined(_, _, t) => unwrap(t)
+      case Block(stats, expr) =>
+        unwrap(expr) match
+          case Closure(meth, _) =>
+            stats.collectFirst {
+              case d: DefDef if d.symbol == meth.symbol => d
+            }.getOrElse(unwrap(expr))
+          case other => other
+      case Closure(meth, _) =>
+        meth.symbol.tree match
+          case d: DefDef => d
+          case _         => tree
+      case other => other
 
-    val tokens = c.prefix.tree.collect {
-      case Select(
-        Apply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),
-        TermName("StringExt")),
-          List(_)), TermName("$bar")) =>
-        AlternativeToken
+    val tokens = ListBuffer.empty[ParamToken]
 
-      case Apply(
-        TypeApply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),
-          TermName("body")), List(tpt)), List(reader)) =>
-        BodyToken(tpt.tpe, reader)
+    def addParamToken(name: String): Unit =
+      availableParams.get(name).foreach(tokens += _)
 
-      case Apply(
-        TypeApply(Select(Select(Select(_, TermName("omhs")), TermName("RoutingDSL")),
-        TermName("query")), List(tpt)), List(reader)) =>
-          QueryToken(tpt.tpe, reader)
+    def isStringExt(term: Term): Boolean =
+      // Use the term's result type — Apply(StringExt.|(...)).symbol is the method itself.
+      val n = term.tpe.widen.typeSymbol.name
+      n.contains("StringExt")
 
-      case Select(Select(Select(_, TermName("omhs")),
-        TermName("RoutingDSL")), TermName(term)) if !ignored.contains(term) =>
-        availableParams.get(term) match {
-          case Some(value) => value
-          case None =>
-           c.abort(focus, s"Unexpected term: $term, available: ${availableParams.keys.mkString(", ")}")
-        }
-    }.toBuffer[ParamToken]
+    object TokenTraverser extends TreeTraverser:
+      override def traverseTree(tree: Tree)(owner: Symbol): Unit =
+        tree match
+          // StringExt("a").|("b")
+          case Select(qual, "|") if isStringExt(qual) =>
+            tokens += AlternativeToken
+            traverseTreeChildren(tree)(owner)
+          case Apply(TypeApply(fun, List(tpt)), args) =>
+            fun.symbol.name match
+              case "body"  => tokens += BodyToken(tpt.tpe)
+              case "query" => tokens += QueryToken(tpt.tpe)
+              case _       => ()
+            // do not re-visit `fun` (would double-count), only args / targs
+            args.foreach(a => traverseTree(a)(owner))
+          case Apply(fun, args) if availableParams.contains(fun.symbol.name) =>
+            // header("x"), regex(...), ... — skip `fun` to avoid Ident double-count
+            addParamToken(fun.symbol.name)
+            args.foreach(a => traverseTree(a)(owner))
+          // imported: Ident("long"); qualified: Select(RoutingDSL, "long")
+          case Ident(name) if availableParams.contains(name) =>
+            addParamToken(name)
+          case Select(_, name) if availableParams.contains(name) =>
+            addParamToken(name)
+            traverseTreeChildren(tree)(owner)
+          case _ =>
+            traverseTreeChildren(tree)(owner)
+
+    TokenTraverser.traverseTree(rule.asTerm)(Symbol.spliceOwner)
+
+    val fTerm = unwrap(f.asTerm)
+    guardRoutes(f.asTerm)
 
     logger.info(s"Found ${tokens.size} arguments for rule")
 
-    val actualFunctionParameters = f match {
-      case q"(..$params) => $_" =>
-        params.collect {
-          case q"$_ val $tname: $tpt = $_" =>
-            (tpt.tpe, tname.toString())
-        }
-
+    val actualFunctionParameters: Seq[(TypeRepr, String)] = fTerm match
+      case Lambda(params, _) =>
+        params.map(p => (p.tpt.tpe, p.name))
+      case d: DefDef =>
+        d.termParamss.flatMap(_.params).map(p => (p.tpt.tpe, p.name))
       case _ =>
-        c.error(focus, "Function is required")
-        Seq.empty
-    }
+        Nil
 
     val isEmptyFunction = actualFunctionParameters.isEmpty
 
-    val reqType = typeOf[com.github.fntz.omhs.CurrentHttpRequest]
-    def isReqParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= reqType
-    val isReqParamNeeded = actualFunctionParameters.exists(x => isReqParam(x._1))
+    val reqType = TypeRepr.of[CurrentHttpRequest]
+    def isReqParam(x: TypeRepr): Boolean = x.widen.dealias =:= reqType
+    val isReqParamNeeded = actualFunctionParameters.exists((t, _) => isReqParam(t))
 
-
-    val chunkedStreamType = typeOf[com.github.fntz.omhs.streams.ChunkedOutputStream]
-    def isStreamParam(x: c.Type): Boolean = x.typeSymbol.asType.toType =:= chunkedStreamType
-    val isStreamNeeded = actualFunctionParameters.exists(x => isStreamParam(x._1))
+    val chunkedStreamType = TypeRepr.of[ChunkedOutputStream]
+    def isStreamParam(x: TypeRepr): Boolean = x.widen.dealias =:= chunkedStreamType
+    val isStreamNeeded = actualFunctionParameters.exists((t, _) => isStreamParam(t))
 
     logger.info(
       s"""
@@ -503,162 +148,155 @@ private[omhs] object RoutingImpl {
          |need to pass requestParam? $isReqParamNeeded
          |need to pass stream? $isStreamNeeded
          |detected tokens: ${tokens.mkString(", ")}
-         |actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1}").mkString(", ")}
+         |actual parameters: ${actualFunctionParameters.map(x => s"${x._2}: ${x._1.show}").mkString(", ")}
          |""".stripMargin
     )
 
-    // order of stream and current-request
-    // todo: simplify
-    if (isReqParamNeeded && isStreamNeeded) {
+    if isReqParamNeeded && isStreamNeeded then
       val size = actualFunctionParameters.size
       val isReqLastOrPenultimate = isReqParam(actualFunctionParameters.last._1) ||
         (size > 1 && isReqParam(actualFunctionParameters(size - 2)._1))
       val isStreamLastOrPenultimate = isStreamParam(actualFunctionParameters.last._1) ||
         (size > 1 && isStreamParam(actualFunctionParameters(size - 2)._1))
-      if (!(isReqLastOrPenultimate && isStreamLastOrPenultimate)) {
-        c.abort(focus, s"$reqType or $chunkedStreamType must be the last arguments in the function")
-      } else {
-        if (isReqParam(actualFunctionParameters.last._1)) {
-          tokens += StreamToken
-          tokens += CurrentRequestToken
-        } else {
-          tokens += CurrentRequestToken
-          tokens += StreamToken
-        }
-      }
-    } else {
-      if (isReqParamNeeded && !isReqParam(actualFunctionParameters.last._1)) {
-        c.error(focus, s"$reqType must be the last argument in the function")
-      } else if (isReqParamNeeded) {
-        tokens += CurrentRequestToken
-      }
-      if (isStreamNeeded && !isStreamParam(actualFunctionParameters.last._1)) {
-        c.error(focus, s"$chunkedStreamType must be the last argument in the function")
-      } else if (isStreamNeeded) {
+      if !(isReqLastOrPenultimate && isStreamLastOrPenultimate) then
+        report.errorAndAbort(
+          s"${reqType.show} or ${chunkedStreamType.show} must be the last arguments in the function"
+        )
+      else if isReqParam(actualFunctionParameters.last._1) then
         tokens += StreamToken
-      }
-    }
+        tokens += CurrentRequestToken
+      else
+        tokens += CurrentRequestToken
+        tokens += StreamToken
+    else
+      if isReqParamNeeded && !isReqParam(actualFunctionParameters.last._1) then
+        report.error(s"${reqType.show} must be the last argument in the function")
+      else if isReqParamNeeded then
+        tokens += CurrentRequestToken
+      if isStreamNeeded && !isStreamParam(actualFunctionParameters.last._1) then
+        report.error(s"${chunkedStreamType.show} must be the last argument in the function")
+      else if isStreamNeeded then
+        tokens += StreamToken
 
-    if (tokens.size != actualFunctionParameters.size && !isEmptyFunction) {
-      c.error(focus, s"Args lengths are not the same. " +
-        s"function has ${actualFunctionParameters.size} params, route definition parsed to ${tokens.size}")
-    }
+    if tokens.size != actualFunctionParameters.size && !isEmptyFunction then
+      report.error(
+        s"Args lengths are not the same. " +
+          s"function has ${actualFunctionParameters.size} params, route definition parsed to ${tokens.size}"
+      )
 
-    // otherwise just ignore all parameters
-    if (!isEmptyFunction) {
+    if !isEmptyFunction then
       tokens.zip(actualFunctionParameters).foreach { case (paramToken, (funcTypeParam, argName)) =>
-        // check against arguments
-        val at = getType(c, paramToken)
-        if (at.toString != funcTypeParam.toString) {
-          c.abort(focus, s"Incorrect type for `$argName`, " +
-            s"required: ${at.typeSymbol.name}, given: ${funcTypeParam}")
-        }
+        val at = tokenType(paramToken)
+        if !(at.widen.dealias =:= funcTypeParam.widen.dealias) then
+          report.errorAndAbort(
+            s"Incorrect type for `$argName`, " +
+              s"required: ${at.typeSymbol.name}, given: ${funcTypeParam.show}"
+          )
       }
-    }
 
-    val bodyCount = tokens.count(x => x.isBody)
-    if (bodyCount > 1) {
-      c.abort(focus, s"BodyParam must be one per rule, given: $bodyCount")
-    }
-    val fileCount = tokens.count(x => x.isFile)
-    if (fileCount > 1) {
-      c.abort(focus, s"FileParam must be one per rule, given: $fileCount")
-    }
+    val bodyCount = tokens.count(_.isBody)
+    if bodyCount > 1 then
+      report.errorAndAbort(s"BodyParam must be one per rule, given: $bodyCount")
+    val fileCount = tokens.count(_.isFile)
+    if fileCount > 1 then
+      report.errorAndAbort(s"FileParam must be one per rule, given: $fileCount")
+    if fileCount == 1 && bodyCount == 1 then
+      report.errorAndAbort("You can not mix BodyParam with FileParam, choose one")
 
-    if (fileCount == 1 && bodyCount == 1) {
-      c.abort(focus, s"You can not mix BodyParam with FileParam, choose one")
-    }
+    val defsPositions: List[Int] = tokens.map {
+      case StringToken         => ParamDef.string
+      case LongToken           => ParamDef.long
+      case RegexToken          => ParamDef.regex
+      case UUIDToken           => ParamDef.uuid
+      case TailToken           => ParamDef.tail
+      case AlternativeToken    => ParamDef.alternative
+      case BodyToken(_)        => ParamDef.body
+      case HeaderToken         => ParamDef.header
+      case CurrentRequestToken => ParamDef.request
+      case FileToken           => ParamDef.file
+      case CookieToken         => ParamDef.cookie
+      case QueryToken(_)       => ParamDef.query
+      case StreamToken         => ParamDef.stream
+    }.toList
 
-    val ts = tokens.map { token  =>
-      val valName = TermName(c.freshName())
-      token match {
+    val positionsExpr = Expr.ofList(defsPositions.map(Expr(_)))
+
+    def extractAt(sorted: Expr[List[ParamDef[?]]], idx: Int, token: ParamToken): Expr[Any] =
+      val i = Expr(idx)
+      token match
         case StringToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.StringDef($valName)", valName, ParamDef.string)
+          '{ $sorted($i).asInstanceOf[StringDef].value }
         case LongToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.LongDef($valName : Long)", valName, ParamDef.long)
+          '{ $sorted($i).asInstanceOf[LongDef].value }
         case RegexToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.RegexDef($valName)", valName, ParamDef.regex)
+          '{ $sorted($i).asInstanceOf[RegexDef].value }
         case UUIDToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.UUIDDef($valName)", valName, ParamDef.uuid)
+          '{ $sorted($i).asInstanceOf[UUIDDef].value }
         case TailToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.TailDef($valName)", valName, ParamDef.tail)
+          '{ $sorted($i).asInstanceOf[TailDef].value }
         case AlternativeToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.AlternativeDef($valName)", valName, ParamDef.alternative)
-        case BodyToken(tpt, _) =>
-          (pq"_root_.com.github.fntz.omhs.internal.BodyDef($valName: ${tpt.typeSymbol})", valName, ParamDef.body)
+          '{ $sorted($i).asInstanceOf[AlternativeDef].value }
+        case BodyToken(tpt) =>
+          tpt.asType match
+            case '[t] => '{ $sorted($i).asInstanceOf[BodyDef[t]].value }
         case HeaderToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.HeaderDef($valName)", valName, ParamDef.header)
+          '{ $sorted($i).asInstanceOf[HeaderDef].value }
         case CurrentRequestToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.CurrentHttpRequestDef($valName)", valName, ParamDef.request)
+          '{ $sorted($i).asInstanceOf[CurrentHttpRequestDef].value }
         case FileToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.FileDef($valName)", valName, ParamDef.file)
+          '{ $sorted($i).asInstanceOf[FileDef].value }
         case CookieToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.CookieDef($valName)", valName, ParamDef.cookie)
-        case QueryToken(tpt, _) =>
-          (pq"_root_.com.github.fntz.omhs.internal.QueryDef($valName: ${tpt.typeSymbol})", valName, ParamDef.query)
+          '{ $sorted($i).asInstanceOf[CookieDef].value }
+        case QueryToken(tpt) =>
+          tpt.asType match
+            case '[t] => '{ $sorted($i).asInstanceOf[QueryDef[t]].value }
         case StreamToken =>
-          (pq"_root_.com.github.fntz.omhs.internal.StreamDef($valName)", valName, ParamDef.stream)
-      }
-    }
+          '{ $sorted($i).asInstanceOf[StreamDef].value }
 
-    val caseClause = q"List(..${ts.map(_._1)})"
-    val args = ts.map(_._2)
-    val defsPositions = ts.map(_._3).toList
+    def returnTypeOfF: TypeRepr =
+      TypeRepr.of[F] match
+        case AppliedType(_, args) if args.nonEmpty => args.last
+        case _ =>
+          fTerm match
+            case Lambda(_, body) => body.tpe.widen
+            case d: DefDef       => d.returnTpt.tpe
+            case _               => TypeRepr.of[Any]
 
-    // skip cookies for now
-    val funName = TermName(c.freshName())
-
-    // generate according to parameters or ignore them
-    val callFunction = if (isEmptyFunction) {
-      q"$f()"
-    } else {
-      q"$f(..$args)"
-    }
-
-    // note:
-    // orig: string << header <<< body
-    // defs: List(string, body, header) <- after apply to rule (@see RequestHelper)
-    // cause: header, string, body
-    // also cookie and header has the same weight and it doesn't possible to define good order ?
-    // maybe I need to rewrite sorting in more effective way
-    val instance =
-      q"""
-        {
-            def $funName() = {
-              val rule = ${c.prefix.tree}.rule
-
-              if ($isReqParamNeeded) {
-                rule.withRequest()
-              }
-              if ($isStreamNeeded) {
-                rule.withStream()
-              }
-
-              val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
-                  val defsMap = defs.groupBy(_.sortProp).map { x =>
-                    x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
-                  }
-                  val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
-
-                  sorted match {
-                    case $caseClause =>
-                      $callFunction
-                    case xs =>
-                      throw new IllegalStateException("Incorrect order of arguments")
-                  }
-                }
-              }
-              rf
-            }
-            $funName()
+    val resultExpr: Expr[ExecutableRule] = returnTypeOfF.asType match
+      case '[r] =>
+        val conv = Expr.summon[r => AsyncResult].getOrElse {
+          report.errorAndAbort(
+            "Cannot convert route result to AsyncResult. Import com.github.fntz.omhs.AsyncResult.Implicits._"
+          )
         }
-        """
 
-    logger.verbose(s"$instance")
+        '{
+          val rule0 = $rule
+          if ${ Expr(isReqParamNeeded) } then { rule0.withRequest(); () }
+          if ${ Expr(isStreamNeeded) } then { rule0.withStream(); () }
 
-    c.Expr[ExecutableRule](instance)
+          new ExecutableRule(
+            rule0,
+            (defs: List[ParamDef[?]]) => {
+              val defsMap = defs.groupBy(_.sortProp).map { x =>
+                x._1 -> x._2.toBuffer[ParamDef[?]]
+              }
+              val sorted = $positionsExpr.map(x => defsMap(x).remove(0))
+              val raw: r = ${
+                if isEmptyFunction then
+                  Apply(Select.unique(f.asTerm, "apply"), Nil).asExprOf[r]
+                else
+                  val args = tokens.zipWithIndex.map { case (token, idx) =>
+                    extractAt('sorted, idx, token).asTerm
+                  }.toList
+                  Apply(Select.unique(f.asTerm, "apply"), args).asExprOf[r]
+              }
+              $conv(raw)
+            }
+          )
+        }
+
+    logger.verbose(resultExpr.asTerm.show)
+    resultExpr
   }
-
-
 }

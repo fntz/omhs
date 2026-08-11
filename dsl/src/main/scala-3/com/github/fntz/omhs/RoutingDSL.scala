@@ -1,7 +1,7 @@
 package com.github.fntz.omhs
 
 import com.github.fntz.omhs.impl.RoutingImpl
-import com.github.fntz.omhs.internal._
+import com.github.fntz.omhs.internal.*
 import io.netty.handler.codec.http.HttpMethod
 
 import scala.util.matching.Regex
@@ -195,75 +195,12 @@ object RoutingDSL {
       FileOrBodyLikeParam(new Rule().path(l).withFiles(f))
   }
 
-  implicit class ExecutableRuleExtensions(val rule: Rule) extends AnyVal {
-    implicit def ~>[R](f: () => R): ExecutableRule =
-    macro RoutingImpl.run0[R]
-
-    implicit def ~>[T1, R](f: (T1) => R): ExecutableRule =
-    macro RoutingImpl.run1[T1, R]
-
-    implicit def ~>[T1, T2, R](f: (T1, T2) => R): ExecutableRule =
-    macro RoutingImpl.run2[T1, T2, R]
-
-    implicit def ~>[T1, T2, T3, R](f: (T1, T2, T3) => R): ExecutableRule =
-    macro RoutingImpl.run3[T1, T2, T3, R]
-
-    implicit def ~>[T1, T2, T3, T4, R](f: (T1, T2, T3, T4) => R): ExecutableRule =
-    macro RoutingImpl.run4[T1, T2, T3, T4, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, R](f: (T1, T2, T3, T4, T5) => R): ExecutableRule =
-    macro RoutingImpl.run5[T1, T2, T3, T4, T5, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, R](f: (T1, T2, T3, T4, T5, T6) => R): ExecutableRule =
-    macro RoutingImpl.run6[T1, T2, T3, T4, T5, T6, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, R](f: (T1, T2, T3, T4, T5, T6, T7) => R): ExecutableRule =
-    macro RoutingImpl.run7[T1, T2, T3, T4, T5, T6, T7, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, R](f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): ExecutableRule =
-    macro RoutingImpl.run8[T1, T2, T3, T4, T5, T6, T7, T8, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9) => R): ExecutableRule =
-    macro RoutingImpl.run9[T1, T2, T3, T4, T5, T6, T7, T8, T9, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) => R): ExecutableRule =
-    macro RoutingImpl.run10[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11) => R): ExecutableRule =
-    macro RoutingImpl.run11[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12) => R): ExecutableRule =
-    macro RoutingImpl.run12[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13) => R): ExecutableRule =
-    macro RoutingImpl.run13[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14) => R): ExecutableRule =
-    macro RoutingImpl.run14[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15) => R): ExecutableRule =
-    macro RoutingImpl.run15[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16) => R): ExecutableRule =
-    macro RoutingImpl.run16[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17) => R): ExecutableRule =
-    macro RoutingImpl.run17[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18) => R): ExecutableRule =
-    macro RoutingImpl.run18[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19) => R): ExecutableRule =
-    macro RoutingImpl.run19[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20) => R): ExecutableRule =
-    macro RoutingImpl.run20[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21) => R): ExecutableRule =
-    macro RoutingImpl.run21[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, R]
-
-    implicit def ~>[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, R](f: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22) => R): ExecutableRule =
-    macro RoutingImpl.run22[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, R]
-
-  }
+  /**
+   * Same surface DSL as Scala 2: `rule ~> { (args) => ... }`.
+   * Internally expands to an [[com.github.fntz.omhs.internal.ExecutableRule]]
+   * with a generated runner function (no anonymous subclass).
+   */
+  extension (inline rule: Rule)
+    transparent inline def ~>[F](inline f: F): ExecutableRule =
+      ${ RoutingImpl.generate('rule, 'f) }
 }

@@ -635,22 +635,19 @@ private[omhs] object RoutingImpl {
                 rule.withStream()
               }
 
-              val rf = new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule) {
-                override def run(defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]): _root_.com.github.fntz.omhs.AsyncResult = {
-                  val defsMap = defs.groupBy(_.sortProp).map { x =>
-                    x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
-                  }
-                  val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
-
-                  sorted match {
-                    case $caseClause =>
-                      $callFunction
-                    case xs =>
-                      throw new IllegalStateException("Incorrect order of arguments")
-                  }
+              new _root_.com.github.fntz.omhs.internal.ExecutableRule(rule, (defs: List[_root_.com.github.fntz.omhs.internal.ParamDef[_]]) => {
+                val defsMap = defs.groupBy(_.sortProp).map { x =>
+                  x._1 -> x._2.toBuffer[_root_.com.github.fntz.omhs.internal.ParamDef[_]]
                 }
-              }
-              rf
+                val sorted = $defsPositions.map { x => defsMap(x).remove(0) }
+
+                sorted match {
+                  case $caseClause =>
+                    $callFunction
+                  case xs =>
+                    throw new IllegalStateException("Incorrect order of arguments")
+                }
+              })
             }
             $funName()
         }
