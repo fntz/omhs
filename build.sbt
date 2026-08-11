@@ -3,7 +3,7 @@ val scala213 = "2.13.17"
 val scala3   = "3.7.1"
 val supportedVersions = Seq(scala213, scala3)
 
-ThisBuild / version := "0.0.5"
+ThisBuild / version := "0.0.6"
 ThisBuild / scalaVersion := scala3
 ThisBuild / crossScalaVersions := supportedVersions
 
@@ -63,15 +63,15 @@ val opts = Seq(
   testFrameworks += new TestFramework("munit.Framework")
 )
 
-val nettyVersion = "4.1.60.Final"
+val nettyVersion = "4.1.84.Final"
 
 val netty = Seq(
   "io.netty" % "netty-codec-http" % nettyVersion,
   "io.netty" % "netty-codec-http2" % nettyVersion
 )
 
-val slf4j = Seq("org.slf4j" % "slf4j-api" % "1.7.30")
-val logback = Seq("ch.qos.logback"  %  "logback-classic" % "1.2.3")
+val slf4j = Seq("org.slf4j" % "slf4j-api" % "2.0.3")
+val logback = Seq("ch.qos.logback"  %  "logback-classic" % "1.4.4")
 
 val libs = Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.2" % "compile"
@@ -80,17 +80,17 @@ val libs = Seq(
 val munit = Seq("org.scalameta" %% "munit" % "1.1.0" % "test")
 
 val playJson = Seq(
-  "com.typesafe.play" %% "play-json" % "2.9.2"
+  "com.typesafe.play" %% "play-json" % "2.9.3"
 )
 
 val circe = Seq(
-  "io.circe" %% "circe-core" % "0.13.0",
-  "io.circe" %% "circe-parser" % "0.13.0"
+  "io.circe" %% "circe-core" % "0.14.3",
+  "io.circe" %% "circe-parser" % "0.14.3"
 )
 
 val jsoniterScala = Seq(
-  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.6.4",
-  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.6.4"
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.17.5",
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.17.5"
 )
 
 lazy val jsonLibs = playJson ++ circe ++ jsoniterScala
@@ -149,7 +149,16 @@ val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
-    libraryDependencies ++= libs ++ slf4j ++ logback ++ munit,
+    libraryDependencies ++= libs ++ slf4j ++ logback ++ munit ++ jsonLibs ++ Seq(
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1" % "test"
+    ) ++ {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) =>
+          Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "test")
+        case _ =>
+          Seq.empty
+      }
+    },
     publish / skip := true,
     crossScalaVersions := supportedVersions
   )

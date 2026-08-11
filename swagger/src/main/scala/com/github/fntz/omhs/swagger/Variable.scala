@@ -13,7 +13,7 @@ package com.github.fntz.omhs.swagger
  *                    CommonMark syntax MAY be used for rich text representation.
  */
 case class Variable(
-                                  enum: List[String],
+                                  `enum`: List[String],
                                   default: String,
                                   description: Option[String] = None
                                 ) {

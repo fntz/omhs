@@ -28,7 +28,7 @@ object MyApp extends App {
 
   case class Foo(id: Long)
   implicit val fooJson = Json.format[Foo]
-  implicit val fooBodyWriter = JsonSupport.writer[Foo]
+  implicit val fooBodyWriter = JsonSupport.writer[Foo]()
 
   case class Search(query: String)
   implicit val searchQueryReader = new QueryReader[Search] {

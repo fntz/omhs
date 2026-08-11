@@ -507,7 +507,7 @@ class RoutingTests extends FunSuite {
     val messagesSize = channel.outboundMessages().size
     var response: DefaultHttpResponse = null
     if (isStream) {
-      import scala.collection.JavaConverters._
+      import scala.jdk.CollectionConverters._
       channel.outboundMessages().asScala.collect {
         case httpContent: DefaultHttpContent =>
           content = content + httpContent.content().toString(CharsetUtil.UTF_8)
