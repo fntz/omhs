@@ -19,11 +19,9 @@ sonatypeCredentialHost := "s01.oss.sonatype.org"
 publishMavenStyle := true
 
 ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots/")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 
 def commonScalacOptions(scalaV: String): Seq[String] = {
@@ -80,17 +78,17 @@ val libs = Seq(
 val munit = Seq("org.scalameta" %% "munit" % "1.1.0" % "test")
 
 val playJson = Seq(
-  "com.typesafe.play" %% "play-json" % "2.9.3"
+  "org.playframework" %% "play-json" % "3.0.6"
 )
 
 val circe = Seq(
-  "io.circe" %% "circe-core" % "0.14.3",
-  "io.circe" %% "circe-parser" % "0.14.3"
+  "io.circe" %% "circe-core" % "0.14.16",
+  "io.circe" %% "circe-parser" % "0.14.16"
 )
 
 val jsoniterScala = Seq(
-  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.17.5",
-  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.17.5"
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % "2.40.1",
+  "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % "2.40.1"
 )
 
 lazy val jsonLibs = playJson ++ circe ++ jsoniterScala
@@ -112,17 +110,18 @@ val dsl = project.settings(opts)
     },
     crossScalaVersions := supportedVersions
   )
-/*
-val swagger = project.in(file("swagger"))
-  .settings(opts)
-  .settings(
-    name := "omhs-swagger",
-    libraryDependencies ++= playJson ++ netty, // todo rm
-    crossScalaVersions := supportedVersions,
-    publish / skip := true
-  ).dependsOn(dsl)
 
-val playJsonSupport = Project("play-json-support", file("play-json-support"))
+// swagger stays unpublished / disabled for now
+// val swagger = project.in(file("swagger"))
+//   .settings(opts)
+//   .settings(
+//     name := "omhs-swagger",
+//     libraryDependencies ++= playJson ++ netty, // todo rm
+//     crossScalaVersions := supportedVersions,
+//     publish / skip := true
+//   ).dependsOn(dsl)
+
+lazy val playJsonSupport = Project("play-json-support", file("play-json-support"))
   .settings(opts)
   .settings(
     name := "omhs-play-support",
@@ -130,7 +129,7 @@ val playJsonSupport = Project("play-json-support", file("play-json-support"))
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl % "provided")
 
-val circeSupport = Project("circe-support", file("circe-support"))
+lazy val circeSupport = Project("circe-support", file("circe-support"))
   .settings(opts)
   .settings(
     name := "omhs-circe-support",
@@ -138,14 +137,14 @@ val circeSupport = Project("circe-support", file("circe-support"))
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl % "provided")
 
-val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
+lazy val jsoniterSupport = Project("jsoniter-support", file("jsoniter-support"))
   .settings(opts)
   .settings(
     name := "omhs-jsoniter-support",
     libraryDependencies ++= jsoniterScala.map(_ % "provided") ++ netty.map(_ % "provided"),
     crossScalaVersions := supportedVersions
   ).dependsOn(dsl % "provided")
-*/
+
 lazy val mainProject = Project("omhs", file("."))
   .settings(
     opts,
@@ -162,5 +161,5 @@ lazy val mainProject = Project("omhs", file("."))
     publish / skip := true,
     crossScalaVersions := supportedVersions
   )
-  .dependsOn(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)
-  .aggregate(dsl)//, playJsonSupport, circeSupport, jsoniterSupport, swagger)
+  .dependsOn(dsl, playJsonSupport, circeSupport, jsoniterSupport)
+  .aggregate(dsl, playJsonSupport, circeSupport, jsoniterSupport)
