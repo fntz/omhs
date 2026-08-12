@@ -3,7 +3,7 @@ val scala213 = "2.13.17"
 val scala3   = "3.7.1"
 val supportedVersions = Seq(scala213, scala3)
 
-ThisBuild / version := "0.0.6"
+ThisBuild / version := "0.1.0"
 ThisBuild / scalaVersion := scala3
 ThisBuild / crossScalaVersions := supportedVersions
 
