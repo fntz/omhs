@@ -272,8 +272,8 @@ private[omhs] object RoutingImpl {
 
         '{
           val rule0 = $rule
-          if ${ Expr(isReqParamNeeded) } then { rule0.withRequest(); () }
-          if ${ Expr(isStreamNeeded) } then { rule0.withStream(); () }
+          if ${ Expr(isReqParamNeeded) } then { val _ = rule0.withRequest() }
+          if ${ Expr(isStreamNeeded) } then { val _ = rule0.withStream() }
 
           new ExecutableRule(
             rule0,
