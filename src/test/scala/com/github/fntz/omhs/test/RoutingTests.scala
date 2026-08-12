@@ -37,7 +37,7 @@ class RoutingTests extends FunSuite {
   Files.write(file1.toPath, "test".getBytes(CharsetUtil.UTF_8))
 
   case class Search(query: String)
-  implicit val queryReader = new QueryReader[Search] {
+  implicit val queryReader: QueryReader[Search] = new QueryReader[Search] {
     override def read(queries: Map[String, Iterable[String]]): Option[Search] = {
       queries.get("query").flatMap(_.headOption).map(Search)
     }
@@ -417,7 +417,7 @@ class RoutingTests extends FunSuite {
 
 
 
-  def routeTest(
+  private def routeTest(
                  testName: String,
                  rule: ExecutableRule,
                  path: String = "/test",
